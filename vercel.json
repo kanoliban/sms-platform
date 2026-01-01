@@ -2,15 +2,11 @@
   "crons": [
     {
       "path": "/api/cron/location-reveal",
-      "schedule": "0 * * * *"
-    },
-    {
-      "path": "/api/cron/pocket-liban",
-      "schedule": "*/5 * * * *"
+      "schedule": "0 9 * * *"
     },
     {
       "path": "/api/cron/post-room",
-      "schedule": "0 * * * *"
+      "schedule": "0 8 * * *"
     }
   ]
 }
