@@ -1,0 +1,31 @@
+/**
+ * SMS Design System - Border Radius Tokens
+ *
+ * Consistent rounding based on Lu.ma patterns.
+ */
+
+:root {
+  /* ===== BORDER RADIUS SCALE ===== */
+  --radius-none: 0;
+  --radius-sm: 4px;       /* Subtle rounding - tags, small elements */
+  --radius-default: 6px;  /* Inputs, small buttons */
+  --radius-md: 8px;       /* Buttons, dropdowns, badges */
+  --radius-lg: 12px;      /* Cards, modals */
+  --radius-xl: 16px;      /* Large cards, featured elements */
+  --radius-2xl: 24px;     /* Hero sections, large containers */
+  --radius-full: 9999px;  /* Avatars, pills, circular buttons */
+
+  /* ===== SEMANTIC ALIASES ===== */
+  --radius-button: var(--radius-md);
+  --radius-button-sm: var(--radius-default);
+  --radius-button-lg: var(--radius-md);
+  --radius-input: var(--radius-default);
+  --radius-card: var(--radius-lg);
+  --radius-modal: var(--radius-lg);
+  --radius-badge: var(--radius-full);
+  --radius-avatar: var(--radius-full);
+  --radius-tag: var(--radius-sm);
+  --radius-tooltip: var(--radius-md);
+  --radius-toast: var(--radius-lg);
+  --radius-dropdown: var(--radius-md);
+}

@@ -1,0 +1,257 @@
+/**
+ * SMS Design System
+ *
+ * Master import file for all design tokens.
+ * Import this file in globals.css to load the entire design system.
+ *
+ * Based on Lu.ma patterns, adapted with a dark/intimate palette for SMS.
+ *
+ * Token Categories:
+ * - colors.css:      Color palette (backgrounds, text, accents, semantic, tones)
+ * - typography.css:  Font families, sizes, weights, line heights
+ * - spacing.css:     Spacing scale, layout widths, z-index
+ * - radius.css:      Border radius values
+ * - shadows.css:     Box shadows, glows, focus rings
+ * - transitions.css: Durations, easings, transition presets
+ */
+
+@import './tokens/colors.css';
+@import './tokens/typography.css';
+@import './tokens/spacing.css';
+@import './tokens/radius.css';
+@import './tokens/shadows.css';
+@import './tokens/transitions.css';
+
+/**
+ * Base Styles
+ *
+ * Applied to all elements using design tokens.
+ */
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: var(--leading-normal);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background-color: var(--bg-base);
+  color: var(--text-primary);
+  margin: 0;
+  padding: 0;
+}
+
+/**
+ * Selection Styles
+ */
+
+::selection {
+  background-color: var(--primary-muted);
+  color: var(--text-primary);
+}
+
+/**
+ * Focus Visible
+ * Modern focus styles for keyboard navigation
+ */
+
+:focus-visible {
+  outline: none;
+  box-shadow: var(--ring-primary);
+}
+
+/**
+ * Scrollbar Styling (Dark Mode)
+ */
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-elevated);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-hover);
+  border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--border-strong);
+}
+
+/**
+ * Keyframe Animations
+ */
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideOutRight {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes slideInUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideOutDown {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(100%);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes scaleOut {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/**
+ * Utility Classes
+ */
+
+/* Animation utilities */
+.animate-fade-in {
+  animation: fadeIn var(--duration-moderate) var(--ease-out);
+}
+
+.animate-fade-out {
+  animation: fadeOut var(--duration-moderate) var(--ease-out);
+}
+
+.animate-slide-in-right {
+  animation: slideInRight var(--duration-slow) var(--ease-out);
+}
+
+.animate-slide-in-up {
+  animation: slideInUp var(--duration-slow) var(--ease-out);
+}
+
+.animate-scale-in {
+  animation: scaleIn var(--duration-moderate) var(--ease-out);
+}
+
+.animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--bg-surface) 0%,
+    var(--bg-surface-hover) 50%,
+    var(--bg-surface) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+.animate-pulse {
+  animation: pulse 2s infinite;
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* Skeleton loading */
+.skeleton {
+  background: var(--bg-muted);
+  border-radius: var(--radius-md);
+}
+
+.skeleton.animate {
+  background: linear-gradient(
+    90deg,
+    var(--bg-muted) 0%,
+    var(--bg-subtle) 50%,
+    var(--bg-muted) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}

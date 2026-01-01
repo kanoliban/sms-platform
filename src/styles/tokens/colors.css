@@ -1,0 +1,149 @@
+/**
+ * SMS Design System - Color Tokens
+ *
+ * Dark/intimate palette adapted from Lu.ma patterns.
+ * Lu.ma uses bright teal on cream; SMS uses warm amber on near-black.
+ */
+
+:root {
+  /* ===== BACKGROUNDS ===== */
+  --bg-base: #000000;              /* Pure black - page background */
+  --bg-elevated: #0a0a0a;          /* Slightly lifted surfaces */
+  --bg-surface: #111111;           /* Cards, modals */
+  --bg-surface-hover: #1a1a1a;     /* Card hover states */
+  --bg-muted: #1f1f1f;             /* Subtle backgrounds */
+  --bg-subtle: #262626;            /* Form inputs, wells */
+
+  /* ===== PRIMARY ACCENT (Warm Amber) ===== */
+  /* Replaces Lu.ma's teal - warm, intimate, intentional */
+  --primary: #d97706;              /* Amber 600 - main accent */
+  --primary-hover: #b45309;        /* Amber 700 */
+  --primary-light: #f59e0b;        /* Amber 500 - lighter variant */
+  --primary-muted: rgba(217, 119, 6, 0.15);  /* Subtle backgrounds */
+  --primary-border: rgba(217, 119, 6, 0.3);  /* Borders */
+
+  /* ===== SECONDARY ACCENT (Soft Coral) ===== */
+  --secondary: #f97316;            /* Orange 500 - highlights */
+  --secondary-hover: #ea580c;      /* Orange 600 */
+  --secondary-muted: rgba(249, 115, 22, 0.1);
+
+  /* ===== TEXT ===== */
+  --text-primary: #ffffff;         /* Headings, body */
+  --text-secondary: #a1a1aa;       /* Subtitles, labels */
+  --text-muted: #71717a;           /* Placeholders, hints */
+  --text-disabled: #52525b;        /* Disabled states */
+  --text-inverse: #000000;         /* Text on light backgrounds */
+
+  /* ===== BORDERS ===== */
+  --border-default: rgba(255, 255, 255, 0.1);
+  --border-hover: rgba(255, 255, 255, 0.2);
+  --border-focus: var(--primary);
+  --border-subtle: rgba(255, 255, 255, 0.05);
+  --border-strong: rgba(255, 255, 255, 0.3);
+
+  /* ===== SEMANTIC COLORS ===== */
+  --success: #22c55e;              /* Green - confirmations */
+  --success-hover: #16a34a;
+  --success-muted: rgba(34, 197, 94, 0.15);
+  --success-text: #4ade80;
+
+  --error: #ef4444;                /* Red - errors, destructive */
+  --error-hover: #dc2626;
+  --error-muted: rgba(239, 68, 68, 0.15);
+  --error-text: #f87171;
+
+  --warning: #f59e0b;              /* Amber - warnings */
+  --warning-hover: #d97706;
+  --warning-muted: rgba(245, 158, 11, 0.15);
+  --warning-text: #fbbf24;
+
+  --info: #3b82f6;                 /* Blue - informational */
+  --info-hover: #2563eb;
+  --info-muted: rgba(59, 130, 246, 0.15);
+  --info-text: #60a5fa;
+
+  /* ===== STATUS BADGES ===== */
+  /* Dark-mode versions with proper contrast */
+  --status-going-bg: rgba(34, 197, 94, 0.15);
+  --status-going-text: #4ade80;
+  --status-going-border: rgba(34, 197, 94, 0.3);
+
+  --status-invited-bg: rgba(59, 130, 246, 0.15);
+  --status-invited-text: #60a5fa;
+  --status-invited-border: rgba(59, 130, 246, 0.3);
+
+  --status-pending-bg: rgba(245, 158, 11, 0.15);
+  --status-pending-text: #fbbf24;
+  --status-pending-border: rgba(245, 158, 11, 0.3);
+
+  --status-waitlist-bg: rgba(161, 161, 170, 0.15);
+  --status-waitlist-text: #a1a1aa;
+  --status-waitlist-border: rgba(161, 161, 170, 0.3);
+
+  --status-declined-bg: rgba(239, 68, 68, 0.15);
+  --status-declined-text: #f87171;
+  --status-declined-border: rgba(239, 68, 68, 0.3);
+
+  --status-checked-in-bg: rgba(139, 92, 246, 0.15);
+  --status-checked-in-text: #a78bfa;
+  --status-checked-in-border: rgba(139, 92, 246, 0.3);
+
+  --status-no-show-bg: rgba(113, 113, 122, 0.15);
+  --status-no-show-text: #71717a;
+  --status-no-show-border: rgba(113, 113, 122, 0.3);
+
+  --status-cancelled-bg: rgba(239, 68, 68, 0.1);
+  --status-cancelled-text: #fca5a5;
+  --status-cancelled-border: rgba(239, 68, 68, 0.2);
+
+  /* ===== ROOM TONES (SMS-specific) ===== */
+  --tone-chill: #3b82f6;           /* Blue - calm, relaxed */
+  --tone-chill-bg: rgba(59, 130, 246, 0.15);
+  --tone-chill-gradient: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(6, 182, 212, 0.2));
+
+  --tone-playful: #ec4899;         /* Pink - fun, light */
+  --tone-playful-bg: rgba(236, 72, 153, 0.15);
+  --tone-playful-gradient: linear-gradient(135deg, rgba(236, 72, 153, 0.2), rgba(249, 115, 22, 0.2));
+
+  --tone-deep: #8b5cf6;            /* Purple - thoughtful, meaningful */
+  --tone-deep-bg: rgba(139, 92, 246, 0.15);
+  --tone-deep-gradient: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(99, 102, 241, 0.2));
+
+  --tone-intense: #ef4444;         /* Red - challenging, vulnerable */
+  --tone-intense-bg: rgba(239, 68, 68, 0.15);
+  --tone-intense-gradient: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(245, 158, 11, 0.2));
+
+  /* ===== TAG PALETTE (8 colors from Lu.ma) ===== */
+  --tag-red: #ef4444;
+  --tag-red-bg: rgba(239, 68, 68, 0.15);
+
+  --tag-cranberry: #be185d;
+  --tag-cranberry-bg: rgba(190, 24, 93, 0.15);
+
+  --tag-orange: #f97316;
+  --tag-orange-bg: rgba(249, 115, 22, 0.15);
+
+  --tag-yellow: #eab308;
+  --tag-yellow-bg: rgba(234, 179, 8, 0.15);
+
+  --tag-green: #22c55e;
+  --tag-green-bg: rgba(34, 197, 94, 0.15);
+
+  --tag-blue: #3b82f6;
+  --tag-blue-bg: rgba(59, 130, 246, 0.15);
+
+  --tag-purple: #8b5cf6;
+  --tag-purple-bg: rgba(139, 92, 246, 0.15);
+
+  --tag-violet: #a855f7;
+  --tag-violet-bg: rgba(168, 85, 247, 0.15);
+
+  /* ===== OVERLAYS ===== */
+  --overlay-backdrop: rgba(0, 0, 0, 0.8);
+  --overlay-light: rgba(255, 255, 255, 0.05);
+
+  /* ===== SPECIAL ===== */
+  --countdown-urgent: #ec4899;     /* Pink - "Starting in 1h" */
+  --link: #60a5fa;                 /* Blue links */
+  --link-hover: #93c5fd;
+}
