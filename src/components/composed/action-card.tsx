@@ -3,15 +3,19 @@
 import { type HTMLAttributes, type ReactNode } from 'react';
 import Link from 'next/link';
 
+export type ActionCardColor = 'default' | 'primary' | 'info' | 'success' | 'warning' | 'error' | 'secondary';
+
 export interface ActionCardProps {
   icon: ReactNode;
-  title: string;
+  title?: string;
+  label?: string; // alias for title
   description?: string;
   href?: string;
   onClick?: () => void;
   disabled?: boolean;
-  badge?: ReactNode;
+  badge?: ReactNode | number;
   variant?: 'default' | 'outline' | 'ghost';
+  color?: ActionCardColor;
   className?: string;
 }
 
@@ -34,17 +38,67 @@ const variantStyles = {
   `,
 };
 
+const colorStyles: Record<ActionCardColor, { bg: string; text: string; hoverBg: string; hoverText: string }> = {
+  default: {
+    bg: 'bg-[var(--bg-subtle)]',
+    text: 'text-[var(--text-primary)]',
+    hoverBg: 'group-hover:bg-[var(--primary-muted)]',
+    hoverText: 'group-hover:text-[var(--primary-light)]',
+  },
+  primary: {
+    bg: 'bg-[var(--primary-muted)]',
+    text: 'text-[var(--primary-light)]',
+    hoverBg: 'group-hover:bg-[var(--primary)]',
+    hoverText: 'group-hover:text-white',
+  },
+  info: {
+    bg: 'bg-blue-500/20',
+    text: 'text-blue-400',
+    hoverBg: 'group-hover:bg-blue-500/30',
+    hoverText: 'group-hover:text-blue-300',
+  },
+  success: {
+    bg: 'bg-green-500/20',
+    text: 'text-green-400',
+    hoverBg: 'group-hover:bg-green-500/30',
+    hoverText: 'group-hover:text-green-300',
+  },
+  warning: {
+    bg: 'bg-amber-500/20',
+    text: 'text-amber-400',
+    hoverBg: 'group-hover:bg-amber-500/30',
+    hoverText: 'group-hover:text-amber-300',
+  },
+  error: {
+    bg: 'bg-red-500/20',
+    text: 'text-red-400',
+    hoverBg: 'group-hover:bg-red-500/30',
+    hoverText: 'group-hover:text-red-300',
+  },
+  secondary: {
+    bg: 'bg-pink-500/20',
+    text: 'text-pink-400',
+    hoverBg: 'group-hover:bg-pink-500/30',
+    hoverText: 'group-hover:text-pink-300',
+  },
+};
+
 export function ActionCard({
   className = '',
   icon,
   title,
+  label,
   description,
   href,
   onClick,
   disabled = false,
   badge,
   variant = 'default',
+  color = 'default',
 }: ActionCardProps) {
+  const displayTitle = title || label;
+  const colorStyle = colorStyles[color];
+
   const Content = (
     <>
       {/* Icon */}
@@ -53,11 +107,11 @@ export function ActionCard({
           w-12 h-12
           flex items-center justify-center
           rounded-[var(--radius-lg)]
-          bg-[var(--bg-subtle)]
-          text-[var(--text-primary)]
+          ${colorStyle.bg}
+          ${colorStyle.text}
           transition-colors duration-[var(--duration-normal)]
-          group-hover:bg-[var(--primary-muted)]
-          group-hover:text-[var(--primary-light)]
+          ${colorStyle.hoverBg}
+          ${colorStyle.hoverText}
           ${disabled ? 'opacity-50' : ''}
         `}
       >
@@ -68,9 +122,15 @@ export function ActionCard({
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
           <span className="text-[var(--text-sm)] font-semibold text-[var(--text-primary)]">
-            {title}
+            {displayTitle}
           </span>
-          {badge}
+          {badge !== undefined && (
+            typeof badge === 'number' ? (
+              <span className="px-1.5 py-0.5 text-[10px] font-semibold rounded-full bg-[var(--error-muted)] text-[var(--error-text)]">
+                {badge}
+              </span>
+            ) : badge
+          )}
         </div>
         {description && (
           <p className="text-[var(--text-xs)] text-[var(--text-muted)] mt-0.5 line-clamp-2">
@@ -151,7 +211,7 @@ export function ActionCardGrid({
   return (
     <div className={`grid ${colStyles[columns]} gap-4 ${className}`} {...props}>
       {actions.map((action, index) => (
-        <ActionCard key={action.title + index} {...action} />
+        <ActionCard key={(action.title || action.label || '') + index} {...action} />
       ))}
     </div>
   );

@@ -1,18 +1,23 @@
-'use client'
+'use client';
 
-import Link from 'next/link'
-import { useEffect, useState } from 'react'
-import type { Room, User } from '@/lib/supabase/types'
+import Link from 'next/link';
+import { useEffect, useState } from 'react';
+import type { Room, User } from '@/lib/supabase/types';
+import { Button, Card } from '@/components/ui';
+import { PageContainer, Header } from '@/components/layout';
+import { RoomCard, StatsGrid, EmptyState } from '@/components/composed';
+
+type RoomTone = 'chill' | 'playful' | 'deep' | 'intense';
 
 type RoomWithCounts = Room & {
-  accepted_count: number
-  total_invited: number
-}
+  accepted_count: number;
+  total_invited: number;
+};
 
 // Check if Supabase is configured
 const isSupabaseConfigured = () => {
-  return !!(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
-}
+  return !!(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+};
 
 // Mock data for demo/preview mode
 const MOCK_ROOMS: RoomWithCounts[] = [
@@ -58,7 +63,28 @@ const MOCK_ROOMS: RoomWithCounts[] = [
     accepted_count: 0,
     total_invited: 0,
   },
-]
+  {
+    id: 'demo-3',
+    host_id: 'demo-host',
+    name: 'Game Night Strangers',
+    description: 'Board games and new friendships',
+    tone: 'playful',
+    date: new Date(Date.now() + 21 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    time: '18:00',
+    duration_minutes: 150,
+    location_address: '789 Fun Blvd, Minneapolis, MN',
+    location_hint: 'Downtown',
+    capacity: 10,
+    price_cents: 2000,
+    status: 'confirmed',
+    location_revealed: true,
+    feedback_requested: false,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    accepted_count: 8,
+    total_invited: 10,
+  },
+];
 
 const MOCK_HOST: User = {
   id: 'demo-host',
@@ -78,46 +104,46 @@ const MOCK_HOST: User = {
   no_shows: 0,
   created_at: new Date().toISOString(),
   updated_at: new Date().toISOString(),
-}
+};
 
 export default function HostDashboard() {
-  const [rooms, setRooms] = useState<RoomWithCounts[]>([])
-  const [loading, setLoading] = useState(true)
-  const [host, setHost] = useState<User | null>(null)
-  const [demoMode, setDemoMode] = useState(false)
+  const [rooms, setRooms] = useState<RoomWithCounts[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [host, setHost] = useState<User | null>(null);
+  const [demoMode, setDemoMode] = useState(false);
 
   useEffect(() => {
-    loadData()
-  }, [])
+    loadData();
+  }, []);
 
   async function loadData() {
     // Check if Supabase is configured
     if (!isSupabaseConfigured()) {
       // Use mock data for demo
-      setDemoMode(true)
-      setHost(MOCK_HOST)
-      setRooms(MOCK_ROOMS)
-      setLoading(false)
-      return
+      setDemoMode(true);
+      setHost(MOCK_HOST);
+      setRooms(MOCK_ROOMS);
+      setLoading(false);
+      return;
     }
 
     // Dynamic import to avoid build-time errors
-    const { createClient } = await import('@/lib/supabase/client')
-    const supabase = createClient()
+    const { createClient } = await import('@/lib/supabase/client');
+    const supabase = createClient();
 
     // For MVP, we'll use a simple phone-based lookup
     // In production, this would use proper auth
-    const storedPhone = localStorage.getItem('sms_host_phone')
+    const storedPhone = localStorage.getItem('sms_host_phone');
 
     if (storedPhone) {
       const { data: user } = await supabase
         .from('users')
         .select('*')
         .eq('phone', storedPhone)
-        .single()
+        .single();
 
       if (user) {
-        setHost(user)
+        setHost(user);
 
         // Get rooms with invitation counts
         const { data: roomsData } = await supabase
@@ -130,163 +156,174 @@ export default function HostDashboard() {
             )
           `)
           .eq('host_id', user.id)
-          .order('date', { ascending: true })
+          .order('date', { ascending: true });
 
         if (roomsData) {
           const roomsWithCounts = roomsData.map((room: Room & { invitations: { id: string; status: string }[] }) => ({
             ...room,
             accepted_count: room.invitations?.filter((i: { status: string }) => i.status === 'accepted').length || 0,
             total_invited: room.invitations?.length || 0,
-          }))
-          setRooms(roomsWithCounts)
+          }));
+          setRooms(roomsWithCounts);
         }
       }
     }
 
-    setLoading(false)
+    setLoading(false);
   }
 
-  const getStatusColor = (status: Room['status']) => {
-    switch (status) {
-      case 'draft':
-        return 'bg-zinc-700'
-      case 'open':
-        return 'bg-green-700'
-      case 'full':
-        return 'bg-blue-700'
-      case 'confirmed':
-        return 'bg-purple-700'
-      case 'completed':
-        return 'bg-zinc-600'
-      case 'canceled':
-        return 'bg-red-700'
-      default:
-        return 'bg-zinc-700'
-    }
-  }
+  // Calculate stats
+  const totalGuests = rooms.reduce((sum, r) => sum + r.accepted_count, 0);
+  const upcomingRooms = rooms.filter(r => r.status === 'open' || r.status === 'confirmed').length;
+  const totalRevenue = rooms.reduce((sum, r) => sum + (r.accepted_count * r.price_cents), 0);
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-black text-white flex items-center justify-center">
-        <div className="text-xl opacity-60">Loading...</div>
+      <div className="min-h-screen bg-[var(--bg-base)] flex items-center justify-center">
+        <div className="text-[var(--text-secondary)]">Loading...</div>
       </div>
-    )
+    );
   }
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-[var(--bg-base)]">
+      <Header />
+
       {/* Demo Mode Banner */}
       {demoMode && (
-        <div className="bg-amber-500/20 border-b border-amber-500/40 px-6 py-3 text-center text-amber-200 text-sm">
-          Demo Mode — Supabase not configured. Showing sample data.
+        <div className="bg-[var(--warning-muted)] border-b border-[var(--warning-border)] px-6 py-3 text-center text-[var(--warning-text)] text-[var(--text-sm)]">
+          Demo Mode - Supabase not configured
         </div>
       )}
 
-      {/* Header */}
-      <header className="border-b border-white/10 p-6">
-        <div className="max-w-4xl mx-auto flex justify-between items-center">
+      <PageContainer size="lg" className="py-8">
+        {/* Welcome & Quick Action */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
           <div>
-            <Link href="/" className="font-bold italic text-xl tracking-tight">
-              SMS
-            </Link>
-            <span className="text-white/40 ml-4">Host Dashboard</span>
+            <h1 className="text-[var(--text-2xl)] font-bold text-[var(--text-primary)]">
+              {host ? `Welcome back, ${host.name || 'Host'}` : 'Host Hub'}
+            </h1>
+            <p className="text-[var(--text-sm)] text-[var(--text-secondary)] mt-1">
+              Manage your rooms and guests
+            </p>
           </div>
-          {host && (
-            <div className="text-sm text-white/60">
-              {host.name || host.phone}
-            </div>
-          )}
-        </div>
-      </header>
-
-      <main className="max-w-4xl mx-auto p-6">
-        {/* Quick Actions */}
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-2xl font-semibold">Your Rooms</h1>
-          <Link
-            href="/host/rooms/new"
-            className="px-6 py-3 bg-white text-black font-medium hover:bg-white/90 transition-colors"
-          >
-            + Create Room
+          <Link href="/host/rooms/new">
+            <Button variant="primary" size="lg">
+              <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+              </svg>
+              Create Room
+            </Button>
           </Link>
         </div>
 
-        {/* Room List */}
-        {rooms.length === 0 ? (
-          <div className="border border-white/20 rounded-lg p-12 text-center">
-            <h2 className="text-xl mb-2">No rooms yet</h2>
-            <p className="text-white/60 mb-6">
-              Create your first room to start hosting strangers.
-            </p>
-            <Link
-              href="/host/rooms/new"
-              className="inline-block px-6 py-3 bg-white text-black font-medium hover:bg-white/90 transition-colors"
-            >
-              Create Your First Room
-            </Link>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {rooms.map((room) => (
-              <Link
-                key={room.id}
-                href={`/host/rooms/${room.id}`}
-                className="block border border-white/20 rounded-lg p-6 hover:border-white/40 transition-colors"
-              >
-                <div className="flex justify-between items-start mb-4">
-                  <div>
-                    <h3 className="text-xl font-medium mb-1">{room.name}</h3>
-                    <p className="text-white/60">
-                      {new Date(room.date).toLocaleDateString('en-US', {
-                        weekday: 'short',
-                        month: 'short',
-                        day: 'numeric',
-                      })}{' '}
-                      at {room.time}
-                    </p>
-                  </div>
-                  <span
-                    className={`px-3 py-1 text-xs uppercase tracking-wide rounded ${getStatusColor(
-                      room.status
-                    )}`}
-                  >
-                    {room.status}
-                  </span>
-                </div>
+        {/* Stats Overview */}
+        <StatsGrid
+          stats={[
+            {
+              label: 'Total Rooms',
+              value: rooms.length,
+              icon: (
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
+                </svg>
+              ),
+            },
+            {
+              label: 'Upcoming',
+              value: upcomingRooms,
+              icon: (
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+                </svg>
+              ),
+              variant: 'highlight',
+            },
+            {
+              label: 'Total Guests',
+              value: totalGuests,
+              icon: (
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
+                </svg>
+              ),
+            },
+            {
+              label: 'Revenue',
+              value: `$${(totalRevenue / 100).toFixed(0)}`,
+              icon: (
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              ),
+              variant: 'warning',
+            },
+          ]}
+          className="mb-8"
+        />
 
-                <div className="flex gap-6 text-sm text-white/60">
-                  <span>
-                    {room.accepted_count} / {room.capacity} confirmed
-                  </span>
-                  <span>{room.total_invited} invited</span>
-                  <span>${(room.price_cents / 100).toFixed(0)}</span>
-                  <span className="capitalize">{room.tone}</span>
-                </div>
-              </Link>
+        {/* Room List */}
+        <div className="mb-6">
+          <h2 className="text-[var(--text-lg)] font-semibold text-[var(--text-primary)] mb-4">
+            Your Rooms
+          </h2>
+        </div>
+
+        {rooms.length === 0 ? (
+          <EmptyState
+            icon={
+              <svg className="w-12 h-12" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
+              </svg>
+            }
+            title="No rooms yet"
+            description="Create your first room to start hosting strangers."
+            action={{
+              label: 'Create Your First Room',
+              href: '/host/rooms/new',
+              variant: 'primary',
+            }}
+          />
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {rooms.map((room) => (
+              <RoomCard
+                key={room.id}
+                id={room.id}
+                title={room.name}
+                tone={room.tone as RoomTone}
+                date={room.date}
+                time={room.time}
+                location={room.location_hint || undefined}
+                capacity={room.capacity}
+                guestCount={room.accepted_count}
+                hostName={host?.name || 'You'}
+                href={`/host/rooms/${room.id}`}
+                isLive={room.status === 'confirmed'}
+              />
             ))}
           </div>
         )}
 
         {/* Host Onboarding (if new) */}
         {!host && (
-          <div className="mt-12 border border-amber-200/30 rounded-lg p-8 bg-amber-200/5">
-            <h2 className="text-xl font-semibold mb-4 text-amber-200">
+          <Card className="mt-12 p-8 border-l-4 border-l-[var(--warning)]">
+            <h2 className="text-[var(--text-xl)] font-semibold mb-4 text-[var(--warning-text)]">
               Become a Host
             </h2>
-            <p className="text-white/70 mb-6">
+            <p className="text-[var(--text-secondary)] mb-6">
               To create rooms, you'll need to complete host onboarding.
               This includes reading the philosophy doc and understanding
               what it means to carry the SMS brand.
             </p>
-            <Link
-              href="/host/onboarding"
-              className="inline-block px-6 py-3 border border-amber-200/60 text-amber-200 hover:bg-amber-200/10 transition-colors"
-            >
-              Start Onboarding
+            <Link href="/host/onboarding">
+              <Button variant="secondary">
+                Start Onboarding
+              </Button>
             </Link>
-          </div>
+          </Card>
         )}
-      </main>
+      </PageContainer>
     </div>
-  )
+  );
 }

@@ -61,6 +61,7 @@ export {
   ActionCardGrid,
   type ActionCardProps,
   type ActionCardGridProps,
+  type ActionCardColor,
 } from './action-card';
 
 // Countdown Components
@@ -70,3 +71,10 @@ export {
   type CountdownBadgeProps,
   type CountdownDisplayProps,
 } from './countdown-badge';
+
+// Invite Components
+export {
+  InviteModal,
+  type InviteModalProps,
+  type InviteRecipient,
+} from './invite-modal';
