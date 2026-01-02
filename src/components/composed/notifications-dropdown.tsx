@@ -132,7 +132,7 @@ export function NotificationsDropdown({
 
       <DropdownContent align="end" className="w-[380px] p-0 max-h-[480px] overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-[var(--border-subtle)]">
+        <div className="flex-shrink-0 flex items-center justify-between p-4 border-b border-[var(--border-subtle)]">
           <h3 className="text-[var(--text-base)] font-semibold text-[var(--text-primary)]">
             Notifications
           </h3>
@@ -250,7 +250,7 @@ export function NotificationsDropdown({
 
         {/* Footer */}
         {notifications.length > 0 && (
-          <div className="p-3 border-t border-[var(--border-subtle)] bg-[var(--bg-elevated)]">
+          <div className="flex-shrink-0 p-3 border-t border-[var(--border-subtle)] bg-[var(--bg-elevated)]">
             <button
               type="button"
               onClick={() => {
