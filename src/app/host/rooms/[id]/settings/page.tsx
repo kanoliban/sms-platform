@@ -14,7 +14,8 @@ import {
   TabsList,
   TabsTrigger,
 } from '@/components/ui';
-import { PageContainer, Header } from '@/components/layout';
+import { PageContainer } from '@/components/layout';
+import { AppHeader } from '@/components/composed';
 
 type RoomTone = 'chill' | 'playful' | 'deep' | 'intense';
 
@@ -236,7 +237,7 @@ export default function RoomSettingsPage() {
 
   return (
     <div className="min-h-screen bg-[var(--bg-base)]">
-      <Header />
+      <AppHeader />
 
       {/* Demo Banner */}
       {demoMode && (

@@ -78,3 +78,44 @@ export {
   type InviteModalProps,
   type InviteRecipient,
 } from './invite-modal';
+
+// Share Components
+export {
+  ShareRoomModal,
+  type ShareRoomModalProps,
+} from './share-room-modal';
+
+// Contact Components
+export {
+  ContactHostModal,
+  type ContactHostModalProps,
+} from './contact-host-modal';
+
+// Report Components
+export {
+  ReportRoomModal,
+  type ReportRoomModalProps,
+} from './report-room-modal';
+
+// Guest Detail Components
+export {
+  GuestDetailSlideOver,
+  type GuestDetailSlideOverProps,
+  type GuestDetail,
+  type GuestTag,
+  type TagColor,
+} from './guest-detail-slide-over';
+
+// Notification Components
+export {
+  NotificationsDropdown,
+  type NotificationsDropdownProps,
+  type Notification,
+  type NotificationType,
+} from './notifications-dropdown';
+
+// App Header (Header + Notifications)
+export {
+  AppHeader,
+  type AppHeaderProps,
+} from './app-header';

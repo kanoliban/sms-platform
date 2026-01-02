@@ -20,6 +20,8 @@ import {
   CountdownBadge,
   StatsCard,
   StatsGrid,
+  ContactHostModal,
+  ReportRoomModal,
 } from '@/components/composed';
 
 type RoomTone = 'chill' | 'playful' | 'deep' | 'intense';
@@ -104,6 +106,8 @@ export default function PublicRoomPage() {
   const [loading, setLoading] = useState(true);
   const [demoMode, setDemoMode] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [showContactModal, setShowContactModal] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
 
   useEffect(() => {
     loadRoom();
@@ -283,11 +287,17 @@ export default function PublicRoomPage() {
 
       {/* Footer Links */}
       <div className="flex gap-4 text-[var(--text-sm)]">
-        <button className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">
+        <button
+          onClick={() => setShowContactModal(true)}
+          className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+        >
           Contact Host
         </button>
         <span className="text-[var(--border-default)]">|</span>
-        <button className="text-[var(--text-secondary)] hover:text-[var(--error-text)] transition-colors">
+        <button
+          onClick={() => setShowReportModal(true)}
+          className="text-[var(--text-secondary)] hover:text-[var(--error-text)] transition-colors"
+        >
           Report Room
         </button>
       </div>
@@ -524,10 +534,41 @@ export default function PublicRoomPage() {
         <PageContainer>
           <div className="flex justify-between items-center text-[var(--text-sm)] text-[var(--text-muted)]">
             <Link href="/" className="font-bold italic hover:text-[var(--text-secondary)] transition-colors">SMS</Link>
-            <span>Strangers Meeting Strangers</span>
+            <div className="flex items-center gap-4">
+              <Link href="/help" className="hover:text-[var(--text-secondary)] transition-colors">Help</Link>
+              <span>Strangers Meeting Strangers</span>
+            </div>
           </div>
         </PageContainer>
       </footer>
+
+      {/* Contact Host Modal */}
+      <ContactHostModal
+        open={showContactModal}
+        onClose={() => setShowContactModal(false)}
+        host={{
+          name: room.host?.name || 'Host',
+        }}
+        roomName={room.name}
+        onSubmit={async (message) => {
+          // In a real app, this would send the message via API
+          console.log('Contact host message:', message);
+          await new Promise((r) => setTimeout(r, 1000));
+        }}
+      />
+
+      {/* Report Room Modal */}
+      <ReportRoomModal
+        open={showReportModal}
+        onClose={() => setShowReportModal(false)}
+        roomId={roomId}
+        roomName={room.name}
+        onSubmit={async (reason, category) => {
+          // In a real app, this would submit the report via API
+          console.log('Report:', { reason, category });
+          await new Promise((r) => setTimeout(r, 1000));
+        }}
+      />
     </div>
   );
 }

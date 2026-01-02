@@ -4,8 +4,8 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import type { Room, User } from '@/lib/supabase/types';
 import { Button, Card } from '@/components/ui';
-import { PageContainer, Header } from '@/components/layout';
-import { RoomCard, StatsGrid, EmptyState } from '@/components/composed';
+import { PageContainer } from '@/components/layout';
+import { RoomCard, StatsGrid, EmptyState, AppHeader } from '@/components/composed';
 
 type RoomTone = 'chill' | 'playful' | 'deep' | 'intense';
 
@@ -187,7 +187,7 @@ export default function HostDashboard() {
 
   return (
     <div className="min-h-screen bg-[var(--bg-base)]">
-      <Header />
+      <AppHeader />
 
       {/* Demo Mode Banner */}
       {demoMode && (

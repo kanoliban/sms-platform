@@ -13,8 +13,8 @@ import {
   TabsList,
   TabsTrigger,
 } from '@/components/ui';
-import { PageContainer, Header } from '@/components/layout';
-import { EmptyState } from '@/components/composed';
+import { PageContainer } from '@/components/layout';
+import { EmptyState, AppHeader } from '@/components/composed';
 import { useToast } from '@/components/ui/toast';
 
 type RecipientFilter = 'all' | 'confirmed' | 'invited';
@@ -252,7 +252,7 @@ export default function BlastsPage() {
   if (!room) {
     return (
       <div className="min-h-screen bg-[var(--bg-base)]">
-        <Header />
+        <AppHeader />
         <PageContainer size="md" className="py-12">
           <EmptyState
             icon={
@@ -275,7 +275,7 @@ export default function BlastsPage() {
 
   return (
     <div className="min-h-screen bg-[var(--bg-base)]">
-      <Header />
+      <AppHeader />
 
       {/* Demo Mode Banner */}
       {demoMode && (

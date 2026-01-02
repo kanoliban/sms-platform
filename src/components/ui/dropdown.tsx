@@ -1,12 +1,14 @@
 'use client';
 
-import {
+import React, {
   createContext,
   useContext,
   useState,
   useRef,
   useEffect,
   useCallback,
+  isValidElement,
+  cloneElement,
   type ReactNode,
   type HTMLAttributes,
   type ButtonHTMLAttributes,
@@ -104,9 +106,39 @@ export interface DropdownTriggerProps extends ButtonHTMLAttributes<HTMLButtonEle
 export function DropdownTrigger({
   className = '',
   children,
+  asChild = false,
   ...props
 }: DropdownTriggerProps) {
   const { open, setOpen, triggerRef } = useDropdownContext();
+
+  const handleClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    setOpen(!open);
+  }, [open, setOpen]);
+
+  // If asChild is true, clone the child and add trigger props
+  if (asChild && isValidElement(children)) {
+    const child = children as React.ReactElement<{
+      onClick?: (e: React.MouseEvent) => void;
+      className?: string;
+    }>;
+
+    return cloneElement(child, {
+      ref: (node: HTMLButtonElement | null) => {
+        // Assign to our ref
+        (triggerRef as React.MutableRefObject<HTMLButtonElement | null>).current = node;
+      },
+      'aria-haspopup': 'menu' as const,
+      'aria-expanded': open,
+      onClick: (e: React.MouseEvent) => {
+        handleClick(e);
+        // Call original onClick if it exists
+        if (child.props.onClick) {
+          child.props.onClick(e);
+        }
+      },
+    });
+  }
 
   return (
     <button
@@ -114,7 +146,7 @@ export function DropdownTrigger({
       type="button"
       aria-haspopup="menu"
       aria-expanded={open}
-      onClick={() => setOpen(!open)}
+      onClick={handleClick}
       className={className}
       {...props}
     >

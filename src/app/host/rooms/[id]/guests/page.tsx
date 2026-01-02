@@ -20,6 +20,8 @@ import {
   GuestRow,
   ActionCard,
   NoGuestsEmptyState,
+  GuestDetailSlideOver,
+  type GuestDetail,
 } from '@/components/composed';
 
 type RoomTone = 'chill' | 'playful' | 'deep' | 'intense';
@@ -149,6 +151,8 @@ export default function GuestListPage() {
   const [filter, setFilter] = useState<FilterOption>('all');
   const [sort, setSort] = useState<SortOption>('recent');
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedGuest, setSelectedGuest] = useState<GuestDetail | null>(null);
+  const [showGuestDetail, setShowGuestDetail] = useState(false);
 
   useEffect(() => {
     loadRoom();
@@ -255,6 +259,38 @@ export default function GuestListPage() {
     if (days > 0) return `${days}d ago`;
     if (hours > 0) return `${hours}h ago`;
     return 'Just now';
+  }
+
+  // Convert invitation to GuestDetail for slide-over
+  function invitationToGuestDetail(inv: InvitationWithUser): GuestDetail {
+    return {
+      id: inv.id,
+      name: inv.user?.name || inv.user?.phone || 'Unknown',
+      email: `${inv.user?.phone?.replace(/\D/g, '')}@sms.app`, // Placeholder email
+      phone: inv.user?.phone,
+      status: mapStatus(inv.status),
+      joinedAt: inv.created_at,
+      roomsAttended: Math.floor(Math.random() * 5) + 1, // Demo data
+      checkIns: Math.floor(Math.random() * 3) + 1, // Demo data
+      totalPaid: inv.amount_cents ? inv.amount_cents / 100 : 0,
+      tags: [],
+    };
+  }
+
+  // Handle guest row click
+  function handleGuestClick(inv: InvitationWithUser) {
+    setSelectedGuest(invitationToGuestDetail(inv));
+    setShowGuestDetail(true);
+  }
+
+  // Navigate between guests
+  function handleNavigateGuest(direction: 'prev' | 'next') {
+    if (!selectedGuest) return;
+    const currentIndex = sortedInvitations.findIndex(inv => inv.id === selectedGuest.id);
+    const newIndex = direction === 'prev' ? currentIndex - 1 : currentIndex + 1;
+    if (newIndex >= 0 && newIndex < sortedInvitations.length) {
+      setSelectedGuest(invitationToGuestDetail(sortedInvitations[newIndex]));
+    }
   }
 
   if (loading) {
@@ -452,13 +488,18 @@ export default function GuestListPage() {
             ) : (
               <div>
                 {sortedInvitations.map((invitation) => (
-                  <GuestRow
+                  <div
                     key={invitation.id}
-                    name={invitation.user?.name || invitation.user?.phone || 'Unknown'}
-                    phone={invitation.user?.phone || ''}
-                    status={mapStatus(invitation.status)}
-                    invitedAt={formatRelativeTime(invitation.created_at)}
-                  />
+                    onClick={() => handleGuestClick(invitation)}
+                    className="cursor-pointer hover:bg-[var(--bg-surface-hover)] transition-colors"
+                  >
+                    <GuestRow
+                      name={invitation.user?.name || invitation.user?.phone || 'Unknown'}
+                      phone={invitation.user?.phone || ''}
+                      status={mapStatus(invitation.status)}
+                      invitedAt={formatRelativeTime(invitation.created_at)}
+                    />
+                  </div>
                 ))}
               </div>
             )}
@@ -474,6 +515,16 @@ export default function GuestListPage() {
           </Card>
         </div>
       </PageContainer>
+
+      {/* Guest Detail Slide-Over */}
+      <GuestDetailSlideOver
+        open={showGuestDetail}
+        onClose={() => setShowGuestDetail(false)}
+        guest={selectedGuest}
+        onNavigate={handleNavigateGuest}
+        hasPrev={selectedGuest ? sortedInvitations.findIndex(inv => inv.id === selectedGuest.id) > 0 : false}
+        hasNext={selectedGuest ? sortedInvitations.findIndex(inv => inv.id === selectedGuest.id) < sortedInvitations.length - 1 : false}
+      />
     </div>
   );
 }

@@ -13,8 +13,8 @@ import {
   TabsList,
   TabsTrigger,
 } from '@/components/ui';
-import { PageContainer, Header } from '@/components/layout';
-import { EmptyState } from '@/components/composed';
+import { PageContainer } from '@/components/layout';
+import { EmptyState, AppHeader } from '@/components/composed';
 
 type RoomTone = 'chill' | 'playful' | 'deep' | 'intense';
 
@@ -305,7 +305,7 @@ export default function ApprovalsPage() {
 
   return (
     <div className="min-h-screen bg-[var(--bg-base)]">
-      <Header />
+      <AppHeader />
 
       {/* Demo Banner */}
       {demoMode && (

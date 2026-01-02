@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { Client } from '@notionhq/client'
+import { sendWelcomeEmail } from '@/lib/email'
 
 const notion = new Client({
   auth: process.env.NOTION_API_KEY,
@@ -83,6 +84,11 @@ export async function POST(request: NextRequest) {
         },
       })
     }
+
+    // Send welcome email (don't block on failure)
+    sendWelcomeEmail(email, name, type).catch((err) => {
+      console.error('Failed to send welcome email:', err)
+    })
 
     return NextResponse.json({ success: true }, { status: 201 })
   } catch (error) {

@@ -88,3 +88,7 @@ export {
   DateTimePicker,
   type DateTimePickerProps,
 } from './date-time-picker';
+export {
+  EmojiRating,
+  type EmojiRatingProps,
+} from './emoji-rating';

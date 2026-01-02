@@ -23,6 +23,7 @@ import {
   GuestRow,
   EmptyState,
   NoGuestsEmptyState,
+  ShareRoomModal,
 } from '@/components/composed';
 
 type RoomTone = 'chill' | 'playful' | 'deep' | 'intense';
@@ -146,6 +147,7 @@ export default function HostDashboard() {
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [showQR, setShowQR] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
 
   useEffect(() => {
     loadRoom();
@@ -354,9 +356,11 @@ export default function HostDashboard() {
   }[room.status] || 'default' as const;
 
   // Tab content
-  const tabs = [
+  type TabItem = { id: string; label: string; href?: string };
+  const tabs: TabItem[] = [
     { id: 'overview', label: 'Overview' },
     { id: 'guests', label: `Guests (${invitations.length})` },
+    { id: 'insights', label: 'Insights', href: `/host/rooms/${roomId}/insights` },
     { id: 'checkin', label: 'Check-In' },
     { id: 'settings', label: 'Settings' },
   ];
@@ -448,9 +452,17 @@ export default function HostDashboard() {
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList variant="underline">
               {tabs.map((tab) => (
-                <TabsTrigger key={tab.id} value={tab.id}>
-                  {tab.label}
-                </TabsTrigger>
+                tab.href ? (
+                  <Link key={tab.id} href={tab.href}>
+                    <TabsTrigger value={tab.id}>
+                      {tab.label}
+                    </TabsTrigger>
+                  </Link>
+                ) : (
+                  <TabsTrigger key={tab.id} value={tab.id}>
+                    {tab.label}
+                  </TabsTrigger>
+                )
               ))}
             </TabsList>
           </Tabs>
@@ -572,7 +584,7 @@ export default function HostDashboard() {
                   <Button
                     variant="ghost"
                     fullWidth
-                    onClick={copyLink}
+                    onClick={() => setShowShareModal(true)}
                   >
                     <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
@@ -794,6 +806,17 @@ Cancel 48+ hours before: no charge.`}
           </div>
         )}
       </PageContainer>
+
+      {/* Share Room Modal */}
+      <ShareRoomModal
+        open={showShareModal}
+        onClose={() => setShowShareModal(false)}
+        room={{
+          id: roomId,
+          name: room.name,
+          url: typeof window !== 'undefined' ? `${window.location.origin}/rooms/${roomId}` : `/rooms/${roomId}`,
+        }}
+      />
     </div>
   );
 }
