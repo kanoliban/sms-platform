@@ -1,6 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import type { User, UserIntent, TonePreference } from '@/lib/supabase/types';
 import {
   Button,
@@ -11,9 +13,31 @@ import {
   Badge,
   Progress,
 } from '@/components/ui';
-import { PageContainer, Header } from '@/components/layout';
-import { StatsGrid } from '@/components/composed';
+import { PageContainer } from '@/components/layout';
+import { UserMenu, LoginModal, NotificationsDropdown, type Notification } from '@/components/composed';
 import { useToast } from '@/components/ui/toast';
+import { useAuth } from '@/lib/auth/auth-context';
+
+// Demo notifications for profile
+const DEMO_NOTIFICATIONS: Notification[] = [
+  {
+    id: '1',
+    type: 'update',
+    title: 'Profile Complete',
+    message: 'Your profile is 80% complete. Add a bio to reach 100%!',
+    timestamp: '1d ago',
+    read: false,
+  },
+  {
+    id: '2',
+    type: 'invite_accepted',
+    title: 'New Connection',
+    message: 'You met 5 new people at Dinner & Deep Talks',
+    timestamp: '3d ago',
+    read: true,
+    room: { id: 'room-1', name: 'Dinner & Deep Talks' },
+  },
+];
 
 // Check if Supabase is configured
 const isSupabaseConfigured = () => {
@@ -56,11 +80,34 @@ const TONE_OPTIONS: { value: TonePreference; label: string; description: string 
 ];
 
 export default function ProfilePage() {
+  const router = useRouter();
   const { addToast } = useToast();
+  const { user: authUser, loading: authLoading } = useAuth();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [demoMode, setDemoMode] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+
+  // Notifications state
+  const [notifications, setNotifications] = useState<Notification[]>(DEMO_NOTIFICATIONS);
+  const unreadCount = notifications.filter(n => !n.read).length;
+
+  // Notification handlers
+  const handleMarkAllRead = useCallback(() => {
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+  }, []);
+
+  const handleMarkRead = useCallback((id: string) => {
+    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+  }, []);
+
+  const handleNotificationClick = useCallback((notification: Notification) => {
+    handleMarkRead(notification.id);
+    if (notification.room?.id) {
+      router.push(`/rooms/${notification.room.id}`);
+    }
+  }, [handleMarkRead, router]);
 
   // Editable fields
   const [name, setName] = useState('');
@@ -69,37 +116,41 @@ export default function ProfilePage() {
   const [tonePreference, setTonePreference] = useState<TonePreference | null>(null);
 
   useEffect(() => {
-    loadProfile();
-  }, []);
+    if (!authLoading) {
+      loadProfile();
+    }
+  }, [authUser, authLoading]);
 
   async function loadProfile() {
-    if (!isSupabaseConfigured()) {
-      setDemoMode(true);
-      setUser(MOCK_USER);
-      setName(MOCK_USER.name || '');
-      setIntent(MOCK_USER.intent);
-      setTonePreference(MOCK_USER.tone_preference);
+    // No authenticated user
+    if (!authUser) {
+      // Check for demo mode
+      if (!isSupabaseConfigured()) {
+        setDemoMode(true);
+        setUser(MOCK_USER);
+        setName(MOCK_USER.name || '');
+        setIntent(MOCK_USER.intent);
+        setTonePreference(MOCK_USER.tone_preference);
+      }
       setLoading(false);
       return;
     }
 
+    // Load user profile using auth context user
     const { createClient } = await import('@/lib/supabase/client');
     const supabase = createClient();
 
-    const storedPhone = localStorage.getItem('sms_user_phone');
-    if (storedPhone) {
-      const { data: userData } = await supabase
-        .from('users')
-        .select('*')
-        .eq('phone', storedPhone)
-        .single();
+    const { data: userData } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', authUser.id)
+      .single();
 
-      if (userData) {
-        setUser(userData);
-        setName(userData.name || '');
-        setIntent(userData.intent);
-        setTonePreference(userData.tone_preference);
-      }
+    if (userData) {
+      setUser(userData);
+      setName(userData.name || '');
+      setIntent(userData.intent);
+      setTonePreference(userData.tone_preference);
     }
 
     setLoading(false);
@@ -181,30 +232,98 @@ export default function ProfilePage() {
     );
   }
 
-  if (!user) {
+  // Not authenticated and not in demo mode - show sign in prompt
+  if (!user && !demoMode) {
     return (
       <div className="min-h-screen bg-[var(--bg-base)]">
-        <Header />
+        {/* Header */}
+        <header className="sticky top-0 z-[var(--z-header)] bg-[var(--bg-base)]/80 backdrop-blur-md border-b border-[var(--border-subtle)]">
+          <PageContainer>
+            <div className="flex justify-between items-center h-16">
+              <Link href="/" className="font-bold text-xl tracking-tight text-[var(--text-primary)] hover:opacity-80 transition-opacity">
+                SMS
+              </Link>
+              <div className="flex items-center gap-4">
+                <Link href="/discover" className="text-[var(--text-sm)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]">
+                  Discover
+                </Link>
+                <Button variant="primary" size="sm" onClick={() => setShowLoginModal(true)}>
+                  Sign In
+                </Button>
+              </div>
+            </div>
+          </PageContainer>
+        </header>
+
         <PageContainer size="md" className="py-12 text-center">
           <Card className="p-8">
+            <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-[var(--bg-subtle)] flex items-center justify-center">
+              <svg className="w-8 h-8 text-[var(--text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+              </svg>
+            </div>
             <h1 className="text-[var(--text-xl)] font-semibold text-[var(--text-primary)] mb-4">
               Sign in to view your profile
             </h1>
             <p className="text-[var(--text-secondary)] mb-6">
               Join SMS to start meeting strangers and attending rooms.
             </p>
-            <Button variant="primary" onClick={() => window.location.href = '/'}>
-              Get Started
+            <Button variant="primary" onClick={() => setShowLoginModal(true)}>
+              Sign In
             </Button>
           </Card>
         </PageContainer>
+
+        <LoginModal
+          open={showLoginModal}
+          onClose={() => setShowLoginModal(false)}
+          onSuccess={() => {
+            setShowLoginModal(false);
+            window.location.reload();
+          }}
+        />
       </div>
     );
   }
 
+  // TypeScript guard - user must exist at this point (either from auth or demo mode)
+  if (!user) {
+    return null;
+  }
+
   return (
     <div className="min-h-screen bg-[var(--bg-base)]">
-      <Header />
+      {/* Header with UserMenu */}
+      <header className="sticky top-0 z-[var(--z-header)] bg-[var(--bg-base)]/80 backdrop-blur-md border-b border-[var(--border-subtle)]">
+        <PageContainer>
+          <div className="flex justify-between items-center h-16">
+            <Link href="/" className="font-bold text-xl tracking-tight text-[var(--text-primary)] hover:opacity-80 transition-opacity">
+              SMS
+            </Link>
+            <nav className="hidden md:flex items-center gap-6">
+              <Link href="/discover" className="text-[var(--text-sm)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]">
+                Discover
+              </Link>
+              <Link href="/my-rooms" className="text-[var(--text-sm)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]">
+                My Rooms
+              </Link>
+              <Link href="/profile" className="text-[var(--text-sm)] text-[var(--text-primary)] font-medium">
+                Profile
+              </Link>
+            </nav>
+            <div className="flex items-center gap-3">
+              <NotificationsDropdown
+                notifications={notifications}
+                unreadCount={unreadCount}
+                onMarkAllRead={handleMarkAllRead}
+                onMarkRead={handleMarkRead}
+                onNotificationClick={handleNotificationClick}
+              />
+              <UserMenu />
+            </div>
+          </div>
+        </PageContainer>
+      </header>
 
       {/* Demo Mode Banner */}
       {demoMode && (
@@ -214,7 +333,7 @@ export default function ProfilePage() {
       )}
 
       <PageContainer size="md" className="py-8">
-        {/* Header */}
+        {/* Page Title */}
         <div className="mb-8">
           <h1 className="text-[var(--text-2xl)] font-bold text-[var(--text-primary)]">
             Profile

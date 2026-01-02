@@ -29,6 +29,7 @@ export interface NotificationsDropdownProps {
   onMarkAllRead?: () => void;
   onMarkRead?: (notificationId: string) => void;
   onNotificationClick?: (notification: Notification) => void;
+  onViewAll?: () => void;
 }
 
 const notificationIcons: Record<NotificationType, React.ReactNode> = {
@@ -79,6 +80,7 @@ export function NotificationsDropdown({
   onMarkAllRead,
   onMarkRead,
   onNotificationClick,
+  onViewAll,
 }: NotificationsDropdownProps) {
   const [open, setOpen] = useState(false);
 
@@ -130,7 +132,7 @@ export function NotificationsDropdown({
         </button>
       </DropdownTrigger>
 
-      <DropdownContent align="end" className="w-[380px] p-0 max-h-[480px] overflow-hidden flex flex-col">
+      <DropdownContent align="end" className="w-[380px] p-0 max-h-[480px] flex flex-col">
         {/* Header */}
         <div className="flex-shrink-0 flex items-center justify-between p-4 border-b border-[var(--border-subtle)]">
           <h3 className="text-[var(--text-base)] font-semibold text-[var(--text-primary)]">
@@ -152,7 +154,7 @@ export function NotificationsDropdown({
         </div>
 
         {/* Notification List */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 min-h-0 overflow-y-auto">
           {notifications.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 px-4">
               <div className="w-12 h-12 rounded-full bg-[var(--bg-subtle)] flex items-center justify-center mb-3">
@@ -255,11 +257,13 @@ export function NotificationsDropdown({
               type="button"
               onClick={() => {
                 setOpen(false);
+                onViewAll?.();
               }}
               className="
                 w-full text-center text-[var(--text-sm)]
                 text-[var(--primary)] hover:text-[var(--primary-light)]
                 transition-colors duration-[var(--duration-normal)]
+                py-1
               "
             >
               View all notifications

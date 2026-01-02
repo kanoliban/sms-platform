@@ -119,3 +119,14 @@ export {
   AppHeader,
   type AppHeaderProps,
 } from './app-header';
+
+// User Menu
+export {
+  UserMenu,
+} from './user-menu';
+
+// Login Modal
+export {
+  LoginModal,
+  type LoginModalProps,
+} from './login-modal';

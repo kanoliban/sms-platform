@@ -1,10 +1,44 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import type { Room } from '@/lib/supabase/types';
 import { Input, Card, Badge, Button } from '@/components/ui';
-import { PageContainer, Header } from '@/components/layout';
-import { RoomCard, EmptyState } from '@/components/composed';
+import { PageContainer } from '@/components/layout';
+import { RoomCard, EmptyState, UserMenu, LoginModal, NotificationsDropdown, type Notification } from '@/components/composed';
+import { useAuth } from '@/lib/auth/auth-context';
+
+// Demo notifications
+const DEMO_NOTIFICATIONS: Notification[] = [
+  {
+    id: '1',
+    type: 'reminder',
+    title: 'Room Tomorrow',
+    message: 'Dinner & Deep Talks is tomorrow at 7 PM',
+    timestamp: '2h ago',
+    read: false,
+    room: { id: 'demo-1', name: 'Dinner & Deep Talks' },
+  },
+  {
+    id: '2',
+    type: 'update',
+    title: 'Location Revealed',
+    message: 'The location for Game Night has been revealed! Check it out.',
+    timestamp: 'Yesterday',
+    read: false,
+    room: { id: 'demo-3', name: 'Game Night Strangers' },
+  },
+  {
+    id: '3',
+    type: 'invite_accepted',
+    title: 'You\'re in!',
+    message: 'Your request to join Strangers & Vinyl was approved',
+    timestamp: '3 days ago',
+    read: true,
+    room: { id: 'demo-2', name: 'Strangers & Vinyl' },
+  },
+];
 
 type RoomTone = 'chill' | 'playful' | 'deep' | 'intense';
 
@@ -157,9 +191,31 @@ const TONE_OPTIONS: { value: RoomTone | 'all'; label: string; color: string }[] 
 ];
 
 export default function DiscoverPage() {
+  const router = useRouter();
+  const { user, loading: authLoading } = useAuth();
   const [rooms, setRooms] = useState<RoomWithHost[]>([]);
   const [loading, setLoading] = useState(true);
   const [demoMode, setDemoMode] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+
+  // Notifications state
+  const [notifications, setNotifications] = useState<Notification[]>(DEMO_NOTIFICATIONS);
+  const unreadCount = notifications.filter(n => !n.read).length;
+
+  const handleMarkAllRead = useCallback(() => {
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+  }, []);
+
+  const handleMarkRead = useCallback((id: string) => {
+    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+  }, []);
+
+  const handleNotificationClick = useCallback((notification: Notification) => {
+    handleMarkRead(notification.id);
+    if (notification.room?.id) {
+      router.push(`/rooms/${notification.room.id}`);
+    }
+  }, [handleMarkRead, router]);
 
   // Filters
   const [searchQuery, setSearchQuery] = useState('');
@@ -260,7 +316,45 @@ export default function DiscoverPage() {
 
   return (
     <div className="min-h-screen bg-[var(--bg-base)]">
-      <Header />
+      {/* Header with UserMenu */}
+      <header className="sticky top-0 z-[var(--z-header)] bg-[var(--bg-base)]/80 backdrop-blur-md border-b border-[var(--border-subtle)]">
+        <PageContainer>
+          <div className="flex justify-between items-center h-16">
+            <Link href="/" className="font-bold text-xl tracking-tight text-[var(--text-primary)] hover:opacity-80 transition-opacity">
+              SMS
+            </Link>
+            <nav className="hidden md:flex items-center gap-6">
+              <Link href="/discover" className="text-[var(--text-sm)] text-[var(--text-primary)] font-medium">
+                Discover
+              </Link>
+              <Link href="/my-rooms" className="text-[var(--text-sm)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]">
+                My Rooms
+              </Link>
+              <Link href="/profile" className="text-[var(--text-sm)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]">
+                Profile
+              </Link>
+            </nav>
+            <div className="flex items-center gap-3">
+              {user && (
+                <NotificationsDropdown
+                  notifications={notifications}
+                  unreadCount={unreadCount}
+                  onMarkAllRead={handleMarkAllRead}
+                  onMarkRead={handleMarkRead}
+                  onNotificationClick={handleNotificationClick}
+                />
+              )}
+              {user ? (
+                <UserMenu />
+              ) : (
+                <Button variant="primary" size="sm" onClick={() => setShowLoginModal(true)}>
+                  Sign In
+                </Button>
+              )}
+            </div>
+          </div>
+        </PageContainer>
+      </header>
 
       {/* Demo Mode Banner */}
       {demoMode && (
@@ -431,6 +525,16 @@ export default function DiscoverPage() {
           </Card>
         </div>
       </PageContainer>
+
+      {/* Login Modal */}
+      <LoginModal
+        open={showLoginModal}
+        onClose={() => setShowLoginModal(false)}
+        onSuccess={() => {
+          setShowLoginModal(false);
+          window.location.reload();
+        }}
+      />
     </div>
   );
 }

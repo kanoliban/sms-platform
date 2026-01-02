@@ -11,6 +11,7 @@ import {
   Avatar,
   AvatarStack,
 } from '@/components/ui';
+import { toast } from '@/components/ui/toast';
 import {
   TwoColumn,
   PageContainer,
@@ -22,7 +23,10 @@ import {
   StatsGrid,
   ContactHostModal,
   ReportRoomModal,
+  LoginModal,
+  UserMenu,
 } from '@/components/composed';
+import { useAuth } from '@/lib/auth/auth-context';
 
 type RoomTone = 'chill' | 'playful' | 'deep' | 'intense';
 
@@ -30,6 +34,14 @@ type RoomWithHost = Room & {
   host: Pick<User, 'id' | 'name'>;
   accepted_count: number;
   guests?: Array<{ name: string; avatar?: string }>;
+};
+
+type InvitationStatus = 'none' | 'pending' | 'sent' | 'accepted' | 'declined' | 'expired';
+
+type UserInvitation = {
+  id: string;
+  status: InvitationStatus;
+  amount_cents: number;
 };
 
 // Check if Supabase is configured
@@ -101,6 +113,7 @@ const toneConfig: Record<RoomTone, { label: string; description: string; gradien
 export default function PublicRoomPage() {
   const params = useParams();
   const roomId = params.id as string;
+  const { user, loading: authLoading } = useAuth();
 
   const [room, setRoom] = useState<RoomWithHost | null>(null);
   const [loading, setLoading] = useState(true);
@@ -108,10 +121,20 @@ export default function PublicRoomPage() {
   const [copied, setCopied] = useState(false);
   const [showContactModal, setShowContactModal] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [userInvitation, setUserInvitation] = useState<UserInvitation | null>(null);
+  const [rsvpLoading, setRsvpLoading] = useState(false);
 
   useEffect(() => {
     loadRoom();
   }, [roomId]);
+
+  // Load user's invitation status when user changes
+  useEffect(() => {
+    if (user && room && !demoMode) {
+      loadUserInvitation();
+    }
+  }, [user, room, demoMode]);
 
   async function loadRoom() {
     // Check for demo mode
@@ -156,6 +179,84 @@ export default function PublicRoomPage() {
     }
 
     setLoading(false);
+  }
+
+  async function loadUserInvitation() {
+    if (!user) return;
+
+    try {
+      const { createClient } = await import('@/lib/supabase/client');
+      const supabase = createClient();
+
+      const { data } = await supabase
+        .from('invitations')
+        .select('id, status, amount_cents')
+        .eq('room_id', roomId)
+        .eq('user_id', user.id)
+        .single();
+
+      if (data) {
+        setUserInvitation(data as UserInvitation);
+      }
+    } catch {
+      // No invitation found is fine
+      setUserInvitation(null);
+    }
+  }
+
+  async function handleRSVP() {
+    // If not logged in, show login modal
+    if (!user) {
+      setShowLoginModal(true);
+      return;
+    }
+
+    // Already accepted
+    if (userInvitation?.status === 'accepted') {
+      toast({
+        variant: 'info',
+        title: 'Already RSVP\'d',
+        description: 'You\'ve already confirmed your spot for this room.',
+      });
+      return;
+    }
+
+    setRsvpLoading(true);
+
+    try {
+      const response = await fetch('/api/rsvp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ room_id: roomId }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to process RSVP');
+      }
+
+      // Redirect to Stripe checkout
+      if (data.checkout_url) {
+        window.location.href = data.checkout_url;
+      }
+    } catch (err) {
+      toast({
+        variant: 'error',
+        title: 'RSVP Failed',
+        description: err instanceof Error ? err.message : 'Please try again.',
+      });
+      setRsvpLoading(false);
+    }
+  }
+
+  // Handle successful login from modal - continue with RSVP
+  function handleLoginSuccess() {
+    setShowLoginModal(false);
+    // Wait a moment for auth state to update, then trigger RSVP
+    setTimeout(() => {
+      handleRSVP();
+    }, 500);
   }
 
   // Generate calendar URLs
@@ -337,20 +438,97 @@ export default function PublicRoomPage() {
             </div>
           </div>
 
-          <div className="flex items-start gap-3">
-            <svg className="w-5 h-5 text-[var(--text-muted)] mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
-              <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
-            </svg>
-            <div>
-              <div className="text-[var(--text-sm)] font-medium text-[var(--text-primary)]">
-                {room.location_hint || 'Location TBA'}
-              </div>
-              <div className="text-[var(--text-xs)] text-[var(--text-muted)]">
-                Full address revealed 24h before
+          {/* Location - Show full address if revealed and user is accepted */}
+          {room.location_revealed && userInvitation?.status === 'accepted' ? (
+            <div className="flex items-start gap-3 p-3 -mx-3 rounded-[var(--radius-lg)] bg-[var(--success-muted)] border border-[var(--success-border)]">
+              <svg className="w-5 h-5 text-[var(--success-text)] mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
+              </svg>
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-[var(--text-xs)] font-medium text-[var(--success-text)] uppercase tracking-wide">Location Revealed</span>
+                </div>
+                <div className="text-[var(--text-sm)] font-medium text-[var(--text-primary)]">
+                  {room.location_address}
+                </div>
+                <div className="flex gap-3 mt-2">
+                  <a
+                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(room.location_address)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-[var(--text-xs)] text-[var(--primary)] hover:underline"
+                  >
+                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                    Google Maps
+                  </a>
+                  <a
+                    href={`http://maps.apple.com/?address=${encodeURIComponent(room.location_address)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-[var(--text-xs)] text-[var(--primary)] hover:underline"
+                  >
+                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                    Apple Maps
+                  </a>
+                </div>
               </div>
             </div>
-          </div>
+          ) : (
+            <div className="flex items-start gap-3">
+              <svg className="w-5 h-5 text-[var(--text-muted)] mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
+              </svg>
+              <div className="flex-1">
+                <div className="text-[var(--text-sm)] font-medium text-[var(--text-primary)]">
+                  {room.location_hint || 'Location TBA'}
+                </div>
+                {userInvitation?.status === 'accepted' ? (
+                  (() => {
+                    const revealTime = new Date(roomDate.getTime() - 24 * 60 * 60 * 1000);
+                    const now = new Date();
+                    const msUntilReveal = revealTime.getTime() - now.getTime();
+
+                    if (msUntilReveal <= 0) {
+                      // Should be revealed but isn't yet (cron hasn't run)
+                      return (
+                        <div className="text-[var(--text-xs)] text-[var(--warning-text)]">
+                          Location will be revealed shortly...
+                        </div>
+                      );
+                    }
+
+                    const hoursUntilReveal = Math.floor(msUntilReveal / (1000 * 60 * 60));
+                    const daysUntilReveal = Math.floor(hoursUntilReveal / 24);
+                    const remainingHours = hoursUntilReveal % 24;
+
+                    if (daysUntilReveal > 0) {
+                      return (
+                        <div className="text-[var(--text-xs)] text-[var(--text-muted)]">
+                          Location reveals in <span className="text-[var(--primary)] font-medium">{daysUntilReveal}d {remainingHours}h</span>
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <div className="text-[var(--text-xs)] text-[var(--primary)] font-medium">
+                        Location reveals in {hoursUntilReveal}h!
+                      </div>
+                    );
+                  })()
+                ) : (
+                  <div className="text-[var(--text-xs)] text-[var(--text-muted)]">
+                    Full address revealed 24h before
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Price */}
@@ -361,15 +539,66 @@ export default function PublicRoomPage() {
           </span>
         </div>
 
-        {/* How to Join */}
-        <div className="bg-[var(--bg-subtle)] rounded-[var(--radius-lg)] p-4 mb-6">
-          <h4 className="text-[var(--text-sm)] font-medium text-[var(--text-primary)] mb-2">How to join</h4>
-          <p className="text-[var(--text-sm)] text-[var(--text-secondary)]">
-            SMS rooms are invite-only. If you've received an invitation via text, reply{' '}
-            <code className="bg-[var(--bg-surface)] px-1.5 py-0.5 rounded text-[var(--primary)]">ACCEPT</code>
-            {' '}to confirm your spot.
+        {/* RSVP Button */}
+        {!isPast && spotsLeft > 0 && (
+          <div className="mb-6">
+            {userInvitation?.status === 'accepted' ? (
+              // Already confirmed
+              <div className="bg-[var(--success-muted)] rounded-[var(--radius-lg)] p-4 text-center">
+                <div className="flex items-center justify-center gap-2 text-[var(--success-text)] mb-2">
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span className="font-medium">You're going!</span>
+                </div>
+                <p className="text-[var(--text-sm)] text-[var(--text-secondary)]">
+                  We'll send the full address 24 hours before.
+                </p>
+              </div>
+            ) : userInvitation?.status === 'declined' ? (
+              // Declined
+              <div className="bg-[var(--bg-subtle)] rounded-[var(--radius-lg)] p-4 text-center">
+                <p className="text-[var(--text-sm)] text-[var(--text-secondary)]">
+                  You declined this invitation. Contact the host if you changed your mind.
+                </p>
+              </div>
+            ) : (
+              // Show RSVP button
+              <Button
+                variant="primary"
+                size="lg"
+                fullWidth
+                onClick={handleRSVP}
+                loading={rsvpLoading}
+                disabled={rsvpLoading || isPast || spotsLeft <= 0}
+              >
+                {rsvpLoading ? 'Processing...' : (
+                  userInvitation?.status === 'sent' || userInvitation?.status === 'pending'
+                    ? 'Accept Invitation'
+                    : user
+                      ? 'Request to Join'
+                      : 'Sign in to Join'
+                )}
+              </Button>
+            )}
+          </div>
+        )}
+
+        {/* Sold out or past event message */}
+        {(isPast || spotsLeft <= 0) && !userInvitation && (
+          <div className="bg-[var(--bg-subtle)] rounded-[var(--radius-lg)] p-4 mb-6 text-center">
+            <p className="text-[var(--text-sm)] text-[var(--text-secondary)]">
+              {isPast ? 'This event has ended.' : 'This room is full. Check back later for cancellations.'}
+            </p>
+          </div>
+        )}
+
+        {/* How payment works hint */}
+        {!isPast && spotsLeft > 0 && !userInvitation?.status && (
+          <p className="text-[var(--text-xs)] text-[var(--text-muted)] text-center mb-6">
+            Your card is authorized but only charged after you attend
           </p>
-        </div>
+        )}
 
         {/* Action Buttons */}
         <div className="flex gap-3">
@@ -469,6 +698,93 @@ export default function PublicRoomPage() {
         </div>
       </Card>
 
+      {/* Pre-event Preparation - Only shown for confirmed attendees */}
+      {userInvitation?.status === 'accepted' && !isPast && (
+        <Card className="p-5 border-[var(--primary)] border bg-gradient-to-br from-[var(--primary)]/5 to-transparent">
+          <div className="flex items-center gap-2 mb-4">
+            <svg className="w-5 h-5 text-[var(--primary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 01-1.043 3.296 3.745 3.745 0 01-3.296 1.043A3.745 3.745 0 0112 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 01-3.296-1.043 3.745 3.745 0 01-1.043-3.296A3.745 3.745 0 013 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 011.043-3.296 3.746 3.746 0 013.296-1.043A3.746 3.746 0 0112 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 013.296 1.043 3.746 3.746 0 011.043 3.296A3.745 3.745 0 0121 12z" />
+            </svg>
+            <h3 className="text-[var(--text-sm)] font-medium text-[var(--primary)]">Prepare for Your Room</h3>
+          </div>
+
+          <div className="space-y-4">
+            {/* Arrival tips */}
+            <div className="flex gap-3">
+              <div className="w-8 h-8 rounded-full bg-[var(--bg-subtle)] flex items-center justify-center flex-shrink-0">
+                <svg className="w-4 h-4 text-[var(--text-secondary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div>
+                <h4 className="text-[var(--text-sm)] font-medium text-[var(--text-primary)]">Arrive 5-10 minutes early</h4>
+                <p className="text-[var(--text-xs)] text-[var(--text-muted)]">Get settled before introductions begin. The host will greet you at the door.</p>
+              </div>
+            </div>
+
+            {/* What to bring */}
+            <div className="flex gap-3">
+              <div className="w-8 h-8 rounded-full bg-[var(--bg-subtle)] flex items-center justify-center flex-shrink-0">
+                <svg className="w-4 h-4 text-[var(--text-secondary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+                </svg>
+              </div>
+              <div>
+                <h4 className="text-[var(--text-sm)] font-medium text-[var(--text-primary)]">What to bring</h4>
+                <p className="text-[var(--text-xs)] text-[var(--text-muted)]">Just yourself and an open mind. Dress casually and comfortably—no need to impress.</p>
+              </div>
+            </div>
+
+            {/* Mindset */}
+            <div className="flex gap-3">
+              <div className="w-8 h-8 rounded-full bg-[var(--bg-subtle)] flex items-center justify-center flex-shrink-0">
+                <svg className="w-4 h-4 text-[var(--text-secondary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z" />
+                </svg>
+              </div>
+              <div>
+                <h4 className="text-[var(--text-sm)] font-medium text-[var(--text-primary)]">The right mindset</h4>
+                <p className="text-[var(--text-xs)] text-[var(--text-muted)]">Be curious, not performative. Ask questions. Listen. Everyone's here for the same thing—real connection.</p>
+              </div>
+            </div>
+
+            {/* First time tip */}
+            <div className="flex gap-3">
+              <div className="w-8 h-8 rounded-full bg-[var(--bg-subtle)] flex items-center justify-center flex-shrink-0">
+                <svg className="w-4 h-4 text-[var(--text-secondary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z" />
+                </svg>
+              </div>
+              <div>
+                <h4 className="text-[var(--text-sm)] font-medium text-[var(--text-primary)]">First time?</h4>
+                <p className="text-[var(--text-xs)] text-[var(--text-muted)]">It's normal to feel nervous. Most guests are too! The host will guide the conversation—just follow along.</p>
+              </div>
+            </div>
+
+            {/* Get Directions - only if location is revealed */}
+            {room.location_revealed && (
+              <div className="pt-3 mt-3 border-t border-[var(--border-subtle)]">
+                <div className="flex gap-2">
+                  <a
+                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(room.location_address)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 text-[var(--text-sm)] font-medium bg-[var(--primary)] text-white rounded-[var(--radius-md)] hover:bg-[var(--primary-hover)] transition-colors"
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
+                    </svg>
+                    Get Directions
+                  </a>
+                </div>
+                <p className="text-[var(--text-xs)] text-[var(--text-muted)] text-center mt-2">{room.location_address}</p>
+              </div>
+            )}
+          </div>
+        </Card>
+      )}
+
       {/* Payment Info */}
       <Card variant="outlined" className="p-5 border-[var(--warning-border)] bg-[var(--warning-muted)]">
         <h3 className="text-[var(--text-sm)] font-medium text-[var(--warning-text)] mb-2">How payment works</h3>
@@ -500,6 +816,17 @@ export default function PublicRoomPage() {
               <Button variant="ghost" size="sm" onClick={copyLink}>
                 {copied ? 'Link Copied!' : 'Share'}
               </Button>
+              {user ? (
+                <UserMenu />
+              ) : (
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={() => setShowLoginModal(true)}
+                >
+                  Sign In
+                </Button>
+              )}
             </div>
           </div>
         </PageContainer>
@@ -568,6 +895,13 @@ export default function PublicRoomPage() {
           console.log('Report:', { reason, category });
           await new Promise((r) => setTimeout(r, 1000));
         }}
+      />
+
+      {/* Login Modal */}
+      <LoginModal
+        open={showLoginModal}
+        onClose={() => setShowLoginModal(false)}
+        onSuccess={handleLoginSuccess}
       />
     </div>
   );

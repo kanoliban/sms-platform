@@ -82,6 +82,11 @@ export function AppHeader({
     }
   }, [handleMarkRead]);
 
+  const handleViewAll = useCallback(() => {
+    // TODO: Navigate to /notifications page when built
+    alert('View All Notifications clicked! (Notifications page coming soon)');
+  }, []);
+
   // Default nav items for host pages
   const defaultNavItems: NavItem[] = [
     { label: 'Dashboard', href: '/host', active: false },
@@ -98,6 +103,7 @@ export function AppHeader({
           onMarkAllRead={handleMarkAllRead}
           onMarkRead={handleMarkRead}
           onNotificationClick={handleNotificationClick}
+          onViewAll={handleViewAll}
         />
       )}
       {extraActions}

@@ -5,10 +5,17 @@ import Link from 'next/link'
 import { useAuth } from '@/lib/auth/auth-context'
 import { toast } from '@/components/ui/toast'
 
+// Format phone for display: (555) 555-5555
+function formatPhoneDisplay(phone: string): string {
+  const digits = phone.replace(/\D/g, '').slice(-10)
+  if (digits.length !== 10) return phone
+  return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6, 10)}`
+}
+
 export function UserMenu() {
   const [open, setOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
-  const { user, signOut } = useAuth()
+  const { user, logout } = useAuth()
 
   const handleClickOutside = useCallback((event: MouseEvent) => {
     if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
@@ -26,18 +33,20 @@ export function UserMenu() {
   }, [open, handleClickOutside])
 
   const handleSignOut = useCallback(async () => {
-    await signOut()
+    await logout()
     setOpen(false)
     toast({
       variant: 'success',
       title: 'Signed out',
       description: 'You have been signed out.',
     })
-  }, [signOut])
+  }, [logout])
 
   if (!user) return null
 
-  const initial = user.email?.charAt(0).toUpperCase() || '?'
+  // Use first letter of name, or first digit of phone, or '?'
+  const initial = user.name?.charAt(0).toUpperCase() || user.phone?.slice(-4) || '?'
+  const displayName = user.name || formatPhoneDisplay(user.phone)
 
   return (
     <div className="relative" ref={menuRef}>
@@ -76,13 +85,18 @@ export function UserMenu() {
         >
           <div className="px-4 py-3 border-b border-[var(--border-subtle)]">
             <p className="text-[var(--text-sm)] font-medium text-[var(--text-primary)] truncate">
-              {user.email}
+              {displayName}
             </p>
+            {user.name && (
+              <p className="text-[var(--text-xs)] text-[var(--text-muted)] truncate">
+                {formatPhoneDisplay(user.phone)}
+              </p>
+            )}
           </div>
 
           <div className="py-1">
             <Link
-              href="/dashboard"
+              href="/my-rooms"
               onClick={() => setOpen(false)}
               className="
                 block px-4 py-2
@@ -91,7 +105,19 @@ export function UserMenu() {
                 transition-colors duration-[var(--duration-normal)]
               "
             >
-              Dashboard
+              My Rooms
+            </Link>
+            <Link
+              href="/profile"
+              onClick={() => setOpen(false)}
+              className="
+                block px-4 py-2
+                text-[var(--text-sm)] text-[var(--text-secondary)]
+                hover:bg-[var(--bg-surface-hover)] hover:text-[var(--text-primary)]
+                transition-colors duration-[var(--duration-normal)]
+              "
+            >
+              Profile
             </Link>
             <Link
               href="/settings"

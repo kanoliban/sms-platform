@@ -1,100 +1,164 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState, useCallback, ReactNode, useMemo } from 'react'
-import { User, Session, SupabaseClient } from '@supabase/supabase-js'
+import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from 'react'
 import { createClient } from '@/lib/supabase/client'
 
+// SMS Platform user from our database
+export interface SMSUser {
+  id: string
+  name: string | null
+  phone: string
+  role: 'guest' | 'host' | 'founder'
+  intent: string | null
+  tone_preference: string | null
+  trust_score_overall: number
+  trust_status: string
+  rooms_attended: number
+  rooms_hosted: number
+  no_shows: number
+  created_at: string
+}
+
 interface AuthContextValue {
-  user: User | null
-  session: Session | null
+  user: SMSUser | null
   loading: boolean
-  signInWithMagicLink: (email: string) => Promise<{ error: Error | null }>
-  signInWithGoogle: () => Promise<{ error: Error | null }>
-  signOut: () => Promise<void>
+  error: string | null
+  // Phone auth (primary for SMS)
+  sendCode: (phone: string) => Promise<{ success: boolean; error?: string }>
+  verifyCode: (phone: string, code: string) => Promise<{ success: boolean; error?: string }>
+  // OAuth
+  signInWithGoogle: () => Promise<{ success: boolean; error?: string }>
+  logout: () => Promise<void>
+  refreshUser: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined)
 
-function getSupabaseClient(): SupabaseClient | null {
-  // Check if environment variables are available
-  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-    return null
-  }
-  return createClient()
-}
-
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
-  const [session, setSession] = useState<Session | null>(null)
+  const [user, setUser] = useState<SMSUser | null>(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  const supabase = useMemo(() => getSupabaseClient(), [])
+  // Fetch current user on mount
+  const refreshUser = useCallback(async () => {
+    try {
+      const res = await fetch('/api/auth/me')
+      const data = await res.json()
+      setUser(data.user || null)
+    } catch (err) {
+      console.error('Failed to fetch user:', err)
+      setUser(null)
+    } finally {
+      setLoading(false)
+    }
+  }, [])
 
   useEffect(() => {
-    if (!supabase) {
-      setLoading(false)
-      return
-    }
+    refreshUser()
+  }, [refreshUser])
 
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session)
-      setUser(session?.user ?? null)
-      setLoading(false)
-    })
+  // Send verification code via SMS
+  const sendCode = useCallback(async (phone: string): Promise<{ success: boolean; error?: string }> => {
+    setError(null)
+    try {
+      const res = await fetch('/api/auth/send-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone }),
+      })
 
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setSession(session)
-        setUser(session?.user ?? null)
-        setLoading(false)
+      const data = await res.json()
+
+      if (!res.ok) {
+        const errorMsg = data.error || 'Failed to send code'
+        setError(errorMsg)
+        return { success: false, error: errorMsg }
       }
-    )
 
-    return () => subscription.unsubscribe()
-  }, [supabase])
-
-  const signInWithMagicLink = useCallback(async (email: string) => {
-    if (!supabase) {
-      return { error: new Error('Authentication not configured') }
+      return { success: true }
+    } catch (err) {
+      const errorMsg = 'Failed to send verification code'
+      setError(errorMsg)
+      return { success: false, error: errorMsg }
     }
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
-      },
-    })
-    return { error: error as Error | null }
-  }, [supabase])
+  }, [])
 
-  const signInWithGoogle = useCallback(async () => {
-    if (!supabase) {
-      return { error: new Error('Authentication not configured') }
+  // Verify code and complete login
+  const verifyCode = useCallback(async (phone: string, code: string): Promise<{ success: boolean; error?: string }> => {
+    setError(null)
+    try {
+      const res = await fetch('/api/auth/verify-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone, code }),
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        const errorMsg = data.error || 'Invalid code'
+        setError(errorMsg)
+        return { success: false, error: errorMsg }
+      }
+
+      setUser(data.user)
+      return { success: true }
+    } catch (err) {
+      const errorMsg = 'Failed to verify code'
+      setError(errorMsg)
+      return { success: false, error: errorMsg }
     }
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-      },
-    })
-    return { error: error as Error | null }
-  }, [supabase])
+  }, [])
 
-  const signOut = useCallback(async () => {
-    if (!supabase) return
-    await supabase.auth.signOut()
-  }, [supabase])
+  // Sign in with Google OAuth
+  const signInWithGoogle = useCallback(async (): Promise<{ success: boolean; error?: string }> => {
+    setError(null)
+    try {
+      const supabase = createClient()
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      })
+
+      if (error) {
+        setError(error.message)
+        return { success: false, error: error.message }
+      }
+
+      return { success: true }
+    } catch (err) {
+      const errorMsg = 'Failed to sign in with Google'
+      setError(errorMsg)
+      return { success: false, error: errorMsg }
+    }
+  }, [])
+
+  // Logout
+  const logout = useCallback(async () => {
+    try {
+      const supabase = createClient()
+      await supabase.auth.signOut()
+      await fetch('/api/auth/logout', { method: 'POST' })
+    } catch (err) {
+      console.error('Logout error:', err)
+    } finally {
+      setUser(null)
+    }
+  }, [])
 
   return (
     <AuthContext.Provider
       value={{
         user,
-        session,
         loading,
-        signInWithMagicLink,
+        error,
+        sendCode,
+        verifyCode,
         signInWithGoogle,
-        signOut,
+        logout,
+        refreshUser,
       }}
     >
       {children}
