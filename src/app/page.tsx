@@ -1,8 +1,43 @@
+'use client'
+
+import { useState } from 'react'
 import { SMSConversation } from '@/components/sms-conversation'
+import { LoginModal } from '@/components/composed/login-modal'
+import { UserMenu } from '@/components/composed/user-menu'
+import { useAuth } from '@/lib/auth/auth-context'
+import { Button } from '@/components/ui/button'
 
 export default function Home() {
+  const [showLogin, setShowLogin] = useState(false)
+  const { user, loading } = useAuth()
+
   return (
     <div className="min-h-screen bg-black text-white overflow-hidden relative">
+      {/* Header */}
+      <header className="fixed top-0 left-0 right-0 z-50 px-6 py-4">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          <div className="font-bold italic text-xl">SMS</div>
+          <div className="flex items-center gap-4">
+            {!loading && (
+              user ? (
+                <UserMenu />
+              ) : (
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setShowLogin(true)}
+                >
+                  Sign in
+                </Button>
+              )
+            )}
+          </div>
+        </div>
+      </header>
+
+      {/* Login Modal */}
+      <LoginModal open={showLogin} onClose={() => setShowLogin(false)} />
+
       {/* Ambient background elements */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         {/* Gradient orbs */}

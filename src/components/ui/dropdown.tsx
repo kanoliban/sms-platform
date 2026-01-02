@@ -121,13 +121,10 @@ export function DropdownTrigger({
     const child = children as React.ReactElement<{
       onClick?: (e: React.MouseEvent) => void;
       className?: string;
+      ref?: React.Ref<HTMLButtonElement>;
     }>;
 
-    return cloneElement(child, {
-      ref: (node: HTMLButtonElement | null) => {
-        // Assign to our ref
-        (triggerRef as React.MutableRefObject<HTMLButtonElement | null>).current = node;
-      },
+    const childProps = {
       'aria-haspopup': 'menu' as const,
       'aria-expanded': open,
       onClick: (e: React.MouseEvent) => {
@@ -137,7 +134,13 @@ export function DropdownTrigger({
           child.props.onClick(e);
         }
       },
-    });
+      ref: (node: HTMLButtonElement | null) => {
+        // Assign to our ref
+        (triggerRef as React.MutableRefObject<HTMLButtonElement | null>).current = node;
+      },
+    };
+
+    return cloneElement(child, childProps as typeof child.props);
   }
 
   return (
