@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { SMSConversation } from '@/components/sms-conversation'
 import { LoginModal } from '@/components/composed/login-modal'
 import { UserMenu } from '@/components/composed/user-menu'
@@ -8,6 +9,7 @@ import { useAuth } from '@/lib/auth/auth-context'
 import { Button } from '@/components/ui/button'
 
 export default function Home() {
+  const router = useRouter()
   const [showLogin, setShowLogin] = useState(false)
   const { user, loading } = useAuth()
 
@@ -36,7 +38,11 @@ export default function Home() {
       </header>
 
       {/* Login Modal */}
-      <LoginModal open={showLogin} onClose={() => setShowLogin(false)} />
+      <LoginModal
+        open={showLogin}
+        onClose={() => setShowLogin(false)}
+        onSuccess={() => router.push('/discover')}
+      />
 
       {/* Ambient background elements */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">

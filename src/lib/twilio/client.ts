@@ -17,6 +17,14 @@ function getClient() {
   return _client
 }
 
+function getVerifyServiceSid(): string {
+  const serviceSid = process.env.TWILIO_VERIFY_SERVICE_SID
+  if (!serviceSid) {
+    throw new Error('TWILIO_VERIFY_SERVICE_SID not configured')
+  }
+  return serviceSid
+}
+
 function getFromNumber(): string {
   const phoneNumber = process.env.TWILIO_PHONE_NUMBER
   if (!phoneNumber) {
@@ -25,6 +33,43 @@ function getFromNumber(): string {
   return phoneNumber
 }
 
+// Send verification code via Twilio Verify (handles A2P compliance)
+export async function sendVerificationCode(to: string): Promise<string> {
+  try {
+    const client = getClient()
+    const verification = await client.verify.v2
+      .services(getVerifyServiceSid())
+      .verifications.create({
+        to: normalizePhoneNumber(to),
+        channel: 'sms',
+      })
+    console.log(`Verification sent: ${verification.sid} to ${to}, status: ${verification.status}`)
+    return verification.sid
+  } catch (error) {
+    console.error('Failed to send verification:', error)
+    throw error
+  }
+}
+
+// Check verification code via Twilio Verify
+export async function checkVerificationCode(to: string, code: string): Promise<{ valid: boolean; status: string }> {
+  try {
+    const client = getClient()
+    const check = await client.verify.v2
+      .services(getVerifyServiceSid())
+      .verificationChecks.create({
+        to: normalizePhoneNumber(to),
+        code,
+      })
+    console.log(`Verification check for ${to}: ${check.status}`)
+    return { valid: check.status === 'approved', status: check.status }
+  } catch (error) {
+    console.error('Failed to check verification:', error)
+    throw error
+  }
+}
+
+// Legacy SMS function (kept for other uses like notifications)
 export async function sendSms(to: string, body: string): Promise<string> {
   try {
     const client = getClient()

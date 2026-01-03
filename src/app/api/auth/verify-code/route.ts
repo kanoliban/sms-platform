@@ -1,15 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase/server'
-import { normalizePhoneNumber } from '@/lib/twilio/client'
+import { checkVerificationCode, normalizePhoneNumber } from '@/lib/twilio/client'
 import { cookies } from 'next/headers'
 import { SignJWT } from 'jose'
 
-// Secret key for JWT signing (should be in env vars)
+// Secret key for JWT signing
 const JWT_SECRET = new TextEncoder().encode(
   process.env.JWT_SECRET || 'sms-platform-secret-key-change-in-production'
 )
 
-// POST /api/auth/verify-code - Verify code and create session
+// POST /api/auth/verify-code - Verify code via Twilio Verify and create session
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
@@ -23,47 +23,35 @@ export async function POST(request: NextRequest) {
     }
 
     const normalizedPhone = normalizePhoneNumber(phone)
-    const supabase = createServerClient()
 
-    // Find the verification code
-    const { data: verificationData, error: fetchError } = await supabase
-      .from('verification_codes')
-      .select('*, user:users(*)')
-      .eq('phone', normalizedPhone)
-      .eq('code', code)
-      .single()
-
-    if (fetchError || !verificationData) {
+    // Verify code with Twilio Verify
+    let verificationResult
+    try {
+      verificationResult = await checkVerificationCode(normalizedPhone, code)
+    } catch (error) {
+      console.error('Verification check error:', error)
       return NextResponse.json(
         { error: 'Invalid verification code' },
         { status: 400 }
       )
     }
 
-    // Check if code is expired
-    if (new Date(verificationData.expires_at) < new Date()) {
-      // Delete expired code
-      await supabase
-        .from('verification_codes')
-        .delete()
-        .eq('id', verificationData.id)
-
+    if (!verificationResult.valid) {
       return NextResponse.json(
-        { error: 'Verification code expired' },
+        { error: verificationResult.status === 'pending' ? 'Invalid code' : 'Verification expired' },
         { status: 400 }
       )
     }
 
-    // Code is valid - delete it (one-time use)
-    await supabase
-      .from('verification_codes')
-      .delete()
-      .eq('id', verificationData.id)
+    // Get user from database
+    const supabase = createServerClient()
+    const { data: user, error: userError } = await supabase
+      .from('users')
+      .select('*')
+      .eq('phone', normalizedPhone)
+      .single()
 
-    // Get user data
-    const user = verificationData.user
-
-    if (!user) {
+    if (userError || !user) {
       return NextResponse.json(
         { error: 'User not found' },
         { status: 404 }
@@ -78,7 +66,7 @@ export async function POST(request: NextRequest) {
     })
       .setProtectedHeader({ alg: 'HS256' })
       .setIssuedAt()
-      .setExpirationTime('7d') // Token expires in 7 days
+      .setExpirationTime('7d')
       .sign(JWT_SECRET)
 
     // Set HTTP-only cookie with the token
@@ -87,7 +75,7 @@ export async function POST(request: NextRequest) {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 7 * 24 * 60 * 60, // 7 days in seconds
+      maxAge: 7 * 24 * 60 * 60,
       path: '/',
     })
 

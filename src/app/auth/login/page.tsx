@@ -12,7 +12,7 @@ type Step = 'phone' | 'verify'
 function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const redirectTo = searchParams.get('redirect') || '/'
+  const redirectTo = searchParams.get('redirect') || '/discover'
 
   const { user, loading: authLoading, sendCode, verifyCode, signInWithGoogle } = useAuth()
 

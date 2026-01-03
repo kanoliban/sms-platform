@@ -34,6 +34,6 @@ export async function GET(request: Request) {
     }
   }
 
-  // Redirect to the dashboard or home page after login
-  return NextResponse.redirect(`${origin}/`)
+  // Redirect to discover page after login
+  return NextResponse.redirect(`${origin}/discover`)
 }
