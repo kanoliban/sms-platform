@@ -40,3 +40,6 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 Luma web Dec 2024/
+
+# supabase
+supabase/.temp/
