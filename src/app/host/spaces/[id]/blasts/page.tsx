@@ -144,9 +144,16 @@ export default function BlastsPage() {
         });
       }
 
-      // TODO: Load blast history from database when table exists
-      // For now, use empty array in production mode
-      setBlasts([]);
+      // Load blast history from API
+      try {
+        const res = await fetch(`/api/blasts?space_id=${spaceId}`);
+        if (res.ok) {
+          const data = await res.json();
+          setBlasts(data.blasts || []);
+        }
+      } catch (err) {
+        console.error('Failed to load blasts:', err);
+      }
     }
 
     setLoading(false);
@@ -190,28 +197,55 @@ export default function BlastsPage() {
 
     setSending(true);
 
-    // In production, this would call an API to send SMS
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    try {
+      // Get host ID from localStorage or space
+      const hostId = space?.host_id || localStorage.getItem('user_id');
 
-    // Add to blast history
-    const newBlast: Blast = {
-      id: `blast-${Date.now()}`,
-      message: message.trim(),
-      recipient_filter: recipientFilter,
-      recipient_count: recipientCount,
-      sent_at: new Date().toISOString(),
-      sent_by: 'You',
-    };
+      const res = await fetch('/api/blasts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          space_id: spaceId,
+          message: message.trim(),
+          recipient_filter: recipientFilter,
+          sent_by: hostId,
+        }),
+      });
 
-    setBlasts(prev => [newBlast, ...prev]);
-    setMessage('');
-    setSending(false);
+      const data = await res.json();
 
-    addToast({
-      variant: 'success',
-      title: 'Blast sent!',
-      description: `Message sent to ${recipientCount} guest${recipientCount !== 1 ? 's' : ''}.`,
-    });
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to send blast');
+      }
+
+      // Add to blast history
+      const newBlast: Blast = {
+        id: data.blast?.id || `blast-${Date.now()}`,
+        message: message.trim(),
+        recipient_filter: recipientFilter,
+        recipient_count: data.sent || recipientCount,
+        sent_at: new Date().toISOString(),
+        sent_by: 'You',
+      };
+
+      setBlasts(prev => [newBlast, ...prev]);
+      setMessage('');
+
+      addToast({
+        variant: 'success',
+        title: 'Blast sent!',
+        description: `Message sent to ${data.sent || recipientCount} guest${(data.sent || recipientCount) !== 1 ? 's' : ''}.`,
+      });
+    } catch (err) {
+      console.error('Failed to send blast:', err);
+      addToast({
+        variant: 'error',
+        title: 'Failed to send',
+        description: err instanceof Error ? err.message : 'Something went wrong. Please try again.',
+      });
+    } finally {
+      setSending(false);
+    }
   };
 
   const formatDate = (dateString: string) => {

@@ -128,11 +128,18 @@ export default function InsightsPage() {
         setSpace(spaceData);
       }
 
-      // In a real app, we'd fetch insights from an analytics endpoint
-      // For now, use mock data
-      setInsights(MOCK_INSIGHTS);
+      // Fetch real insights from API
+      const res = await fetch(`/api/insights?space_id=${spaceId}`);
+      if (res.ok) {
+        const data = await res.json();
+        setInsights(data.insights);
+      } else {
+        // Fallback to mock data if API fails
+        setInsights(MOCK_INSIGHTS);
+      }
     } catch (err) {
       console.error('Failed to load insights:', err);
+      setInsights(MOCK_INSIGHTS);
     }
 
     setLoading(false);

@@ -111,5 +111,32 @@ export interface SmsConversation {
   created_at: string
 }
 
+export type BlastRecipientFilter = 'all' | 'confirmed' | 'invited'
+
+export interface Blast {
+  id: string
+  space_id: string
+  sent_by: string
+  message: string
+  recipient_filter: BlastRecipientFilter
+  recipient_count: number
+  sent_at: string
+  created_at: string
+}
+
+export type NotificationType = 'reminder' | 'update' | 'invite' | 'location_reveal' | 'registration' | 'payment' | 'invite_accepted' | 'approval_request'
+
+export interface Notification {
+  id: string
+  user_id: string
+  type: NotificationType
+  title: string
+  message: string
+  space_id: string | null
+  actor_id: string | null
+  read: boolean
+  created_at: string
+}
+
 // Backwards compatibility alias for Room -> Space migration
 export type Room = Space

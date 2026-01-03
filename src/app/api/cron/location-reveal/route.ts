@@ -4,8 +4,11 @@ import { sendSms } from '@/lib/twilio/client'
 import { locationRevealMessage, hostLocationReminderMessage } from '@/lib/twilio/messages'
 
 // POST /api/cron/location-reveal
-// Vercel Cron: runs hourly
-// Sends full address to accepted guests 24 hours before space
+// Vercel Cron: runs every 15 minutes (*/15 * * * *)
+// Handles multiple space lifecycle tasks:
+// 1. Location reveal - send address to guests 24h before
+// 2. Pocket Liban - send prompts to hosts at scheduled times
+// 3. Auto-complete - mark spaces as completed after they end
 export async function POST(request: NextRequest) {
   try {
     // Verify cron secret (Vercel sends this header)
@@ -123,6 +126,64 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // --- Pocket Liban: Send host prompts ---
+    const { data: prompts, error: promptsError } = await supabase
+      .from('host_prompts')
+      .select(`
+        *,
+        space:spaces (
+          *,
+          host:users!spaces_host_id_fkey (
+            id,
+            name,
+            phone
+          )
+        )
+      `)
+      .eq('sent', false)
+      .lte('send_at', now.toISOString())
+      .order('send_at', { ascending: true })
+
+    let promptsSent = 0
+    if (!promptsError && prompts) {
+      for (const prompt of prompts) {
+        const space = prompt.space
+        const host = space?.host
+
+        // Skip if space is canceled or completed
+        if (space?.status === 'canceled' || space?.status === 'completed') {
+          await supabase
+            .from('host_prompts')
+            .update({ sent: true })
+            .eq('id', prompt.id)
+          continue
+        }
+
+        if (!host?.phone) continue
+
+        try {
+          await sendSms(host.phone, prompt.message)
+
+          await supabase
+            .from('host_prompts')
+            .update({ sent: true })
+            .eq('id', prompt.id)
+
+          await supabase.from('sms_conversations').insert({
+            user_id: host.id,
+            direction: 'outbound',
+            message: prompt.message,
+            context: `pocket_liban_${prompt.prompt_type}`,
+            space_id: space.id,
+          })
+
+          promptsSent++
+        } catch (err) {
+          console.error(`Error sending prompt ${prompt.id}:`, err)
+        }
+      }
+    }
+
     // --- Auto-complete spaces that have ended ---
     // Find spaces that are past their end time and still in active status
     const { data: endedSpaces, error: endedError } = await supabase
@@ -153,9 +214,10 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({
-      message: `Location reveal processed`,
-      processed,
+      message: `Space lifecycle processed`,
+      locationReveals: processed,
       errors,
+      promptsSent,
       autoCompleted: completedCount,
     })
   } catch (err) {
