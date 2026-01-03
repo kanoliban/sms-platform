@@ -1,0 +1,52 @@
+# SMS - Strangers Meeting Strangers
+
+> Infrastructure for human connection. Rooms where strangers meet with intention.
+
+## What is SMS?
+
+SMS (Strangers Meeting Strangers) is a platform that facilitates intentional social gatherings in Minneapolis, Minnesota. We create spaces where strangers can meet with purpose, fostering genuine human connection in an increasingly disconnected world.
+
+## Core Concept
+
+- **Spaces**: Curated social events hosted by verified community members
+- **Intention**: Every gathering has a tone and purpose (chill, playful, deep, or intense)
+- **Trust**: A trust-based system ensures safe, meaningful interactions
+- **Location Reveal**: Venues are revealed closer to event time for privacy
+
+## How It Works
+
+1. **Browse Spaces**: Discover upcoming gatherings in the /discover section
+2. **RSVP**: Reserve your spot (some spaces are free, others have a small fee)
+3. **Location Reveal**: Receive the venue details before the event
+4. **Attend**: Show up, meet strangers, connect with intention
+5. **Feedback**: Share your experience to improve future spaces
+
+## Key Features
+
+- Phone-based authentication (no social media required)
+- Host your own spaces if you're verified
+- Trust scoring system based on attendance and behavior
+- SMS notifications for reminders and updates
+- Flexible tones: chill gatherings to deep conversations
+
+## Who Is This For?
+
+- People seeking authentic human connection
+- Those tired of superficial social interactions
+- Anyone curious about meeting new people intentionally
+- Minneapolis locals looking for community
+
+## Contact & Links
+
+- Website: https://strangersmeetingstrangers.com
+- Discover Events: https://strangersmeetingstrangers.com/discover
+- Host a Space: https://strangersmeetingstrangers.com/host
+- About the Founder: https://strangersmeetingstrangers.com/founder
+
+## Location
+
+Based in Minneapolis, Minnesota, USA.
+
+## Founder
+
+Liban Kano - Building infrastructure for human connection.

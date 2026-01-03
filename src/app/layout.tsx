@@ -4,6 +4,7 @@ import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
 import { ToastProvider } from '@/components/ui/toast'
 import { AuthProvider } from '@/lib/auth/auth-context'
+import { StructuredData } from '@/components/seo/structured-data'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -61,6 +62,7 @@ export default function RootLayout({
           </ToastProvider>
         </AuthProvider>
         <Analytics />
+        <StructuredData />
       </body>
     </html>
   )
