@@ -93,13 +93,13 @@ const shareOptions: ShareOption[] = [
   },
 ];
 
-export function ShareSpaceModal({ open, onClose, room }: ShareSpaceModalProps) {
+export function ShareSpaceModal({ open, onClose, space }: ShareSpaceModalProps) {
   const [copied, setCopied] = useState(false);
 
   const getShareUrl = useCallback((platform: SharePlatform): string | null => {
     const text = `Join me at ${space.name}!`;
     const encodedText = encodeURIComponent(text);
-    const encodedUrl = encodeURIComponent(room.url);
+    const encodedUrl = encodeURIComponent(space.url);
 
     switch (platform) {
       case 'twitter':
@@ -117,12 +117,12 @@ export function ShareSpaceModal({ open, onClose, room }: ShareSpaceModalProps) {
       default:
         return null;
     }
-  }, [space.name, room.url]);
+  }, [space.name, space.url]);
 
   const handleShare = useCallback(async (platform: SharePlatform) => {
     if (platform === 'copy') {
       try {
-        await navigator.clipboard.writeText(room.url);
+        await navigator.clipboard.writeText(space.url);
         setCopied(true);
         toast({
           variant: 'success',
@@ -144,7 +144,7 @@ export function ShareSpaceModal({ open, onClose, room }: ShareSpaceModalProps) {
     if (url) {
       window.open(url, '_blank', 'noopener,noreferrer,width=600,height=400');
     }
-  }, [room.url, getShareUrl, toast]);
+  }, [space.url, getShareUrl]);
 
   const handleNativeShare = useCallback(async () => {
     if (navigator.share) {
@@ -152,7 +152,7 @@ export function ShareSpaceModal({ open, onClose, room }: ShareSpaceModalProps) {
         await navigator.share({
           title: space.name,
           text: `Join me at ${space.name}!`,
-          url: room.url,
+          url: space.url,
         });
       } catch (err) {
         if ((err as Error).name !== 'AbortError') {
@@ -164,11 +164,11 @@ export function ShareSpaceModal({ open, onClose, room }: ShareSpaceModalProps) {
         }
       }
     }
-  }, [space.name, room.url, toast]);
+  }, [space.name, space.url]);
 
   const handleCopyUrl = useCallback(async () => {
     try {
-      await navigator.clipboard.writeText(room.url);
+      await navigator.clipboard.writeText(space.url);
       setCopied(true);
       toast({
         variant: 'success',
@@ -183,7 +183,7 @@ export function ShareSpaceModal({ open, onClose, room }: ShareSpaceModalProps) {
         description: 'Could not copy the link to clipboard.',
       });
     }
-  }, [room.url, toast]);
+  }, [space.url]);
 
   return (
     <Modal
@@ -267,7 +267,7 @@ export function ShareSpaceModal({ open, onClose, room }: ShareSpaceModalProps) {
           </label>
           <div className="flex gap-2">
             <Input
-              value={room.url}
+              value={space.url}
               readOnly
               className="flex-1"
               onClick={(e) => (e.target as HTMLInputElement).select()}

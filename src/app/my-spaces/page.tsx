@@ -201,8 +201,8 @@ export default function MyRoomsPage() {
       .eq('user_id', user.id);
 
     if (invitations) {
-      const roomsWithStatus = invitations
-        .filter((inv): inv is typeof inv & { room: Space & { host: { name: string } } } => inv.space !== null)
+      const spacesWithStatus = invitations
+        .filter((inv): inv is typeof inv & { space: Space & { host: { name: string } } } => inv.space !== null)
         .map((inv) => {
           let userStatus: 'going' | 'invited' | 'attended' | 'missed';
           if (inv.attended === true) {
@@ -222,7 +222,7 @@ export default function MyRoomsPage() {
           };
         });
 
-      setSpaces(roomsWithStatus);
+      setSpaces(spacesWithStatus);
     }
 
     setLoading(false);

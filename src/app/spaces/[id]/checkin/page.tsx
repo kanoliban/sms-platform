@@ -81,7 +81,7 @@ export default function CheckInPage() {
     if (phoneParam && space && !result) {
       handleCheckIn();
     }
-  }, [phoneParam, room]);
+  }, [phoneParam, space]);
 
   async function loadRoom() {
     if (!isSupabaseConfigured() || spaceId.startsWith('demo-')) {

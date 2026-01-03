@@ -3,34 +3,72 @@
 -- Description: Rename rooms table to spaces and update all references
 
 -- ============================================
--- RENAME MAIN TABLE
+-- ENSURE UPDATE FUNCTION EXISTS
 -- ============================================
-ALTER TABLE rooms RENAME TO spaces;
+CREATE OR REPLACE FUNCTION update_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
 
 -- ============================================
--- RENAME FOREIGN KEY COLUMNS
+-- RENAME MAIN TABLE (if not already renamed)
+-- ============================================
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'rooms') THEN
+    ALTER TABLE rooms RENAME TO spaces;
+  END IF;
+END $$;
+
+-- ============================================
+-- RENAME FOREIGN KEY COLUMNS (idempotent)
 -- ============================================
 
 -- Invitations table
-ALTER TABLE invitations RENAME COLUMN room_id TO space_id;
+DO $$ BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'invitations' AND column_name = 'room_id') THEN
+    ALTER TABLE invitations RENAME COLUMN room_id TO space_id;
+  END IF;
+END $$;
 
 -- Feedback table
-ALTER TABLE feedback RENAME COLUMN room_id TO space_id;
+DO $$ BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'feedback' AND column_name = 'room_id') THEN
+    ALTER TABLE feedback RENAME COLUMN room_id TO space_id;
+  END IF;
+END $$;
 
 -- Trust events table
-ALTER TABLE trust_events RENAME COLUMN room_id TO space_id;
+DO $$ BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'trust_events' AND column_name = 'room_id') THEN
+    ALTER TABLE trust_events RENAME COLUMN room_id TO space_id;
+  END IF;
+END $$;
 
 -- Host prompts table
-ALTER TABLE host_prompts RENAME COLUMN room_id TO space_id;
+DO $$ BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'host_prompts' AND column_name = 'room_id') THEN
+    ALTER TABLE host_prompts RENAME COLUMN room_id TO space_id;
+  END IF;
+END $$;
 
 -- SMS conversations (context_id is generic, but update comments)
 -- Note: context_id remains as-is since it's a generic reference
 
 -- ============================================
--- RENAME USER STATS COLUMNS
+-- RENAME USER STATS COLUMNS (idempotent)
 -- ============================================
-ALTER TABLE users RENAME COLUMN rooms_attended TO spaces_attended;
-ALTER TABLE users RENAME COLUMN rooms_hosted TO spaces_hosted;
+DO $$ BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'rooms_attended') THEN
+    ALTER TABLE users RENAME COLUMN rooms_attended TO spaces_attended;
+  END IF;
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'rooms_hosted') THEN
+    ALTER TABLE users RENAME COLUMN rooms_hosted TO spaces_hosted;
+  END IF;
+END $$;
 
 -- ============================================
 -- RENAME INDEXES (Postgres auto-renames some, but let's be explicit)
@@ -51,23 +89,32 @@ ALTER INDEX IF EXISTS idx_feedback_room RENAME TO idx_feedback_space;
 ALTER INDEX IF EXISTS idx_host_prompts_room RENAME TO idx_host_prompts_space;
 
 -- ============================================
--- UPDATE UNIQUE CONSTRAINTS
+-- UPDATE UNIQUE CONSTRAINTS (idempotent)
 -- ============================================
 
 -- Drop and recreate unique constraint on invitations
 ALTER TABLE invitations DROP CONSTRAINT IF EXISTS invitations_room_id_user_id_key;
-ALTER TABLE invitations ADD CONSTRAINT invitations_space_id_user_id_key UNIQUE (space_id, user_id);
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'invitations_space_id_user_id_key') THEN
+    ALTER TABLE invitations ADD CONSTRAINT invitations_space_id_user_id_key UNIQUE (space_id, user_id);
+  END IF;
+END $$;
 
 -- Drop and recreate unique constraint on feedback
 ALTER TABLE feedback DROP CONSTRAINT IF EXISTS feedback_room_id_user_id_key;
-ALTER TABLE feedback ADD CONSTRAINT feedback_space_id_user_id_key UNIQUE (space_id, user_id);
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'feedback_space_id_user_id_key') THEN
+    ALTER TABLE feedback ADD CONSTRAINT feedback_space_id_user_id_key UNIQUE (space_id, user_id);
+  END IF;
+END $$;
 
 -- ============================================
 -- UPDATE TRIGGERS
 -- ============================================
 
--- Drop and recreate the spaces update trigger
+-- Drop old trigger and create new one
 DROP TRIGGER IF EXISTS update_rooms_updated_at ON spaces;
+DROP TRIGGER IF EXISTS update_spaces_updated_at ON spaces;
 CREATE TRIGGER update_spaces_updated_at
   BEFORE UPDATE ON spaces
   FOR EACH ROW EXECUTE FUNCTION update_updated_at();
