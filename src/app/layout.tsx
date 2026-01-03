@@ -11,12 +11,30 @@ const inter = Inter({
 })
 
 export const metadata: Metadata = {
-  title: 'SMS - Strangers Meeting Strangers',
+  metadataBase: new URL('https://strangersmeetingstrangers.com'),
+  title: {
+    default: 'SMS - Strangers Meeting Strangers',
+    template: '%s | SMS',
+  },
   description: 'Infrastructure for human connection. Rooms where strangers meet with intention.',
+  keywords: ['strangers', 'meeting', 'connection', 'social', 'events', 'rooms', 'Minneapolis'],
+  authors: [{ name: 'SMS' }],
   openGraph: {
     title: 'SMS - Strangers Meeting Strangers',
     description: 'Infrastructure for human connection. Rooms where strangers meet with intention.',
+    url: 'https://strangersmeetingstrangers.com',
+    siteName: 'SMS - Strangers Meeting Strangers',
+    locale: 'en_US',
     type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'SMS - Strangers Meeting Strangers',
+    description: 'Infrastructure for human connection. Rooms where strangers meet with intention.',
+  },
+  robots: {
+    index: true,
+    follow: true,
   },
 }
 
