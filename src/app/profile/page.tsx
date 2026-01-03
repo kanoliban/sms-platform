@@ -35,7 +35,7 @@ const DEMO_NOTIFICATIONS: Notification[] = [
     message: 'You met 5 new people at Dinner & Deep Talks',
     timestamp: '3d ago',
     read: true,
-    room: { id: 'room-1', name: 'Dinner & Deep Talks' },
+    space: { id: 'room-1', name: 'Dinner & Deep Talks' },
   },
 ];
 
@@ -58,8 +58,8 @@ const MOCK_USER: User = {
   trust_safety: 80,
   trust_tenure: 60,
   trust_status: 'active',
-  rooms_attended: 12,
-  rooms_hosted: 3,
+  spaces_attended: 12,
+  spaces_hosted: 3,
   no_shows: 0,
   created_at: new Date(Date.now() - 180 * 24 * 60 * 60 * 1000).toISOString(),
   updated_at: new Date().toISOString(),
@@ -104,8 +104,8 @@ export default function ProfilePage() {
 
   const handleNotificationClick = useCallback((notification: Notification) => {
     handleMarkRead(notification.id);
-    if (notification.room?.id) {
-      router.push(`/rooms/${notification.room.id}`);
+    if (notification.space?.id) {
+      router.push(`/spaces/${notification.space.id}`);
     }
   }, [handleMarkRead, router]);
 
@@ -266,7 +266,7 @@ export default function ProfilePage() {
               Sign in to view your profile
             </h1>
             <p className="text-[var(--text-secondary)] mb-6">
-              Join SMS to start meeting strangers and attending rooms.
+              Join SMS to start meeting strangers and attending spaces.
             </p>
             <Button variant="primary" onClick={() => setShowLoginModal(true)}>
               Sign In
@@ -304,8 +304,8 @@ export default function ProfilePage() {
               <Link href="/discover" className="text-[var(--text-sm)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]">
                 Discover
               </Link>
-              <Link href="/my-rooms" className="text-[var(--text-sm)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]">
-                My Rooms
+              <Link href="/my-spaces" className="text-[var(--text-sm)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]">
+                My Spaces
               </Link>
               <Link href="/profile" className="text-[var(--text-sm)] text-[var(--text-primary)] font-medium">
                 Profile
@@ -547,13 +547,13 @@ export default function ProfilePage() {
                 <div className="flex items-center justify-between">
                   <span className="text-[var(--text-sm)] text-[var(--text-secondary)]">Rooms Attended</span>
                   <span className="text-[var(--text-sm)] font-medium text-[var(--text-primary)]">
-                    {user.rooms_attended || 0}
+                    {user.spaces_attended || 0}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-[var(--text-sm)] text-[var(--text-secondary)]">Rooms Hosted</span>
                   <span className="text-[var(--text-sm)] font-medium text-[var(--text-primary)]">
-                    {user.rooms_hosted || 0}
+                    {user.spaces_hosted || 0}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
@@ -572,13 +572,13 @@ export default function ProfilePage() {
               </h3>
               <div className="space-y-2">
                 <a
-                  href="/my-rooms"
+                  href="/my-spaces"
                   className="flex items-center gap-3 p-3 rounded-[var(--radius-lg)] bg-[var(--bg-subtle)] hover:bg-[var(--bg-surface)] border border-[var(--border-subtle)] hover:border-[var(--border-default)] transition-all"
                 >
                   <svg className="w-5 h-5 text-[var(--text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
                   </svg>
-                  <span className="text-[var(--text-sm)] text-[var(--text-primary)]">My Rooms</span>
+                  <span className="text-[var(--text-sm)] text-[var(--text-primary)]">My Spaces</span>
                 </a>
                 <a
                   href="/settings"

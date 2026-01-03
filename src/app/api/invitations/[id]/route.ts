@@ -22,7 +22,7 @@ export async function GET(
           phone,
           trust_score_overall
         ),
-        room:rooms (
+        space:spaces (
           id,
           name,
           date,
@@ -61,7 +61,7 @@ export async function PATCH(
     // Get current invitation
     const { data: invitation, error: fetchError } = await supabase
       .from('invitations')
-      .select('*, room:rooms(*)')
+      .select('*, space:spaces(*)')
       .eq('id', id)
       .single()
 
@@ -111,22 +111,22 @@ export async function PATCH(
         // Update trust score for attendance
         await recordTrustEvent(
           invitation.user_id,
-          'room_attended',
-          invitation.room_id,
-          `Attended room: ${invitation.room?.name}`
+          'space_attended',
+          invitation.space_id,
+          `Attended room: ${invitation.space?.name}`
         )
 
-        // Update user stats - increment rooms_attended
+        // Update user stats - increment spaces_attended
         const { data: userData } = await supabase
           .from('users')
-          .select('rooms_attended')
+          .select('spaces_attended')
           .eq('id', invitation.user_id)
           .single()
 
         if (userData) {
           await supabase
             .from('users')
-            .update({ rooms_attended: (userData.rooms_attended || 0) + 1 })
+            .update({ spaces_attended: (userData.spaces_attended || 0) + 1 })
             .eq('id', invitation.user_id)
         }
 
@@ -145,8 +145,8 @@ export async function PATCH(
         await recordTrustEvent(
           invitation.user_id,
           'no_show',
-          invitation.room_id,
-          `No-show for room: ${invitation.room?.name}`
+          invitation.space_id,
+          `No-show for room: ${invitation.space?.name}`
         )
 
         // Update user stats - increment no_shows

@@ -125,7 +125,7 @@ export function SignupView({ type, onBack, animate = false }: SignupViewProps) {
               style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif' }}>
               {type === 'host'
                 ? "We'll review your application and text you soon."
-                : "Welcome to the pool. Watch for a text when the right room opens."
+                : "Welcome to the pool. Watch for a text when the right space opens."
               }
             </p>
             <button
@@ -146,7 +146,7 @@ export function SignupView({ type, onBack, animate = false }: SignupViewProps) {
             <p className="text-[15px] text-white/60 px-[16px] mb-[20px]"
               style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif' }}>
               {type === 'host'
-                ? "Tell us about yourself and the room you want to create."
+                ? "Tell us about yourself and the space you want to create."
                 : "Tell us what you're into. We'll text you when the right gathering opens."
               }
             </p>

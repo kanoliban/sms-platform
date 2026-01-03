@@ -16,7 +16,7 @@ export interface Notification {
     name: string;
     avatar?: string;
   };
-  room?: {
+  space?: {
     id: string;
     name: string;
     thumbnail?: string;
@@ -226,13 +226,13 @@ export function NotificationsDropdown({
                       </p>
                     </div>
 
-                    {/* Right: Room Thumbnail */}
-                    {notification.room?.thumbnail && (
+                    {/* Right: Space Thumbnail */}
+                    {notification.space?.thumbnail && (
                       <div className="flex-shrink-0">
                         <div className="w-12 h-12 rounded-[var(--radius-md)] overflow-hidden bg-[var(--bg-subtle)]">
                           <img
-                            src={notification.room.thumbnail}
-                            alt={notification.room.name}
+                            src={notification.space.thumbnail}
+                            alt={notification.space.name}
                             className="w-full h-full object-cover"
                           />
                         </div>

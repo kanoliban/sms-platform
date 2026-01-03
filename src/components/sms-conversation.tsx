@@ -41,7 +41,7 @@ const INITIAL_OPTIONS = [
 ]
 
 const HOST_MESSAGES: MessageType[] = [
-  { id: 'h1', text: "You want to create a room where strangers meet.", variant: 'received', showTail: false },
+  { id: 'h1', text: "You want to create a space where strangers meet.", variant: 'received', showTail: false },
   { id: 'h2', text: "Here's what that looks like:", variant: 'received', showTail: true },
   { id: 'h3', text: '"Dinner for 8. Saturday 7pm. $40. Creatives only."', variant: 'received', showTail: false },
   { id: 'h4', text: "You text the idea. We find the strangers. They show up. You host. You get paid.", variant: 'received', showTail: false },
@@ -49,7 +49,7 @@ const HOST_MESSAGES: MessageType[] = [
 ]
 
 const ATTENDEE_MESSAGES: MessageType[] = [
-  { id: 'a1', text: "You want to be invited to the right rooms.", variant: 'received', showTail: false },
+  { id: 'a1', text: "You want to be invited to the right spaces.", variant: 'received', showTail: false },
   { id: 'a2', text: "No more scrolling. No more evaluating. You tell me what you're into—once.", variant: 'received', showTail: true },
   { id: 'a3', text: "Then you wait. Not for a feed. For a text.", variant: 'received', showTail: false },
   { id: 'a4', text: '"Friday 7pm. Strangers & Supper. 8 people. $40. Northeast Minneapolis. The host has a 4.9 rating. You\'re free. Want in?"', variant: 'received', showTail: false },
@@ -58,10 +58,10 @@ const ATTENDEE_MESSAGES: MessageType[] = [
 
 const LEARN_MORE_MESSAGES: MessageType[] = [
   { id: 'l1', text: "The loneliness epidemic isn't a lack of events.", variant: 'received', showTail: false },
-  { id: 'l2', text: "It's a lack of rooms.", variant: 'received', showTail: true },
+  { id: 'l2', text: "It's a lack of spaces.", variant: 'received', showTail: true },
   { id: 'l3', text: "Not physical rooms—spaces where strangers feel safe enough to be real with each other.", variant: 'received', showTail: false },
   { id: 'l4', text: "We've hosted 2,800+ strangers over 3.5 years in Minneapolis.", variant: 'received', showTail: false },
-  { id: 'l5', text: "Now we're building infrastructure so anyone can create these rooms.", variant: 'received', showTail: true },
+  { id: 'l5', text: "Now we're building infrastructure so anyone can create these spaces.", variant: 'received', showTail: true },
 ]
 
 export function SMSConversation() {

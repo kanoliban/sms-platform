@@ -18,7 +18,7 @@ function getStripe(): Stripe {
 
 interface PaymentIntentMetadata {
   invitation_id: string
-  room_id: string
+  space_id: string
   user_id: string
   user_phone: string
   [key: string]: string  // Index signature for Stripe metadata
@@ -34,7 +34,7 @@ export async function createPaymentIntent(
     currency: 'usd',
     capture_method: 'manual', // Authorize only, capture later
     metadata,
-    description: `SMS Room - ${metadata.room_id}`,
+    description: `SMS Room - ${metadata.space_id}`,
   })
 }
 

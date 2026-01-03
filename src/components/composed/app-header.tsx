@@ -15,7 +15,7 @@ const DEMO_NOTIFICATIONS: Notification[] = [
     timestamp: '4m',
     read: false,
     actor: { name: 'Alex Chen' },
-    room: { id: 'demo-1', name: 'Dinner & Deep Talks' },
+    space: { id: 'demo-1', name: 'Dinner & Deep Talks' },
   },
   {
     id: '2',
@@ -25,7 +25,7 @@ const DEMO_NOTIFICATIONS: Notification[] = [
     timestamp: '2h',
     read: false,
     actor: { name: 'Jordan Lee' },
-    room: { id: 'demo-3', name: 'Game Night Strangers' },
+    space: { id: 'demo-3', name: 'Game Night Strangers' },
   },
   {
     id: '3',
@@ -35,7 +35,7 @@ const DEMO_NOTIFICATIONS: Notification[] = [
     timestamp: '5h',
     read: true,
     actor: { name: 'Sam Rivera' },
-    room: { id: 'demo-2', name: 'Strangers & Vinyl' },
+    space: { id: 'demo-2', name: 'Strangers & Vinyl' },
   },
   {
     id: '4',
@@ -45,7 +45,7 @@ const DEMO_NOTIFICATIONS: Notification[] = [
     timestamp: 'Mon',
     read: true,
     actor: { name: 'Taylor Kim' },
-    room: { id: 'demo-1', name: 'Dinner & Deep Talks' },
+    space: { id: 'demo-1', name: 'Dinner & Deep Talks' },
   },
 ];
 
@@ -76,9 +76,9 @@ export function AppHeader({
 
   const handleNotificationClick = useCallback((notification: Notification) => {
     handleMarkRead(notification.id);
-    // Navigate to the relevant room if available
-    if (notification.room?.id) {
-      window.location.href = `/host/rooms/${notification.room.id}`;
+    // Navigate to the relevant space if available
+    if (notification.space?.id) {
+      window.location.href = `/host/spaces/${notification.space.id}`;
     }
   }, [handleMarkRead]);
 
@@ -91,7 +91,7 @@ export function AppHeader({
   const defaultNavItems: NavItem[] = [
     { label: 'Dashboard', href: '/host', active: false },
     { label: 'Discover', href: '/discover', active: false },
-    { label: 'My Rooms', href: '/my-rooms', active: false },
+    { label: 'My Spaces', href: '/my-spaces', active: false },
   ];
 
   const actions = (

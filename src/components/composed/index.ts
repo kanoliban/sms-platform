@@ -5,12 +5,12 @@
  * These are domain-specific components for the SMS platform.
  */
 
-// Room Components
+// Space Components
 export {
-  RoomCard,
-  type RoomCardProps,
-  type RoomTone,
-} from './room-card';
+  SpaceCard,
+  type SpaceCardProps,
+  type SpaceTone,
+} from './space-card';
 
 // Guest Components
 export {
@@ -50,7 +50,7 @@ export {
 export {
   EmptyState,
   NoGuestsEmptyState,
-  NoRoomsEmptyState,
+  NoSpacesEmptyState,
   NoResultsEmptyState,
   type EmptyStateProps,
 } from './empty-state';
@@ -81,9 +81,9 @@ export {
 
 // Share Components
 export {
-  ShareRoomModal,
-  type ShareRoomModalProps,
-} from './share-room-modal';
+  ShareSpaceModal,
+  type ShareSpaceModalProps,
+} from './share-space-modal';
 
 // Contact Components
 export {
@@ -93,9 +93,9 @@ export {
 
 // Report Components
 export {
-  ReportRoomModal,
-  type ReportRoomModalProps,
-} from './report-room-modal';
+  ReportSpaceModal,
+  type ReportSpaceModalProps,
+} from './report-space-modal';
 
 // Guest Detail Components
 export {

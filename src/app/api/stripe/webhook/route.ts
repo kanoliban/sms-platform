@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
       }
 
       case 'charge.captured': {
-        // Payment was captured (after room completion)
+        // Payment was captured (after space completion)
         const charge = event.data.object as Stripe.Charge
         console.log('Payment captured:', charge.id)
         break
@@ -98,7 +98,7 @@ async function handlePaymentSuccess(
   // Payment authorized - update invitation
   const { data: invitation } = await supabase
     .from('invitations')
-    .select('*, user:users(*), room:rooms(*)')
+    .select('*, user:users(*), space:spaces(*)')
     .eq('id', invitationId)
     .single()
 
@@ -109,14 +109,14 @@ async function handlePaymentSuccess(
 
   // Send confirmation
   const user = invitation.user
-  const room = invitation.room
+  const space = invitation.space
 
   if (user?.phone) {
     const msg = confirmationAfterPaymentMessage({
-      roomName: room.name,
-      date: new Date(room.date),
-      time: room.time,
-      locationHint: room.location_hint || 'Location will be sent 24h before',
+      spaceName: space.name,
+      date: new Date(space.date),
+      time: space.time,
+      locationHint: space.location_hint || 'Location will be sent 24h before',
     })
 
     await sendSms(user.phone, msg)
@@ -126,7 +126,7 @@ async function handlePaymentSuccess(
       direction: 'outbound',
       message: msg,
       context: 'payment_confirmation',
-      room_id: room.id,
+      space_id: space.id,
     })
   }
 }
@@ -140,7 +140,7 @@ async function handlePaymentFailure(
 
   const { data: invitation } = await supabase
     .from('invitations')
-    .select('*, user:users(*), room:rooms(*)')
+    .select('*, user:users(*), space:spaces(*)')
     .eq('id', invitationId)
     .single()
 
@@ -153,12 +153,12 @@ async function handlePaymentFailure(
     .eq('id', invitationId)
 
   const user = invitation.user
-  const room = invitation.room
+  const space = invitation.space
 
   if (user?.phone) {
     await sendSms(
       user.phone,
-      `Your payment for ${room.name} didn't go through. Reply ACCEPT to try again, or contact us if you need help.`
+      `Your payment for ${space.name} didn't go through. Reply ACCEPT to try again, or contact us if you need help.`
     )
   }
 }
@@ -184,7 +184,7 @@ async function handleCheckoutComplete(
   // Checkout completed - update invitation to accepted
   const { data: invitation } = await supabase
     .from('invitations')
-    .select('*, user:users(*), room:rooms(*)')
+    .select('*, user:users(*), space:spaces(*)')
     .eq('id', invitationId)
     .single()
 
@@ -199,14 +199,14 @@ async function handleCheckoutComplete(
     .eq('id', invitationId)
 
   const user = invitation.user
-  const room = invitation.room
+  const space = invitation.space
 
   if (user?.phone) {
     const msg = confirmationAfterPaymentMessage({
-      roomName: room.name,
-      date: new Date(room.date),
-      time: room.time,
-      locationHint: room.location_hint || 'Location will be sent 24h before',
+      spaceName: space.name,
+      date: new Date(space.date),
+      time: space.time,
+      locationHint: space.location_hint || 'Location will be sent 24h before',
     })
 
     await sendSms(user.phone, msg)

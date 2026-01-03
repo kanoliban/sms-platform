@@ -103,7 +103,7 @@ export async function POST(request: NextRequest) {
         intent: user.intent,
         tone_preference: user.tone_preference,
         trust_score_overall: user.trust_score_overall,
-        rooms_attended: user.rooms_attended,
+        spaces_attended: user.spaces_attended,
       },
     })
   } catch (err) {

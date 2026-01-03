@@ -35,22 +35,22 @@ const helpCategories: HelpCategory[] = [
       },
       {
         question: 'How do I create an account?',
-        answer: 'You can sign up with your phone number. We\'ll send you a verification code, and once verified, you can start exploring rooms and creating your profile.',
+        answer: 'You can sign up with your phone number. We\'ll send you a verification code, and once verified, you can start exploring spaces and creating your profile.',
       },
       {
         question: 'Is SMS free to use?',
-        answer: 'Creating an account and browsing rooms is free. Some rooms may have a ticket price set by the host, which helps cover the experience costs.',
+        answer: 'Creating an account and browsing spaces is free. Some spaces may have a ticket price set by the host, which helps cover the experience costs.',
       },
       {
-        question: 'How do I find rooms near me?',
-        answer: 'Use the Explore page to browse rooms. You can filter by date, location, and room type to find experiences that match your interests.',
+        question: 'How do I find spaces near me?',
+        answer: 'Use the Explore page to browse spaces. You can filter by date, location, and space type to find experiences that match your interests.',
       },
     ],
   },
   {
     id: 'attending',
     name: 'Attending Rooms',
-    description: 'Everything about joining rooms.',
+    description: 'Everything about joining spaces.',
     icon: (
       <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
@@ -58,8 +58,8 @@ const helpCategories: HelpCategory[] = [
     ),
     faqs: [
       {
-        question: 'How do I join a room?',
-        answer: 'Find a room you\'re interested in, read the details, and click "Request to Join" or "Get Tickets". Some rooms require host approval before you can attend.',
+        question: 'How do I join a space?',
+        answer: 'Find a space you\'re interested in, read the details, and click "Request to Join" or "Get Tickets". Some spaces require host approval before you can attend.',
       },
       {
         question: 'When do I get the exact location?',
@@ -67,22 +67,22 @@ const helpCategories: HelpCategory[] = [
       },
       {
         question: 'Can I bring a friend?',
-        answer: 'It depends on the room. Some hosts allow +1s, while others prefer solo attendees to maximize new connections. Check the room details for specifics.',
+        answer: 'It depends on the space. Some hosts allow +1s, while others prefer solo attendees to maximize new connections. Check the space details for specifics.',
       },
       {
         question: 'What if I need to cancel?',
-        answer: 'You can cancel your spot through the room page. Refund policies vary by room, so check the terms before booking. Generally, cancellations 48+ hours in advance are fully refundable.',
+        answer: 'You can cancel your spot through the space page. Refund policies vary by room, so check the terms before booking. Generally, cancellations 48+ hours in advance are fully refundable.',
       },
       {
         question: 'What should I bring?',
-        answer: 'Just yourself and an open mind! The host will provide details about anything specific in the room description or pre-event communication.',
+        answer: 'Just yourself and an open mind! The host will provide details about anything specific in the space description or pre-event communication.',
       },
     ],
   },
   {
     id: 'hosting',
     name: 'Hosting Rooms',
-    description: 'Create and manage your own rooms.',
+    description: 'Create and manage your own spaces.',
     icon: (
       <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
@@ -90,16 +90,16 @@ const helpCategories: HelpCategory[] = [
     ),
     faqs: [
       {
-        question: 'How do I create a room?',
-        answer: 'Go to Host Hub and click "Create Room". Fill in the details like title, description, date, location, and capacity. You can save as draft or publish immediately.',
+        question: 'How do I create a space?',
+        answer: 'Go to Host Hub and click "Create Space". Fill in the details like title, description, date, location, and capacity. You can save as draft or publish immediately.',
       },
       {
-        question: 'Can I charge for my room?',
+        question: 'Can I charge for my space?',
         answer: 'Yes! You can set a ticket price to cover costs or create a premium experience. SMS handles payments securely and transfers funds to you after the event.',
       },
       {
         question: 'How do I approve guests?',
-        answer: 'When guests request to join, you\'ll see them in your room\'s guest list with "Pending" status. Review their profile and approve or decline their request.',
+        answer: 'When guests request to join, you\'ll see them in your space\'s guest list with "Pending" status. Review their profile and approve or decline their request.',
       },
       {
         question: 'Can I have co-hosts?',
@@ -107,7 +107,7 @@ const helpCategories: HelpCategory[] = [
       },
       {
         question: 'How do I contact my guests?',
-        answer: 'Use the messaging feature in your room dashboard to send updates to all confirmed guests. Individual messages are also available through guest profiles.',
+        answer: 'Use the messaging feature in your space dashboard to send updates to all confirmed guests. Individual messages are also available through guest profiles.',
       },
     ],
   },
@@ -126,16 +126,16 @@ const helpCategories: HelpCategory[] = [
         answer: 'We accept all major credit and debit cards through our secure payment processor, Stripe.',
       },
       {
-        question: 'When am I charged for a room?',
-        answer: 'Payment is collected when you book a room. For rooms requiring approval, payment is only captured after the host approves your request.',
+        question: 'When am I charged for a space?',
+        answer: 'Payment is collected when you book a space. For rooms requiring approval, payment is only captured after the host approves your request.',
       },
       {
         question: 'How do refunds work?',
-        answer: 'Refund policies are set by hosts. Most rooms offer full refunds for cancellations 48+ hours before the event. Check the specific room for details.',
+        answer: 'Refund policies are set by hosts. Most spaces offer full refunds for cancellations 48+ hours before the event. Check the specific space for details.',
       },
       {
         question: 'When do hosts receive payment?',
-        answer: 'Host payouts are processed 24-48 hours after the room ends, once attendance is confirmed. Funds are deposited to your connected bank account.',
+        answer: 'Host payouts are processed 24-48 hours after the space ends, once attendance is confirmed. Funds are deposited to your connected bank account.',
       },
     ],
   },
@@ -159,7 +159,7 @@ const helpCategories: HelpCategory[] = [
       },
       {
         question: 'How do I report a problem?',
-        answer: 'Use the "Report" option on any room or profile page. Our team reviews all reports within 24 hours and takes appropriate action.',
+        answer: 'Use the "Report" option on any space or profile page. Our team reviews all reports within 24 hours and takes appropriate action.',
       },
       {
         question: 'What happens if I feel unsafe?',

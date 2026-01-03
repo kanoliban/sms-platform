@@ -4,9 +4,9 @@ export type UserRole = 'guest' | 'host' | 'founder'
 export type UserIntent = 'human_connection' | 'professional' | 'curious' | 'referred'
 export type TonePreference = 'chill' | 'playful' | 'deep' | 'intense'
 export type TrustStatus = 'new' | 'active' | 'suspended' | 'banned'
-export type RoomStatus = 'draft' | 'open' | 'full' | 'confirmed' | 'completed' | 'canceled'
+export type SpaceStatus = 'draft' | 'open' | 'full' | 'confirmed' | 'completed' | 'canceled'
 export type InvitationStatus = 'pending' | 'sent' | 'accepted' | 'declined' | 'expired'
-export type PromptType = 'pre_room' | 'opening' | 'check_in' | 'energy_check' | 'closing_warning' | 'closing'
+export type PromptType = 'pre_space' | 'opening' | 'check_in' | 'energy_check' | 'closing_warning' | 'closing'
 
 export interface User {
   id: string
@@ -21,14 +21,14 @@ export interface User {
   trust_safety: number
   trust_tenure: number
   trust_status: TrustStatus
-  rooms_attended: number
-  rooms_hosted: number
+  spaces_attended: number
+  spaces_hosted: number
   no_shows: number
   created_at: string
   updated_at: string
 }
 
-export interface Room {
+export interface Space {
   id: string
   host_id: string
   name: string
@@ -41,7 +41,7 @@ export interface Room {
   location_hint: string | null
   capacity: number
   price_cents: number
-  status: RoomStatus
+  status: SpaceStatus
   location_revealed: boolean
   feedback_requested: boolean
   created_at: string
@@ -50,7 +50,7 @@ export interface Room {
 
 export interface Invitation {
   id: string
-  room_id: string
+  space_id: string
   user_id: string
   status: InvitationStatus
   sent_at: string | null
@@ -64,7 +64,7 @@ export interface Invitation {
 
 export interface Feedback {
   id: string
-  room_id: string
+  space_id: string
   user_id: string
   role: 'guest' | 'host'
   felt_different: 'much' | 'somewhat' | 'not_really' | null
@@ -86,14 +86,14 @@ export interface TrustEvent {
   user_id: string
   event_type: string
   delta: number
-  room_id: string | null
+  space_id: string | null
   notes: string | null
   created_at: string
 }
 
 export interface HostPrompt {
   id: string
-  room_id: string
+  space_id: string
   prompt_type: PromptType
   message: string
   send_at: string
@@ -107,6 +107,9 @@ export interface SmsConversation {
   direction: 'inbound' | 'outbound'
   message: string
   context: string | null
-  room_id: string | null
+  space_id: string | null
   created_at: string
 }
+
+// Backwards compatibility alias for Room -> Space migration
+export type Room = Space

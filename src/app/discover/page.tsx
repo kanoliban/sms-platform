@@ -3,10 +3,10 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import type { Room } from '@/lib/supabase/types';
+import type { Space } from '@/lib/supabase/types';
 import { Input, Card, Badge, Button } from '@/components/ui';
 import { PageContainer } from '@/components/layout';
-import { RoomCard, EmptyState, UserMenu, LoginModal, NotificationsDropdown, type Notification } from '@/components/composed';
+import { SpaceCard, EmptyState, UserMenu, LoginModal, NotificationsDropdown, type Notification } from '@/components/composed';
 import { useAuth } from '@/lib/auth/auth-context';
 
 // Demo notifications
@@ -14,11 +14,11 @@ const DEMO_NOTIFICATIONS: Notification[] = [
   {
     id: '1',
     type: 'reminder',
-    title: 'Room Tomorrow',
+    title: 'Space Tomorrow',
     message: 'Dinner & Deep Talks is tomorrow at 7 PM',
     timestamp: '2h ago',
     read: false,
-    room: { id: 'demo-1', name: 'Dinner & Deep Talks' },
+    space: { id: 'demo-1', name: 'Dinner & Deep Talks' },
   },
   {
     id: '2',
@@ -27,7 +27,7 @@ const DEMO_NOTIFICATIONS: Notification[] = [
     message: 'The location for Game Night has been revealed! Check it out.',
     timestamp: 'Yesterday',
     read: false,
-    room: { id: 'demo-3', name: 'Game Night Strangers' },
+    space: { id: 'demo-3', name: 'Game Night Strangers' },
   },
   {
     id: '3',
@@ -36,13 +36,13 @@ const DEMO_NOTIFICATIONS: Notification[] = [
     message: 'Your request to join Strangers & Vinyl was approved',
     timestamp: '3 days ago',
     read: true,
-    room: { id: 'demo-2', name: 'Strangers & Vinyl' },
+    space: { id: 'demo-2', name: 'Strangers & Vinyl' },
   },
 ];
 
-type RoomTone = 'chill' | 'playful' | 'deep' | 'intense';
+type SpaceTone = 'chill' | 'playful' | 'deep' | 'intense';
 
-type RoomWithHost = Room & {
+type SpaceWithHost = Space & {
   host: { name: string };
   guest_count: number;
 };
@@ -52,8 +52,8 @@ const isSupabaseConfigured = () => {
   return !!(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
 };
 
-// Mock rooms for demo mode
-const MOCK_ROOMS: RoomWithHost[] = [
+// Mock spaces for demo mode
+const MOCK_ROOMS: SpaceWithHost[] = [
   {
     id: 'demo-1',
     host_id: 'host-1',
@@ -182,7 +182,7 @@ const MOCK_ROOMS: RoomWithHost[] = [
   },
 ];
 
-const TONE_OPTIONS: { value: RoomTone | 'all'; label: string; color: string }[] = [
+const TONE_OPTIONS: { value: SpaceTone | 'all'; label: string; color: string }[] = [
   { value: 'all', label: 'All Vibes', color: 'var(--text-secondary)' },
   { value: 'chill', label: 'Chill', color: 'var(--tone-chill)' },
   { value: 'playful', label: 'Playful', color: 'var(--tone-playful)' },
@@ -193,7 +193,7 @@ const TONE_OPTIONS: { value: RoomTone | 'all'; label: string; color: string }[] 
 export default function DiscoverPage() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
-  const [rooms, setRooms] = useState<RoomWithHost[]>([]);
+  const [spaces, setSpaces] = useState<SpaceWithHost[]>([]);
   const [loading, setLoading] = useState(true);
   const [demoMode, setDemoMode] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
@@ -212,24 +212,24 @@ export default function DiscoverPage() {
 
   const handleNotificationClick = useCallback((notification: Notification) => {
     handleMarkRead(notification.id);
-    if (notification.room?.id) {
-      router.push(`/rooms/${notification.room.id}`);
+    if (notification.space?.id) {
+      router.push(`/spaces/${notification.space.id}`);
     }
   }, [handleMarkRead, router]);
 
   // Filters
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedTone, setSelectedTone] = useState<RoomTone | 'all'>('all');
+  const [selectedTone, setSelectedTone] = useState<SpaceTone | 'all'>('all');
   const [priceFilter, setPriceFilter] = useState<'all' | 'free' | 'paid'>('all');
 
   useEffect(() => {
-    loadRooms();
+    loadSpaces();
   }, []);
 
-  async function loadRooms() {
+  async function loadSpaces() {
     if (!isSupabaseConfigured()) {
       setDemoMode(true);
-      setRooms(MOCK_ROOMS);
+      setSpaces(MOCK_ROOMS);
       setLoading(false);
       return;
     }
@@ -237,59 +237,59 @@ export default function DiscoverPage() {
     const { createClient } = await import('@/lib/supabase/client');
     const supabase = createClient();
 
-    // Get open rooms with host info
-    const { data: roomsData } = await supabase
-      .from('rooms')
+    // Get open spaces with host info
+    const { data: spacesData } = await supabase
+      .from('spaces')
       .select(`
         *,
-        host:users!rooms_host_id_fkey(name),
+        host:users!spaces_host_id_fkey(name),
         invitations(status)
       `)
       .eq('status', 'open')
       .gte('date', new Date().toISOString().split('T')[0])
       .order('date', { ascending: true });
 
-    if (roomsData) {
-      const roomsWithCounts = roomsData.map((room: Room & { host: { name: string }; invitations: { status: string }[] }) => ({
-        ...room,
-        guest_count: room.invitations?.filter((i: { status: string }) => i.status === 'accepted').length || 0,
+    if (spacesData) {
+      const roomsWithCounts = spacesData.map((space: Space & { host: { name: string }; invitations: { status: string }[] }) => ({
+        ...space,
+        guest_count: space.invitations?.filter((i: { status: string }) => i.status === 'accepted').length || 0,
       }));
-      setRooms(roomsWithCounts);
+      setSpaces(roomsWithCounts);
     }
 
     setLoading(false);
   }
 
-  // Filter rooms
-  const filteredRooms = useMemo(() => {
-    return rooms.filter((room) => {
+  // Filter spaces
+  const filteredSpaces = useMemo(() => {
+    return spaces.filter((space) => {
       // Search filter
       if (searchQuery) {
         const query = searchQuery.toLowerCase();
         const matchesSearch =
-          room.name.toLowerCase().includes(query) ||
-          room.description?.toLowerCase().includes(query) ||
-          room.location_hint?.toLowerCase().includes(query) ||
-          room.host.name.toLowerCase().includes(query);
+          space.name.toLowerCase().includes(query) ||
+          space.description?.toLowerCase().includes(query) ||
+          space.location_hint?.toLowerCase().includes(query) ||
+          space.host.name.toLowerCase().includes(query);
         if (!matchesSearch) return false;
       }
 
       // Tone filter
-      if (selectedTone !== 'all' && room.tone !== selectedTone) {
+      if (selectedTone !== 'all' && space.tone !== selectedTone) {
         return false;
       }
 
       // Price filter
-      if (priceFilter === 'free' && room.price_cents > 0) {
+      if (priceFilter === 'free' && space.price_cents > 0) {
         return false;
       }
-      if (priceFilter === 'paid' && room.price_cents === 0) {
+      if (priceFilter === 'paid' && space.price_cents === 0) {
         return false;
       }
 
       return true;
     });
-  }, [rooms, searchQuery, selectedTone, priceFilter]);
+  }, [spaces, searchQuery, selectedTone, priceFilter]);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -327,8 +327,8 @@ export default function DiscoverPage() {
               <Link href="/discover" className="text-[var(--text-sm)] text-[var(--text-primary)] font-medium">
                 Discover
               </Link>
-              <Link href="/my-rooms" className="text-[var(--text-sm)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]">
-                My Rooms
+              <Link href="/my-spaces" className="text-[var(--text-sm)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]">
+                My Spaces
               </Link>
               <Link href="/profile" className="text-[var(--text-sm)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]">
                 Profile
@@ -367,10 +367,10 @@ export default function DiscoverPage() {
       <div className="border-b border-[var(--border-subtle)]">
         <PageContainer size="lg" className="py-12 text-center">
           <h1 className="text-[var(--text-3xl)] font-bold text-[var(--text-primary)] mb-3">
-            Discover Rooms
+            Discover Spaces
           </h1>
           <p className="text-[var(--text-lg)] text-[var(--text-secondary)] max-w-2xl mx-auto">
-            Find your next adventure with strangers in Minneapolis. Every room is a chance to meet someone new.
+            Find your next adventure with strangers in Minneapolis. Every space is a chance to meet someone new.
           </p>
         </PageContainer>
       </div>
@@ -391,7 +391,7 @@ export default function DiscoverPage() {
             </svg>
             <Input
               type="text"
-              placeholder="Search rooms, hosts, neighborhoods..."
+              placeholder="Search spaces, hosts, neighborhoods..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-12 py-3"
@@ -456,7 +456,7 @@ export default function DiscoverPage() {
         {/* Results Count */}
         <div className="mb-6 flex items-center justify-between">
           <p className="text-[var(--text-sm)] text-[var(--text-secondary)]">
-            {filteredRooms.length} room{filteredRooms.length !== 1 ? 's' : ''} available
+            {filteredSpaces.length} space{filteredSpaces.length !== 1 ? 's' : ''} available
           </p>
           {(searchQuery || selectedTone !== 'all' || priceFilter !== 'all') && (
             <button
@@ -473,8 +473,8 @@ export default function DiscoverPage() {
           )}
         </div>
 
-        {/* Room Grid */}
-        {filteredRooms.length === 0 ? (
+        {/* Space Grid */}
+        {filteredSpaces.length === 0 ? (
           <Card className="p-12">
             <EmptyState
               icon={
@@ -482,29 +482,29 @@ export default function DiscoverPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
                 </svg>
               }
-              title="No rooms found"
+              title="No spaces found"
               description={
                 searchQuery || selectedTone !== 'all' || priceFilter !== 'all'
-                  ? "Try adjusting your filters to find more rooms."
-                  : "Check back soon for new rooms in your area."
+                  ? "Try adjusting your filters to find more spaces."
+                  : "Check back soon for new spaces in your area."
               }
             />
           </Card>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredRooms.map((room) => (
-              <RoomCard
-                key={room.id}
-                id={room.id}
-                title={room.name}
-                tone={room.tone as RoomTone}
-                date={room.date}
-                time={room.time}
-                location={room.location_hint || undefined}
-                capacity={room.capacity}
-                guestCount={room.guest_count}
-                hostName={room.host.name}
-                href={`/rooms/${room.id}`}
+            {filteredSpaces.map((space) => (
+              <SpaceCard
+                key={space.id}
+                id={space.id}
+                title={space.name}
+                tone={space.tone as SpaceTone}
+                date={space.date}
+                time={space.time}
+                location={space.location_hint || undefined}
+                capacity={space.capacity}
+                guestCount={space.guest_count}
+                hostName={space.host.name}
+                href={`/spaces/${space.id}`}
               />
             ))}
           </div>
@@ -514,12 +514,12 @@ export default function DiscoverPage() {
         <div className="mt-16 text-center">
           <Card className="p-8 bg-gradient-to-br from-[var(--bg-surface)] to-[var(--bg-subtle)] border-[var(--border-default)]">
             <h2 className="text-[var(--text-xl)] font-semibold text-[var(--text-primary)] mb-3">
-              Want to host your own room?
+              Want to host your own space?
             </h2>
             <p className="text-[var(--text-secondary)] mb-6 max-w-md mx-auto">
               Create meaningful gatherings and meet interesting people in your neighborhood.
             </p>
-            <Button variant="primary" size="lg" onClick={() => window.location.href = '/host/rooms/new'}>
+            <Button variant="primary" size="lg" onClick={() => window.location.href = '/host/spaces/new'}>
               Become a Host
             </Button>
           </Card>

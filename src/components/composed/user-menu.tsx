@@ -96,7 +96,7 @@ export function UserMenu() {
 
           <div className="py-1">
             <Link
-              href="/my-rooms"
+              href="/my-spaces"
               onClick={() => setOpen(false)}
               className="
                 block px-4 py-2
@@ -105,7 +105,7 @@ export function UserMenu() {
                 transition-colors duration-[var(--duration-normal)]
               "
             >
-              My Rooms
+              My Spaces
             </Link>
             <Link
               href="/profile"

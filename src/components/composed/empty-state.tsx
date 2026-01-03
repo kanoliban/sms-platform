@@ -178,13 +178,13 @@ export function NoGuestsEmptyState(props: Partial<EmptyStateProps>) {
         </svg>
       }
       title="No guests yet"
-      description="Share your room link or send invites to get the party started."
+      description="Share your space link or send invites to get the party started."
       {...props}
     />
   );
 }
 
-export function NoRoomsEmptyState(props: Partial<EmptyStateProps>) {
+export function NoSpacesEmptyState(props: Partial<EmptyStateProps>) {
   return (
     <EmptyState
       icon={
@@ -192,8 +192,8 @@ export function NoRoomsEmptyState(props: Partial<EmptyStateProps>) {
           <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
         </svg>
       }
-      title="No rooms yet"
-      description="Create your first room to start hosting amazing experiences."
+      title="No spaces yet"
+      description="Create your first space to start hosting amazing experiences."
       {...props}
     />
   );

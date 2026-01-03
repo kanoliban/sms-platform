@@ -4,7 +4,7 @@ import type { User } from '@/lib/supabase/types'
 // Trust score events and their deltas
 export const TRUST_EVENTS = {
   // Positive events
-  room_attended: { delta: 3, component: 'reliability' as const },
+  space_attended: { delta: 3, component: 'reliability' as const },
   feedback_submitted: { delta: 1, component: 'social' as const },
   positive_host_feedback: { delta: 3, component: 'social' as const },
   positive_guest_feedback: { delta: 2, component: 'social' as const },
@@ -15,11 +15,11 @@ export const TRUST_EVENTS = {
   late_cancel: { delta: -5, component: 'reliability' as const },
   negative_host_feedback: { delta: -10, component: 'social' as const },
   agreement_violation: { delta: -20, component: 'safety' as const },
-  phone_during_room: { delta: -3, component: 'social' as const },
+  phone_during_space: { delta: -3, component: 'social' as const },
 
   // Host-specific
-  room_hosted: { delta: 5, component: 'reliability' as const },
-  room_canceled_by_host: { delta: -8, component: 'reliability' as const },
+  space_hosted: { delta: 5, component: 'reliability' as const },
+  space_canceled_by_host: { delta: -8, component: 'reliability' as const },
 
   // Tenure (time-based)
   monthly_active: { delta: 1, component: 'tenure' as const },
@@ -39,7 +39,7 @@ const COMPONENT_WEIGHTS = {
 export async function recordTrustEvent(
   userId: string,
   eventType: TrustEventType,
-  roomId?: string,
+  spaceId?: string,
   notes?: string,
   customDelta?: number
 ): Promise<void> {
@@ -52,7 +52,7 @@ export async function recordTrustEvent(
     user_id: userId,
     event_type: eventType,
     delta,
-    room_id: roomId,
+    space_id: spaceId,
     notes,
   })
 
@@ -121,10 +121,10 @@ async function checkTrustStatus(userId: string, overallScore: number): Promise<v
     .eq('id', userId)
 }
 
-// Check if user can be invited to a room
+// Check if user can be invited to a space
 export function canInviteToRoom(
   user: Pick<User, 'trust_score_overall' | 'trust_status' | 'no_shows'>,
-  roomTone?: 'chill' | 'playful' | 'deep' | 'intense'
+  spaceTone?: 'chill' | 'playful' | 'deep' | 'intense'
 ): { allowed: boolean; reason?: string } {
   // Banned users cannot attend
   if (user.trust_status === 'banned') {
@@ -141,10 +141,10 @@ export function canInviteToRoom(
     return { allowed: false, reason: 'Too many no-shows' }
   }
 
-  // Deep/intense rooms require higher trust
-  if (roomTone === 'deep' || roomTone === 'intense') {
+  // Deep/intense spaces require higher trust
+  if (spaceTone === 'deep' || spaceTone === 'intense') {
     if (user.trust_score_overall < 45) {
-      return { allowed: false, reason: 'Trust score too low for this room type' }
+      return { allowed: false, reason: 'Trust score too low for this space type' }
     }
   }
 
@@ -153,7 +153,7 @@ export function canInviteToRoom(
 
 // Check if user can host
 export function canHost(
-  user: Pick<User, 'trust_score_overall' | 'trust_status' | 'rooms_attended'>
+  user: Pick<User, 'trust_score_overall' | 'trust_status' | 'spaces_attended'>
 ): { allowed: boolean; reason?: string } {
   if (user.trust_status !== 'active') {
     return { allowed: false, reason: 'User must be in active status to host' }
@@ -163,8 +163,8 @@ export function canHost(
     return { allowed: false, reason: 'Trust score too low to host' }
   }
 
-  if (user.rooms_attended < 2) {
-    return { allowed: false, reason: 'Must attend at least 2 rooms before hosting' }
+  if (user.spaces_attended < 2) {
+    return { allowed: false, reason: 'Must attend at least 2 spaces before hosting' }
   }
 
   return { allowed: true }
@@ -198,7 +198,7 @@ export function getTrustDisplay(score: number): {
     return {
       label: 'Caution',
       color: 'orange',
-      description: 'Limited access to certain rooms',
+      description: 'Limited access to certain spaces',
     }
   } else {
     return {

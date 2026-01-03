@@ -294,7 +294,7 @@ function getHostWelcomeHtml(name: string): string {
       Hey ${name}!
     </h2>
     <p style="margin: 0 0 20px 0; color: #444444; font-size: 16px; line-height: 1.6;">
-      We got your application. You want to create a room where strangers meet.
+      We got your application. You want to create a space where strangers meet.
     </p>
     <p style="margin: 0 0 20px 0; color: #444444; font-size: 16px; line-height: 1.6;">
       Here's what that looks like:
@@ -307,7 +307,7 @@ function getHostWelcomeHtml(name: string): string {
       We've done this 35+ times. Now we're giving you the infrastructure.
     </p>
     <p style="margin: 0 0 20px 0; color: #444444; font-size: 16px; line-height: 1.6;">
-      <strong>What's next?</strong> We'll review your application and reach out within 48 hours to chat about your first room.
+      <strong>What's next?</strong> We'll review your application and reach out within 48 hours to chat about your first space.
     </p>
     <p style="margin: 30px 0 0 0; color: #444444; font-size: 16px; line-height: 1.6;">
       Talk soon,<br>
@@ -340,7 +340,7 @@ https://strangersmeetingstrangers.com`
 function getHostWelcomeText(name: string): string {
   return `Hey ${name}!
 
-We got your application. You want to create a room where strangers meet.
+We got your application. You want to create a space where strangers meet.
 
 Here's what that looks like:
 
@@ -350,7 +350,7 @@ You text the idea. We find the strangers. They show up. You host. You get paid.
 
 We've done this 35+ times. Now we're giving you the infrastructure.
 
-What's next? We'll review your application and reach out within 48 hours to chat about your first room.
+What's next? We'll review your application and reach out within 48 hours to chat about your first space.
 
 Talk soon,
 SMS
@@ -730,7 +730,7 @@ function getHostApprovedHtml(name: string, dashboardUrl: string): string {
       Here's what you can do now:
     </p>
     <ul style="margin: 0 0 20px 0; padding-left: 20px; color: #444444; font-size: 16px; line-height: 1.8;">
-      <li>Create your first room</li>
+      <li>Create your first space</li>
       <li>Set your price and capacity</li>
       <li>We'll find the strangers</li>
       <li>You host. You get paid.</li>
@@ -749,7 +749,7 @@ function getHostApprovedText(name: string, dashboardUrl: string): string {
 Your host application has been approved. Welcome to the other side.
 
 Here's what you can do now:
-- Create your first room
+- Create your first space
 - Set your price and capacity
 - We'll find the strangers
 - You host. You get paid.

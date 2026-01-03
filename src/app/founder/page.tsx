@@ -3,30 +3,30 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import type { Room, User, Invitation, Feedback } from '@/lib/supabase/types'
+import type { Space, User, Invitation, Feedback } from '@/lib/supabase/types'
 
-type RoomWithDetails = Room & {
+type SpaceWithDetails = Space & {
   host: Pick<User, 'id' | 'name' | 'phone'>
   invitations: Array<Invitation & { user: Pick<User, 'id' | 'name' | 'phone' | 'trust_score_overall'> }>
   feedback: Feedback[]
 }
 
 type UserWithStats = User & {
-  recent_rooms: number
+  recent_spaces: number
 }
 
 export default function FounderDashboard() {
-  const [rooms, setRooms] = useState<RoomWithDetails[]>([])
+  const [spaces, setSpaces] = useState<SpaceWithDetails[]>([])
   const [users, setUsers] = useState<UserWithStats[]>([])
   const [stats, setStats] = useState({
-    totalRooms: 0,
+    totalSpaces: 0,
     totalGuests: 0,
     totalAttendees: 0,
     avgTrustScore: 0,
     noShowRate: 0,
   })
   const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState<'rooms' | 'users' | 'trust'>('rooms')
+  const [activeTab, setActiveTab] = useState<'spaces' | 'users' | 'trust'>('spaces')
 
   useEffect(() => {
     loadData()
@@ -35,12 +35,12 @@ export default function FounderDashboard() {
   async function loadData() {
     const supabase = createClient()
 
-    // Load all rooms with details
-    const { data: roomsData } = await supabase
-      .from('rooms')
+    // Load all spaces with details
+    const { data: spacesData } = await supabase
+      .from('spaces')
       .select(`
         *,
-        host:users!rooms_host_id_fkey (
+        host:users!spaces_host_id_fkey (
           id,
           name,
           phone
@@ -58,8 +58,8 @@ export default function FounderDashboard() {
       `)
       .order('date', { ascending: false })
 
-    if (roomsData) {
-      setRooms(roomsData as RoomWithDetails[])
+    if (spacesData) {
+      setSpaces(spacesData as SpaceWithDetails[])
     }
 
     // Load all users with stats
@@ -73,8 +73,8 @@ export default function FounderDashboard() {
     }
 
     // Calculate stats
-    const totalRooms = roomsData?.length || 0
-    const allInvitations = roomsData?.flatMap((r) => r.invitations) || []
+    const totalSpaces = spacesData?.length || 0
+    const allInvitations = spacesData?.flatMap((r) => r.invitations) || []
     const totalGuests = new Set(allInvitations.map((i) => i.user_id)).size
     const totalAttendees = allInvitations.filter((i) => i.attended === true).length
     const noShows = allInvitations.filter((i) => i.attended === false).length
@@ -85,7 +85,7 @@ export default function FounderDashboard() {
       : 0
 
     setStats({
-      totalRooms,
+      totalSpaces,
       totalGuests,
       totalAttendees,
       avgTrustScore: avgTrust,
@@ -95,7 +95,7 @@ export default function FounderDashboard() {
     setLoading(false)
   }
 
-  const getStatusColor = (status: Room['status']) => {
+  const getStatusColor = (status: Space['status']) => {
     switch (status) {
       case 'draft':
         return 'bg-zinc-700'
@@ -164,8 +164,8 @@ export default function FounderDashboard() {
         {/* Stats Grid */}
         <div className="grid grid-cols-5 gap-4 mb-8">
           <div className="p-4 border border-white/20 rounded-lg">
-            <div className="text-3xl font-bold">{stats.totalRooms}</div>
-            <div className="text-sm text-white/60">Total Rooms</div>
+            <div className="text-3xl font-bold">{stats.totalSpaces}</div>
+            <div className="text-sm text-white/60">Total Spaces</div>
           </div>
           <div className="p-4 border border-white/20 rounded-lg">
             <div className="text-3xl font-bold">{stats.totalGuests}</div>
@@ -188,14 +188,14 @@ export default function FounderDashboard() {
         {/* Tab Navigation */}
         <div className="flex gap-4 mb-6 border-b border-white/10">
           <button
-            onClick={() => setActiveTab('rooms')}
+            onClick={() => setActiveTab('spaces')}
             className={`px-4 py-2 -mb-px border-b-2 transition-colors ${
-              activeTab === 'rooms'
+              activeTab === 'spaces'
                 ? 'border-white text-white'
                 : 'border-transparent text-white/60 hover:text-white'
             }`}
           >
-            All Rooms
+            All Spaces
           </button>
           <button
             onClick={() => setActiveTab('users')}
@@ -219,49 +219,49 @@ export default function FounderDashboard() {
           </button>
         </div>
 
-        {/* Rooms Tab */}
-        {activeTab === 'rooms' && (
+        {/* Spaces Tab */}
+        {activeTab === 'spaces' && (
           <div className="space-y-4">
-            {rooms.length === 0 ? (
-              <div className="text-center text-white/60 p-8">No rooms yet</div>
+            {spaces.length === 0 ? (
+              <div className="text-center text-white/60 p-8">No spaces yet</div>
             ) : (
-              rooms.map((room) => {
-                const accepted = room.invitations?.filter((i) => i.status === 'accepted').length || 0
-                const attended = room.invitations?.filter((i) => i.attended === true).length || 0
-                const noShows = room.invitations?.filter((i) => i.attended === false).length || 0
-                const feedbackCount = room.feedback?.length || 0
+              spaces.map((space) => {
+                const accepted = space.invitations?.filter((i) => i.status === 'accepted').length || 0
+                const attended = space.invitations?.filter((i) => i.attended === true).length || 0
+                const noShows = space.invitations?.filter((i) => i.attended === false).length || 0
+                const feedbackCount = space.feedback?.length || 0
 
                 return (
                   <div
-                    key={room.id}
+                    key={space.id}
                     className="p-4 border border-white/20 rounded-lg hover:border-white/40 transition-colors"
                   >
                     <div className="flex justify-between items-start mb-2">
                       <div>
                         <div className="flex items-center gap-3">
-                          <h3 className="text-lg font-medium">{room.name}</h3>
+                          <h3 className="text-lg font-medium">{space.name}</h3>
                           <span
                             className={`px-2 py-0.5 text-xs uppercase tracking-wide rounded ${getStatusColor(
-                              room.status
+                              space.status
                             )}`}
                           >
-                            {room.status}
+                            {space.status}
                           </span>
                         </div>
                         <p className="text-sm text-white/60">
-                          Hosted by {room.host?.name || room.host?.phone || 'Unknown'} ·{' '}
-                          {new Date(room.date).toLocaleDateString('en-US', {
+                          Hosted by {space.host?.name || space.host?.phone || 'Unknown'} ·{' '}
+                          {new Date(space.date).toLocaleDateString('en-US', {
                             month: 'short',
                             day: 'numeric',
                           })}{' '}
-                          at {room.time}
+                          at {space.time}
                         </p>
                       </div>
                       <div className="text-right text-sm">
                         <div className="text-white/60">
-                          {accepted}/{room.capacity} accepted
+                          {accepted}/{space.capacity} accepted
                         </div>
-                        {room.status === 'completed' && (
+                        {space.status === 'completed' && (
                           <div className="text-green-400">
                             {attended} attended · {noShows} no-shows
                           </div>
@@ -270,11 +270,11 @@ export default function FounderDashboard() {
                     </div>
 
                     {/* Guest list preview */}
-                    {room.invitations && room.invitations.length > 0 && (
+                    {space.invitations && space.invitations.length > 0 && (
                       <div className="mt-3 pt-3 border-t border-white/10">
                         <div className="text-xs text-white/40 mb-2">Guests:</div>
                         <div className="flex flex-wrap gap-2">
-                          {room.invitations.slice(0, 8).map((inv) => (
+                          {space.invitations.slice(0, 8).map((inv) => (
                             <div
                               key={inv.id}
                               className={`px-2 py-1 text-xs rounded ${
@@ -295,9 +295,9 @@ export default function FounderDashboard() {
                               )}
                             </div>
                           ))}
-                          {room.invitations.length > 8 && (
+                          {space.invitations.length > 8 && (
                             <div className="px-2 py-1 text-xs text-white/40">
-                              +{room.invitations.length - 8} more
+                              +{space.invitations.length - 8} more
                             </div>
                           )}
                         </div>
@@ -347,11 +347,11 @@ export default function FounderDashboard() {
                   </span>
                 </div>
                 <div className="text-sm">
-                  <span className="text-white/60">Attended:</span> {user.rooms_attended}
+                  <span className="text-white/60">Attended:</span> {user.spaces_attended}
                   {user.role === 'host' && (
                     <>
                       <br />
-                      <span className="text-white/60">Hosted:</span> {user.rooms_hosted}
+                      <span className="text-white/60">Hosted:</span> {user.spaces_hosted}
                     </>
                   )}
                 </div>

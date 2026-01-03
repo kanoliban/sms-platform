@@ -13,7 +13,7 @@ export interface InviteModalProps {
   open: boolean;
   onClose: () => void;
   onSend: (recipients: InviteRecipient[]) => Promise<void>;
-  roomName: string;
+  spaceName: string;
   capacity: number;
   currentCount: number;
   suggestedGuests?: InviteRecipient[];
@@ -46,7 +46,7 @@ export function InviteModal({
   open,
   onClose,
   onSend,
-  roomName,
+  spaceName,
   capacity,
   currentCount,
   suggestedGuests = [],
@@ -284,7 +284,7 @@ export function InviteModal({
                 <path strokeLinecap="round" strokeLinejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
               </svg>
               <p className="text-[var(--text-sm)] text-[var(--text-muted)]">
-                Add phone numbers to invite guests to {roomName}
+                Add phone numbers to invite guests to {spaceName}
               </p>
             </div>
           ) : (

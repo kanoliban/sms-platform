@@ -37,9 +37,9 @@ export async function POST(request: NextRequest) {
     const userPhone = payload.phone as string
 
     const body = await request.json()
-    const { room_id } = body
+    const { space_id } = body
 
-    if (!room_id) {
+    if (!space_id) {
       return NextResponse.json(
         { error: 'Room ID required' },
         { status: 400 }
@@ -48,30 +48,30 @@ export async function POST(request: NextRequest) {
 
     const supabase = createServerClient()
 
-    // Get the room
-    const { data: room, error: roomError } = await supabase
-      .from('rooms')
+    // Get the space
+    const { data: space, error: spaceError } = await supabase
+      .from('spaces')
       .select('*')
-      .eq('id', room_id)
+      .eq('id', space_id)
       .single()
 
-    if (roomError || !room) {
-      return NextResponse.json({ error: 'Room not found' }, { status: 404 })
+    if (spaceError || !space) {
+      return NextResponse.json({ error: 'Space not found' }, { status: 404 })
     }
 
-    // Check room status
-    if (room.status !== 'open') {
+    // Check space status
+    if (space.status !== 'open') {
       return NextResponse.json(
-        { error: 'This room is not accepting RSVPs' },
+        { error: 'This space is not accepting RSVPs' },
         { status: 400 }
       )
     }
 
-    // Check room is not in the past
-    const roomDate = new Date(`${room.date}T${room.time}`)
-    if (roomDate < new Date()) {
+    // Check space is not in the past
+    const spaceDate = new Date(`${space.date}T${space.time}`)
+    if (spaceDate < new Date()) {
       return NextResponse.json(
-        { error: 'This room has already happened' },
+        { error: 'This space has already happened' },
         { status: 400 }
       )
     }
@@ -80,12 +80,12 @@ export async function POST(request: NextRequest) {
     const { count: acceptedCount } = await supabase
       .from('invitations')
       .select('*', { count: 'exact', head: true })
-      .eq('room_id', room_id)
+      .eq('space_id', space_id)
       .eq('status', 'accepted')
 
-    if (acceptedCount && acceptedCount >= room.capacity) {
+    if (acceptedCount && acceptedCount >= space.capacity) {
       return NextResponse.json(
-        { error: 'This room is full' },
+        { error: 'This space is full' },
         { status: 400 }
       )
     }
@@ -94,7 +94,7 @@ export async function POST(request: NextRequest) {
     const { data: existingInvitation } = await supabase
       .from('invitations')
       .select('*')
-      .eq('room_id', room_id)
+      .eq('space_id', space_id)
       .eq('user_id', userId)
       .single()
 
@@ -104,7 +104,7 @@ export async function POST(request: NextRequest) {
       // Already has an invitation
       if (existingInvitation.status === 'accepted') {
         return NextResponse.json(
-          { error: 'You have already RSVP\'d to this room' },
+          { error: 'You have already RSVP\'d to this space' },
           { status: 400 }
         )
       }
@@ -123,10 +123,10 @@ export async function POST(request: NextRequest) {
       const { data: newInvitation, error: inviteError } = await supabase
         .from('invitations')
         .insert({
-          room_id,
+          space_id,
           user_id: userId,
           status: 'pending',
-          amount_cents: room.price_cents,
+          amount_cents: space.price_cents,
         })
         .select()
         .single()
@@ -144,15 +144,15 @@ export async function POST(request: NextRequest) {
 
     // Build URLs
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || request.headers.get('origin') || 'http://localhost:3000'
-    const successUrl = `${baseUrl}/rooms/${room_id}/success?invitation=${invitationId}`
-    const cancelUrl = `${baseUrl}/rooms/${room_id}`
+    const successUrl = `${baseUrl}/spaces/${space_id}/success?invitation=${invitationId}`
+    const cancelUrl = `${baseUrl}/spaces/${space_id}`
 
     // Create Stripe checkout session
     const session = await createCheckoutSession(
-      room.price_cents,
+      space.price_cents,
       {
         invitation_id: invitationId,
-        room_id: room_id,
+        space_id: space_id,
         user_id: userId,
         user_phone: userPhone,
       },

@@ -23,7 +23,7 @@ export interface GuestDetail {
   avatar?: string;
   status: GuestStatus;
   joinedAt: string;
-  roomsAttended: number;
+  spacesAttended: number;
   checkIns: number;
   totalPaid: number;
   tags: GuestTag[];
@@ -175,7 +175,7 @@ export function GuestDetailSlideOver({
 
   const handleBlock = useCallback(async () => {
     if (!onBlock) return;
-    const confirm = window.confirm(`Are you sure you want to block ${guest?.name}? They won't be able to register for any of your rooms.`);
+    const confirm = window.confirm(`Are you sure you want to block ${guest?.name}? They won't be able to register for any of your spaces.`);
     if (!confirm) return;
 
     setBlocking(true);
@@ -184,7 +184,7 @@ export function GuestDetailSlideOver({
       toast({
         variant: 'success',
         title: 'Guest blocked',
-        description: `${guest?.name} has been blocked from all your rooms.`,
+        description: `${guest?.name} has been blocked from all your spaces.`,
       });
       onClose();
     } catch {
@@ -410,7 +410,7 @@ export function GuestDetailSlideOver({
           <div className="bg-[var(--bg-subtle)] rounded-[var(--radius-lg)] p-3 text-center">
             <p className="text-[var(--text-xs)] text-[var(--text-muted)] mb-1"># Rooms</p>
             <p className="text-[var(--text-sm)] font-medium text-[var(--text-primary)]">
-              {guest.roomsAttended}
+              {guest.spacesAttended}
             </p>
           </div>
           <div className="bg-[var(--bg-subtle)] rounded-[var(--radius-lg)] p-3 text-center">
@@ -552,7 +552,7 @@ export function GuestDetailSlideOver({
         )}
 
         {/* Empty State for no activity */}
-        {guest.roomsAttended === 0 && (
+        {guest.spacesAttended === 0 && (
           <div className="text-center py-8">
             <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-[var(--bg-subtle)] flex items-center justify-center">
               <svg className="w-6 h-6 text-[var(--text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -560,7 +560,7 @@ export function GuestDetailSlideOver({
               </svg>
             </div>
             <p className="text-[var(--text-sm)] text-[var(--text-muted)]">
-              No rooms attended yet.
+              No spaces attended yet.
             </p>
           </div>
         )}

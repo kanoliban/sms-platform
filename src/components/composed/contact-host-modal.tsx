@@ -11,7 +11,7 @@ export interface ContactHostModalProps {
     name: string;
     avatar?: string;
   };
-  roomName: string;
+  spaceName: string;
   userEmail?: string;
   onSubmit: (message: string) => Promise<void>;
 }
@@ -20,7 +20,7 @@ export function ContactHostModal({
   open,
   onClose,
   host,
-  roomName,
+  spaceName,
   userEmail,
   onSubmit,
 }: ContactHostModalProps) {
@@ -87,7 +87,7 @@ export function ContactHostModal({
           <span>Contact the Host</span>
         </div>
       }
-      description="Have a question about the room? Send a message to the host."
+      description="Have a question about the space? Send a message to the host."
       footer={
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 text-[var(--text-sm)] text-[var(--text-muted)]">
@@ -130,7 +130,7 @@ export function ContactHostModal({
           </div>
           <div className="min-w-0">
             <p className="text-[var(--text-sm)] font-medium text-[var(--text-primary)] truncate">
-              {roomName}
+              {spaceName}
             </p>
             <p className="text-[var(--text-xs)] text-[var(--text-muted)]">
               Hosted by {host.name}

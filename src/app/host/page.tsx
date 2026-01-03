@@ -2,14 +2,14 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import type { Room, User } from '@/lib/supabase/types';
+import type { Space, User } from '@/lib/supabase/types';
 import { Button, Card } from '@/components/ui';
 import { PageContainer } from '@/components/layout';
-import { RoomCard, StatsGrid, EmptyState, AppHeader } from '@/components/composed';
+import { SpaceCard, StatsGrid, EmptyState, AppHeader } from '@/components/composed';
 
-type RoomTone = 'chill' | 'playful' | 'deep' | 'intense';
+type SpaceTone = 'chill' | 'playful' | 'deep' | 'intense';
 
-type RoomWithCounts = Room & {
+type SpaceWithCounts = Space & {
   accepted_count: number;
   total_invited: number;
 };
@@ -20,7 +20,7 @@ const isSupabaseConfigured = () => {
 };
 
 // Mock data for demo/preview mode
-const MOCK_ROOMS: RoomWithCounts[] = [
+const MOCK_SPACES: SpaceWithCounts[] = [
   {
     id: 'demo-1',
     host_id: 'demo-host',
@@ -99,15 +99,15 @@ const MOCK_HOST: User = {
   trust_safety: 75,
   trust_tenure: 50,
   trust_status: 'active',
-  rooms_attended: 15,
-  rooms_hosted: 8,
+  spaces_attended: 15,
+  spaces_hosted: 8,
   no_shows: 0,
   created_at: new Date().toISOString(),
   updated_at: new Date().toISOString(),
 };
 
 export default function HostDashboard() {
-  const [rooms, setRooms] = useState<RoomWithCounts[]>([]);
+  const [spaces, setSpaces] = useState<SpaceWithCounts[]>([]);
   const [loading, setLoading] = useState(true);
   const [host, setHost] = useState<User | null>(null);
   const [demoMode, setDemoMode] = useState(false);
@@ -122,7 +122,7 @@ export default function HostDashboard() {
       // Use mock data for demo
       setDemoMode(true);
       setHost(MOCK_HOST);
-      setRooms(MOCK_ROOMS);
+      setSpaces(MOCK_SPACES);
       setLoading(false);
       return;
     }
@@ -145,9 +145,9 @@ export default function HostDashboard() {
       if (user) {
         setHost(user);
 
-        // Get rooms with invitation counts
-        const { data: roomsData } = await supabase
-          .from('rooms')
+        // Get spaces with invitation counts
+        const { data: spacesData } = await supabase
+          .from('spaces')
           .select(`
             *,
             invitations (
@@ -158,13 +158,13 @@ export default function HostDashboard() {
           .eq('host_id', user.id)
           .order('date', { ascending: true });
 
-        if (roomsData) {
-          const roomsWithCounts = roomsData.map((room: Room & { invitations: { id: string; status: string }[] }) => ({
-            ...room,
-            accepted_count: room.invitations?.filter((i: { status: string }) => i.status === 'accepted').length || 0,
-            total_invited: room.invitations?.length || 0,
+        if (spacesData) {
+          const spacesWithCounts = spacesData.map((space: Space & { invitations: { id: string; status: string }[] }) => ({
+            ...space,
+            accepted_count: space.invitations?.filter((i: { status: string }) => i.status === 'accepted').length || 0,
+            total_invited: space.invitations?.length || 0,
           }));
-          setRooms(roomsWithCounts);
+          setSpaces(spacesWithCounts);
         }
       }
     }
@@ -173,9 +173,9 @@ export default function HostDashboard() {
   }
 
   // Calculate stats
-  const totalGuests = rooms.reduce((sum, r) => sum + r.accepted_count, 0);
-  const upcomingRooms = rooms.filter(r => r.status === 'open' || r.status === 'confirmed').length;
-  const totalRevenue = rooms.reduce((sum, r) => sum + (r.accepted_count * r.price_cents), 0);
+  const totalGuests = spaces.reduce((sum, r) => sum + r.accepted_count, 0);
+  const upcomingSpaces = spaces.filter(r => r.status === 'open' || r.status === 'confirmed').length;
+  const totalRevenue = spaces.reduce((sum, r) => sum + (r.accepted_count * r.price_cents), 0);
 
   if (loading) {
     return (
@@ -204,15 +204,15 @@ export default function HostDashboard() {
               {host ? `Welcome back, ${host.name || 'Host'}` : 'Host Hub'}
             </h1>
             <p className="text-[var(--text-sm)] text-[var(--text-secondary)] mt-1">
-              Manage your rooms and guests
+              Manage your spaces and guests
             </p>
           </div>
-          <Link href="/host/rooms/new">
+          <Link href="/host/spaces/new">
             <Button variant="primary" size="lg">
               <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
               </svg>
-              Create Room
+              Create Space
             </Button>
           </Link>
         </div>
@@ -221,8 +221,8 @@ export default function HostDashboard() {
         <StatsGrid
           stats={[
             {
-              label: 'Total Rooms',
-              value: rooms.length,
+              label: 'Total Spaces',
+              value: spaces.length,
               icon: (
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
@@ -231,7 +231,7 @@ export default function HostDashboard() {
             },
             {
               label: 'Upcoming',
-              value: upcomingRooms,
+              value: upcomingSpaces,
               icon: (
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
@@ -265,41 +265,41 @@ export default function HostDashboard() {
         {/* Room List */}
         <div className="mb-6">
           <h2 className="text-[var(--text-lg)] font-semibold text-[var(--text-primary)] mb-4">
-            Your Rooms
+            Your Spaces
           </h2>
         </div>
 
-        {rooms.length === 0 ? (
+        {spaces.length === 0 ? (
           <EmptyState
             icon={
               <svg className="w-12 h-12" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
               </svg>
             }
-            title="No rooms yet"
-            description="Create your first room to start hosting strangers."
+            title="No spaces yet"
+            description="Create your first space to start hosting strangers."
             action={{
               label: 'Create Your First Room',
-              href: '/host/rooms/new',
+              href: '/host/spaces/new',
               variant: 'primary',
             }}
           />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {rooms.map((room) => (
-              <RoomCard
-                key={room.id}
-                id={room.id}
-                title={room.name}
-                tone={room.tone as RoomTone}
-                date={room.date}
-                time={room.time}
-                location={room.location_hint || undefined}
-                capacity={room.capacity}
-                guestCount={room.accepted_count}
+            {spaces.map((space) => (
+              <SpaceCard
+                key={space.id}
+                id={space.id}
+                title={space.name}
+                tone={space.tone as SpaceTone}
+                date={space.date}
+                time={space.time}
+                location={space.location_hint || undefined}
+                capacity={space.capacity}
+                guestCount={space.accepted_count}
                 hostName={host?.name || 'You'}
-                href={`/host/rooms/${room.id}`}
-                isLive={room.status === 'confirmed'}
+                href={`/host/spaces/${space.id}`}
+                isLive={space.status === 'confirmed'}
               />
             ))}
           </div>
@@ -312,7 +312,7 @@ export default function HostDashboard() {
               Become a Host
             </h2>
             <p className="text-[var(--text-secondary)] mb-6">
-              To create rooms, you'll need to complete host onboarding.
+              To create spaces, you'll need to complete host onboarding.
               This includes reading the philosophy doc and understanding
               what it means to carry the SMS brand.
             </p>

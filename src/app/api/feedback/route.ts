@@ -2,14 +2,14 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient, createAdminClient } from '@/lib/supabase/server'
 import { recordTrustEvent } from '@/lib/trust/scoring'
 
-// GET /api/feedback - Get feedback for a room
+// GET /api/feedback - Get feedback for a space
 export async function GET(request: NextRequest) {
   try {
     const supabase = createServerClient()
     const { searchParams } = new URL(request.url)
-    const roomId = searchParams.get('room_id')
+    const spaceId = searchParams.get('space_id')
 
-    if (!roomId) {
+    if (!spaceId) {
       return NextResponse.json({ error: 'Room ID required' }, { status: 400 })
     }
 
@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
           phone
         )
       `)
-      .eq('room_id', roomId)
+      .eq('space_id', spaceId)
       .order('submitted_at', { ascending: true })
 
     if (error) {
@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
 
     const {
-      room_id,
+      space_id,
       user_id,
       role, // 'guest' or 'host'
       // Guest feedback fields
@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
       what_would_help,
     } = body
 
-    if (!room_id || !user_id || !role) {
+    if (!space_id || !user_id || !role) {
       return NextResponse.json(
         { error: 'Room ID, user ID, and role required' },
         { status: 400 }
@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
     const { data: existing } = await supabase
       .from('feedback')
       .select('id')
-      .eq('room_id', room_id)
+      .eq('space_id', space_id)
       .eq('user_id', user_id)
       .single()
 
@@ -88,7 +88,7 @@ export async function POST(request: NextRequest) {
     const { data: feedback, error } = await supabase
       .from('feedback')
       .insert({
-        room_id,
+        space_id,
         user_id,
         role,
         // Guest fields
@@ -118,7 +118,7 @@ export async function POST(request: NextRequest) {
     await recordTrustEvent(
       user_id,
       'feedback_submitted',
-      room_id,
+      space_id,
       `Feedback submitted as ${role}`
     )
 
@@ -126,18 +126,18 @@ export async function POST(request: NextRequest) {
     if (role === 'guest') {
       // Positive feedback increases host's trust
       if (felt_different === 'much' || attend_again === 'definitely') {
-        // Get room host
-        const { data: room } = await supabase
-          .from('rooms')
+        // Get space host
+        const { data: space } = await supabase
+          .from('spaces')
           .select('host_id')
-          .eq('id', room_id)
+          .eq('id', space_id)
           .single()
 
-        if (room?.host_id) {
+        if (space?.host_id) {
           await recordTrustEvent(
-            room.host_id,
+            space.host_id,
             'positive_guest_feedback',
-            room_id,
+            space_id,
             `Positive guest feedback: felt_different=${felt_different}, attend_again=${attend_again}`
           )
         }
@@ -146,7 +146,7 @@ export async function POST(request: NextRequest) {
       // Report agreement violations
       if (agreements_followed === 'issues' && issues) {
         // Log for founder review - could trigger further investigation
-        console.log(`Agreement violation reported in room ${room_id}: ${issues}`)
+        console.log(`Agreement violation reported in room ${space_id}: ${issues}`)
       }
     }
 
@@ -154,12 +154,12 @@ export async function POST(request: NextRequest) {
       // Process host feedback about specific guests
       if (difficult_guests) {
         // Log for founder review
-        console.log(`Difficult guests reported in room ${room_id}: ${difficult_guests}`)
+        console.log(`Difficult guests reported in room ${space_id}: ${difficult_guests}`)
       }
 
       if (exceptional_guests) {
         // Could award bonus trust to mentioned guests
-        console.log(`Exceptional guests in room ${room_id}: ${exceptional_guests}`)
+        console.log(`Exceptional guests in room ${space_id}: ${exceptional_guests}`)
       }
     }
 

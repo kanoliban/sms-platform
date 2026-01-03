@@ -2,17 +2,17 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase/server'
 import { sendSms, normalizePhoneNumber } from '@/lib/twilio/client'
 import { contractInviteMessage } from '@/lib/twilio/messages'
-import type { Room, User } from '@/lib/supabase/types'
+import type { Space, User } from '@/lib/supabase/types'
 
-// GET /api/invitations - List invitations for a room
+// GET /api/invitations - List invitations for a space
 export async function GET(request: NextRequest) {
   try {
     const supabase = createServerClient()
     const { searchParams } = new URL(request.url)
-    const roomId = searchParams.get('room_id')
+    const spaceId = searchParams.get('space_id')
 
-    if (!roomId) {
-      return NextResponse.json({ error: 'Room ID required' }, { status: 400 })
+    if (!spaceId) {
+      return NextResponse.json({ error: 'Space ID required' }, { status: 400 })
     }
 
     const { data, error } = await supabase
@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
           trust_score_overall
         )
       `)
-      .eq('room_id', roomId)
+      .eq('space_id', spaceId)
       .order('created_at', { ascending: true })
 
     if (error) {
@@ -46,11 +46,11 @@ export async function POST(request: NextRequest) {
     const supabase = createServerClient()
     const body = await request.json()
 
-    const { room_id, phone } = body
+    const { space_id, phone } = body
 
-    if (!room_id || !phone) {
+    if (!space_id || !phone) {
       return NextResponse.json(
-        { error: 'Room ID and phone number required' },
+        { error: 'Space ID and phone number required' },
         { status: 400 }
       )
     }
@@ -58,28 +58,28 @@ export async function POST(request: NextRequest) {
     // Normalize phone number
     const normalizedPhone = normalizePhoneNumber(phone)
 
-    // Get the room
-    const { data: room, error: roomError } = await supabase
-      .from('rooms')
+    // Get the space
+    const { data: space, error: spaceError } = await supabase
+      .from('spaces')
       .select(`
         *,
-        host:users!rooms_host_id_fkey (
+        host:users!spaces_host_id_fkey (
           id,
           name,
           phone
         )
       `)
-      .eq('id', room_id)
+      .eq('id', space_id)
       .single()
 
-    if (roomError || !room) {
-      return NextResponse.json({ error: 'Room not found' }, { status: 404 })
+    if (spaceError || !space) {
+      return NextResponse.json({ error: 'Space not found' }, { status: 404 })
     }
 
-    // Check room status
-    if (room.status !== 'open' && room.status !== 'draft') {
+    // Check space status
+    if (space.status !== 'open' && space.status !== 'draft') {
       return NextResponse.json(
-        { error: 'Room is not accepting invitations' },
+        { error: 'Space is not accepting invitations' },
         { status: 400 }
       )
     }
@@ -88,12 +88,12 @@ export async function POST(request: NextRequest) {
     const { count: acceptedCount } = await supabase
       .from('invitations')
       .select('*', { count: 'exact', head: true })
-      .eq('room_id', room_id)
+      .eq('space_id', space_id)
       .eq('status', 'accepted')
 
-    if (acceptedCount && acceptedCount >= room.capacity) {
+    if (acceptedCount && acceptedCount >= space.capacity) {
       return NextResponse.json(
-        { error: 'Room is at capacity' },
+        { error: 'Space is at capacity' },
         { status: 400 }
       )
     }
@@ -142,13 +142,13 @@ export async function POST(request: NextRequest) {
     const { data: existingInvitation } = await supabase
       .from('invitations')
       .select('*')
-      .eq('room_id', room_id)
+      .eq('space_id', space_id)
       .eq('user_id', user.id)
       .single()
 
     if (existingInvitation) {
       return NextResponse.json(
-        { error: 'User already invited to this room' },
+        { error: 'User already invited to this space' },
         { status: 400 }
       )
     }
@@ -157,10 +157,10 @@ export async function POST(request: NextRequest) {
     const { data: invitation, error: inviteError } = await supabase
       .from('invitations')
       .insert({
-        room_id,
+        space_id,
         user_id: user.id,
         status: 'pending',
-        amount_cents: room.price_cents,
+        amount_cents: space.price_cents,
       })
       .select()
       .single()
@@ -174,14 +174,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Send SMS invitation
-    const hostName = (room as Room & { host: Pick<User, 'id' | 'name' | 'phone'> }).host?.name || 'Your host'
+    const hostName = (space as Space & { host: Pick<User, 'id' | 'name' | 'phone'> }).host?.name || 'Your host'
     const smsMessage = contractInviteMessage({
-      roomName: room.name,
+      spaceName: space.name,
       hostName,
-      date: new Date(room.date),
-      time: room.time,
-      locationHint: room.location_hint || 'Location TBA',
-      priceDollars: room.price_cents / 100,
+      date: new Date(space.date),
+      time: space.time,
+      locationHint: space.location_hint || 'Location TBA',
+      priceDollars: space.price_cents / 100,
     })
 
     try {
@@ -202,7 +202,7 @@ export async function POST(request: NextRequest) {
         direction: 'outbound',
         message: smsMessage,
         context: 'contract_invite',
-        room_id: room_id,
+        space_id: space_id,
       })
 
       return NextResponse.json({

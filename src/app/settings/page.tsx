@@ -21,7 +21,7 @@ const isSupabaseConfigured = () => {
 
 interface Settings {
   notifications: {
-    roomReminders: boolean;
+    spaceReminders: boolean;
     inviteAlerts: boolean;
     hostUpdates: boolean;
     marketingEmails: boolean;
@@ -35,7 +35,7 @@ interface Settings {
 
 const DEFAULT_SETTINGS: Settings = {
   notifications: {
-    roomReminders: true,
+    spaceReminders: true,
     inviteAlerts: true,
     hostUpdates: true,
     marketingEmails: false,
@@ -171,15 +171,15 @@ export default function SettingsPage() {
                 <div className="flex items-start justify-between gap-4 pb-6 border-b border-[var(--border-subtle)]">
                   <div>
                     <h3 className="text-[var(--text-sm)] font-medium text-[var(--text-primary)]">
-                      Room Reminders
+                      Space Reminders
                     </h3>
                     <p className="text-[var(--text-sm)] text-[var(--text-muted)] mt-1">
-                      Get SMS reminders before rooms you're attending
+                      Get SMS reminders before spaces you're attending
                     </p>
                   </div>
                   <Toggle
-                    checked={settings.notifications.roomReminders}
-                    onChange={(e) => updateNotification('roomReminders', e.target.checked)}
+                    checked={settings.notifications.spaceReminders}
+                    onChange={(e) => updateNotification('spaceReminders', e.target.checked)}
                   />
                 </div>
 
@@ -189,7 +189,7 @@ export default function SettingsPage() {
                       Invite Alerts
                     </h3>
                     <p className="text-[var(--text-sm)] text-[var(--text-muted)] mt-1">
-                      Get notified when you receive a room invitation
+                      Get notified when you receive a space invitation
                     </p>
                   </div>
                   <Toggle
@@ -204,7 +204,7 @@ export default function SettingsPage() {
                       Host Updates
                     </h3>
                     <p className="text-[var(--text-sm)] text-[var(--text-muted)] mt-1">
-                      Receive blasts and updates from room hosts
+                      Receive blasts and updates from space hosts
                     </p>
                   </div>
                   <Toggle
@@ -219,7 +219,7 @@ export default function SettingsPage() {
                       Marketing Messages
                     </h3>
                     <p className="text-[var(--text-sm)] text-[var(--text-muted)] mt-1">
-                      Occasional updates about new features and rooms near you
+                      Occasional updates about new features and spaces near you
                     </p>
                   </div>
                   <Toggle
@@ -260,7 +260,7 @@ export default function SettingsPage() {
                       Allow Host Contact
                     </h3>
                     <p className="text-[var(--text-sm)] text-[var(--text-muted)] mt-1">
-                      Let hosts reach out about upcoming rooms you might like
+                      Let hosts reach out about upcoming spaces you might like
                     </p>
                   </div>
                   <Toggle
@@ -275,7 +275,7 @@ export default function SettingsPage() {
                       Share Attendance History
                     </h3>
                     <p className="text-[var(--text-sm)] text-[var(--text-muted)] mt-1">
-                      Allow others to see which rooms you've attended
+                      Allow others to see which spaces you've attended
                     </p>
                   </div>
                   <Toggle
@@ -319,7 +319,7 @@ export default function SettingsPage() {
                   </a>
 
                   <a
-                    href="/my-rooms"
+                    href="/my-spaces"
                     className="flex items-center justify-between p-4 rounded-[var(--radius-lg)] bg-[var(--bg-subtle)] hover:bg-[var(--bg-surface)] border border-[var(--border-subtle)] hover:border-[var(--border-default)] transition-all"
                   >
                     <div className="flex items-center gap-3">
@@ -328,10 +328,10 @@ export default function SettingsPage() {
                       </svg>
                       <div>
                         <p className="text-[var(--text-sm)] font-medium text-[var(--text-primary)]">
-                          My Rooms
+                          My Spaces
                         </p>
                         <p className="text-[var(--text-xs)] text-[var(--text-muted)]">
-                          View your upcoming and past rooms
+                          View your upcoming and past spaces
                         </p>
                       </div>
                     </div>

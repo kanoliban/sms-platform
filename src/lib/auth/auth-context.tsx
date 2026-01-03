@@ -13,8 +13,8 @@ export interface SMSUser {
   tone_preference: string | null
   trust_score_overall: number
   trust_status: string
-  rooms_attended: number
-  rooms_hosted: number
+  spaces_attended: number
+  spaces_hosted: number
   no_shows: number
   created_at: string
 }

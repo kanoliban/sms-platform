@@ -2,7 +2,7 @@
 // All messages are designed for brevity and clarity
 
 interface ContractInviteParams {
-  roomName: string
+  spaceName: string
   hostName: string
   date: Date
   time: string
@@ -11,7 +11,7 @@ interface ContractInviteParams {
 }
 
 export function contractInviteMessage(params: ContractInviteParams): string {
-  const { roomName, hostName, date, time, locationHint, priceDollars } = params
+  const { spaceName, hostName, date, time, locationHint, priceDollars } = params
   const dateStr = date.toLocaleDateString('en-US', {
     weekday: 'short',
     month: 'short',
@@ -20,11 +20,11 @@ export function contractInviteMessage(params: ContractInviteParams): string {
 
   return `SMS ROOM INVITATION
 
-You're invited to: ${roomName}
+You're invited to: ${spaceName}
 Hosted by: ${hostName}
 ${dateStr} at ${time} · ${locationHint}
 
-This is a room where strangers meet with intention.
+This is a space where strangers meet with intention.
 
 BY ACCEPTING, YOU COMMIT TO:
 • Confidentiality - what's shared stays here
@@ -39,13 +39,13 @@ Cancel 48+ hours before: no charge.`
 }
 
 interface AcceptedParams {
-  roomName: string
+  spaceName: string
   date: Date
   time: string
 }
 
 export function acceptedMessage(params: AcceptedParams): string {
-  const { roomName, date, time } = params
+  const { spaceName, date, time } = params
   const dateStr = date.toLocaleDateString('en-US', {
     weekday: 'short',
     month: 'short',
@@ -54,24 +54,24 @@ export function acceptedMessage(params: AcceptedParams): string {
 
   return `You're in.
 
-${roomName}
+${spaceName}
 ${dateStr} at ${time}
 
 The full address will be sent 24 hours before.
 
-Remember: What's shared in the room stays in the room.
+Remember: What's shared in the space stays in the space.
 
 See you there.`
 }
 
 interface DeclinedParams {
-  roomName: string
+  spaceName: string
 }
 
 export function declinedMessage(params: DeclinedParams): string {
-  return `Got it. You've declined the invitation to ${params.roomName}.
+  return `Got it. You've declined the invitation to ${params.spaceName}.
 
-We hope to see you at a future room. Reply HELP anytime if you have questions.`
+We hope to see you at a future space. Reply HELP anytime if you have questions.`
 }
 
 export function paymentLinkMessage(checkoutUrl: string): string {
@@ -82,14 +82,14 @@ Your card will only be charged after you attend.`
 }
 
 interface ConfirmationAfterPaymentParams {
-  roomName: string
+  spaceName: string
   date: Date
   time: string
   locationHint: string
 }
 
 export function confirmationAfterPaymentMessage(params: ConfirmationAfterPaymentParams): string {
-  const { roomName, date, time, locationHint } = params
+  const { spaceName, date, time, locationHint } = params
   const dateStr = date.toLocaleDateString('en-US', {
     weekday: 'long',
     month: 'long',
@@ -98,7 +98,7 @@ export function confirmationAfterPaymentMessage(params: ConfirmationAfterPayment
 
   return `Your spot is confirmed.
 
-${roomName}
+${spaceName}
 ${dateStr} at ${time}
 ${locationHint}
 
@@ -113,7 +113,7 @@ See you there.`
 }
 
 interface LocationRevealParams {
-  roomName: string
+  spaceName: string
   date: Date
   time: string
   address: string
@@ -121,16 +121,16 @@ interface LocationRevealParams {
 }
 
 export function locationRevealMessage(params: LocationRevealParams): string {
-  const { roomName, date, time, address, hostName } = params
+  const { spaceName, date, time, address, hostName } = params
   const dateStr = date.toLocaleDateString('en-US', {
     weekday: 'long',
     month: 'long',
     day: 'numeric',
   })
 
-  return `Your room is tomorrow.
+  return `Your space is tomorrow.
 
-${roomName}
+${spaceName}
 ${dateStr} at ${time}
 
 ADDRESS:
@@ -147,21 +147,21 @@ See you there.`
 }
 
 interface HostLocationReminderParams {
-  roomName: string
+  spaceName: string
   guestCount: number
   date: Date
   time: string
 }
 
 export function hostLocationReminderMessage(params: HostLocationReminderParams): string {
-  const { roomName, guestCount, date, time } = params
+  const { spaceName, guestCount, date, time } = params
   const dateStr = date.toLocaleDateString('en-US', {
     weekday: 'short',
     month: 'short',
     day: 'numeric',
   })
 
-  return `TOMORROW: ${roomName}
+  return `TOMORROW: ${spaceName}
 ${dateStr} at ${time}
 ${guestCount} confirmed guests
 
@@ -169,16 +169,16 @@ Guests have received the address.
 
 Your first prompt arrives 2 hours before start.
 
-Your calm sets the room's calm.`
+Your calm sets the space's calm.`
 }
 
 // Pocket Liban Prompts - Sent to hosts at key moments
 export const pocketLibanPrompts = {
-  pre_room: {
+  pre_space: {
     timing: -120, // 2 hours before
-    message: `Your room starts in 2 hours.
+    message: `Your space starts in 2 hours.
 
-Take a breath. Your energy sets the room's energy.
+Take a breath. Your energy sets the space's energy.
 
 Quick checklist:
 □ Space is ready (chairs, minimal clutter)
@@ -186,7 +186,7 @@ Quick checklist:
 □ Phones collected at the door
 □ You feel calm
 
-Your calm sets the room's calm.`,
+Your calm sets the space's calm.`,
   },
 
   opening: {
@@ -195,7 +195,7 @@ Your calm sets the room's calm.`,
 
 OPENING CONTAINER (say this or similar):
 
-"Welcome to SMS. This is a room where strangers meet with intention.
+"Welcome to SMS. This is a space where strangers meet with intention.
 
 Before we begin, three agreements:
 
@@ -276,16 +276,16 @@ You did it.`,
   },
 }
 
-// Schedule prompts for a room
-export function schedulePocketLibanPrompts(roomId: string, roomDateTime: Date): Array<{
-  room_id: string
+// Schedule prompts for a space
+export function schedulePocketLibanPrompts(spaceId: string, spaceDateTime: Date): Array<{
+  space_id: string
   prompt_type: string
   message: string
   send_at: string
   sent: boolean
 }> {
   const prompts: Array<{
-    room_id: string
+    space_id: string
     prompt_type: string
     message: string
     send_at: string
@@ -293,10 +293,10 @@ export function schedulePocketLibanPrompts(roomId: string, roomDateTime: Date): 
   }> = []
 
   for (const [type, prompt] of Object.entries(pocketLibanPrompts)) {
-    const sendAt = new Date(roomDateTime.getTime() + prompt.timing * 60 * 1000)
+    const sendAt = new Date(spaceDateTime.getTime() + prompt.timing * 60 * 1000)
 
     prompts.push({
-      room_id: roomId,
+      space_id: spaceId,
       prompt_type: type,
       message: prompt.message,
       send_at: sendAt.toISOString(),
@@ -309,12 +309,12 @@ export function schedulePocketLibanPrompts(roomId: string, roomDateTime: Date): 
 
 // Feedback request messages
 interface FeedbackRequestParams {
-  roomName: string
+  spaceName: string
   guestName: string
 }
 
 export function guestFeedbackRequest(params: FeedbackRequestParams): string {
-  return `Thanks for attending ${params.roomName}!
+  return `Thanks for attending ${params.spaceName}!
 
 Quick feedback (takes 30 seconds):
 
@@ -326,10 +326,10 @@ B) Somewhat
 C) Not really`
 }
 
-export function hostFeedbackRequest(roomName: string): string {
-  return `How did ${roomName} go?
+export function hostFeedbackRequest(spaceName: string): string {
+  return `How did ${spaceName} go?
 
-Did it feel like an SMS room?
+Did it feel like an SMS space?
 
 Reply:
 1) Yes, it felt like SMS
@@ -345,8 +345,8 @@ export const guestFeedbackFollowups = {
     C: 'Thanks for the honesty. What would have made it feel more meaningful?\n\n(Reply with your thoughts)',
   },
   shared_something: {
-    Y: 'That\'s what it\'s about. Would you attend another SMS room?\n\nReply:\nA) Definitely\nB) Maybe\nC) Probably not',
-    N: 'That\'s okay. Would you attend another SMS room?\n\nReply:\nA) Definitely\nB) Maybe\nC) Probably not',
+    Y: 'That\'s what it\'s about. Would you attend another SMS space?\n\nReply:\nA) Definitely\nB) Maybe\nC) Probably not',
+    N: 'That\'s okay. Would you attend another SMS space?\n\nReply:\nA) Definitely\nB) Maybe\nC) Probably not',
   },
 }
 
@@ -359,16 +359,16 @@ export const hostFeedbackFollowups = {
 }
 
 // Reminder messages
-export function reminder24hMessage(roomName: string, time: string): string {
-  return `Reminder: ${roomName} is tomorrow at ${time}.
+export function reminder24hMessage(spaceName: string, time: string): string {
+  return `Reminder: ${spaceName} is tomorrow at ${time}.
 
 The address will arrive in a few hours.
 
 Looking forward to seeing you there.`
 }
 
-export function reminder2hMessage(roomName: string, address: string): string {
-  return `${roomName} starts in 2 hours.
+export function reminder2hMessage(spaceName: string, address: string): string {
+  return `${spaceName} starts in 2 hours.
 
 Address: ${address}
 

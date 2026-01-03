@@ -22,9 +22,9 @@ export async function POST(request: NextRequest) {
       .from('host_prompts')
       .select(`
         *,
-        room:rooms (
+        space:spaces (
           *,
-          host:users!rooms_host_id_fkey (
+          host:users!spaces_host_id_fkey (
             id,
             name,
             phone
@@ -48,11 +48,11 @@ export async function POST(request: NextRequest) {
     let errors = 0
 
     for (const prompt of prompts) {
-      const room = prompt.room
-      const host = room?.host
+      const space = prompt.space
+      const host = space?.host
 
-      // Skip if room is canceled or completed
-      if (room?.status === 'canceled' || room?.status === 'completed') {
+      // Skip if space is canceled or completed
+      if (space?.status === 'canceled' || space?.status === 'completed') {
         // Mark as sent to skip in future
         await supabase
           .from('host_prompts')
@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
 
       // Skip if no host phone
       if (!host?.phone) {
-        console.error(`No phone for host of room ${room?.id}`)
+        console.error(`No phone for host of space ${space?.id}`)
         errors++
         continue
       }
@@ -84,11 +84,11 @@ export async function POST(request: NextRequest) {
           direction: 'outbound',
           message: prompt.message,
           context: `pocket_liban_${prompt.prompt_type}`,
-          room_id: room.id,
+          space_id: space.id,
         })
 
         processed++
-        console.log(`Sent ${prompt.prompt_type} prompt for room ${room.id}`)
+        console.log(`Sent ${prompt.prompt_type} prompt for room ${space.id}`)
       } catch (err) {
         console.error(`Error sending prompt ${prompt.id}:`, err)
         errors++
