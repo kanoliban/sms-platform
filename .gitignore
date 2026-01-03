@@ -43,3 +43,4 @@ Luma web Dec 2024/
 
 # supabase
 supabase/.temp/
+.env*.local

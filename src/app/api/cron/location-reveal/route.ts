@@ -123,10 +123,40 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // --- Auto-complete spaces that have ended ---
+    // Find spaces that are past their end time and still in active status
+    const { data: endedSpaces, error: endedError } = await supabase
+      .from('spaces')
+      .select('id, date, time, duration_hours')
+      .in('status', ['open', 'full', 'confirmed'])
+
+    let completedCount = 0
+    if (!endedError && endedSpaces) {
+      for (const space of endedSpaces) {
+        const startTime = new Date(`${space.date}T${space.time}`)
+        const durationHours = space.duration_hours || 3 // Default 3 hours if not set
+        const endTime = new Date(startTime.getTime() + durationHours * 60 * 60 * 1000)
+
+        // If end time has passed, mark as completed
+        if (now > endTime) {
+          const { error: updateError } = await supabase
+            .from('spaces')
+            .update({ status: 'completed' })
+            .eq('id', space.id)
+
+          if (!updateError) {
+            completedCount++
+            console.log(`Auto-completed space ${space.id}`)
+          }
+        }
+      }
+    }
+
     return NextResponse.json({
       message: `Location reveal processed`,
       processed,
       errors,
+      autoCompleted: completedCount,
     })
   } catch (err) {
     console.error('Location reveal cron error:', err)

@@ -201,6 +201,23 @@ async function handleCheckoutComplete(
   const user = invitation.user
   const space = invitation.space
 
+  // Check if space is now at capacity → auto-update to 'full'
+  if (space.status === 'open') {
+    const { count } = await supabase
+      .from('invitations')
+      .select('*', { count: 'exact', head: true })
+      .eq('space_id', space.id)
+      .eq('status', 'accepted')
+
+    if (count && count >= space.capacity) {
+      await supabase
+        .from('spaces')
+        .update({ status: 'full' })
+        .eq('id', space.id)
+      console.log(`Space ${space.id} auto-updated to full status (${count}/${space.capacity})`)
+    }
+  }
+
   if (user?.phone) {
     const msg = confirmationAfterPaymentMessage({
       spaceName: space.name,
