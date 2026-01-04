@@ -30,7 +30,7 @@ export function SignupView({ type, onBack, animate = false }: SignupViewProps) {
     setError(null)
 
     try {
-      const response = await fetch('/api/signup', {
+      const response = await fetch('/api/leads', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ type, ...formData }),

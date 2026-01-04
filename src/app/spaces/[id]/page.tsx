@@ -10,6 +10,7 @@ import {
   Badge,
   Avatar,
   AvatarStack,
+  Modal,
 } from '@/components/ui';
 import { toast } from '@/components/ui/toast';
 import {
@@ -38,7 +39,7 @@ type SpaceWithHost = Space & {
   guests?: Array<{ name: string; avatar?: string }>;
 };
 
-type InvitationStatus = 'none' | 'pending' | 'sent' | 'accepted' | 'declined' | 'expired';
+type InvitationStatus = 'none' | 'pending' | 'sent' | 'accepted' | 'declined' | 'expired' | 'canceled';
 
 type UserInvitation = {
   id: string;
@@ -127,6 +128,10 @@ export default function PublicRoomPage() {
   const [showOnboardingReminder, setShowOnboardingReminder] = useState(false);
   const [userInvitation, setUserInvitation] = useState<UserInvitation | null>(null);
   const [rsvpLoading, setRsvpLoading] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [cancelLoading, setCancelLoading] = useState(false);
+  const [showGetReady, setShowGetReady] = useState(false);
+  const [reminderPrefs, setReminderPrefs] = useState({ text: true, email: true });
 
   useEffect(() => {
     loadRoom();
@@ -263,6 +268,44 @@ export default function PublicRoomPage() {
     setShowOnboardingReminder(false);
     // Continue with RSVP, skipping the onboarding check
     handleRSVP(true);
+  }
+
+  // Handle cancel RSVP
+  async function handleCancelRSVP() {
+    if (!userInvitation) return;
+
+    setCancelLoading(true);
+    try {
+      const response = await fetch('/api/rsvp/cancel', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ invitation_id: userInvitation.id }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to cancel RSVP');
+      }
+
+      toast({
+        variant: 'success',
+        title: 'RSVP Canceled',
+        description: 'The host has been notified of your cancellation.',
+      });
+
+      // Refresh invitation status
+      setUserInvitation(null);
+      setShowCancelModal(false);
+    } catch (err) {
+      toast({
+        variant: 'error',
+        title: 'Cancel Failed',
+        description: err instanceof Error ? err.message : 'Please try again.',
+      });
+    } finally {
+      setCancelLoading(false);
+    }
   }
 
   // Generate calendar URLs
@@ -545,20 +588,139 @@ export default function PublicRoomPage() {
           </span>
         </div>
 
-        {/* RSVP Button */}
+        {/* RSVP Status Section */}
         {!isPast && spotsLeft > 0 && (
           <div className="mb-6">
             {userInvitation?.status === 'accepted' ? (
-              // Already confirmed
-              <div className="bg-[var(--success-muted)] rounded-[var(--radius-lg)] p-4 text-center">
-                <div className="flex items-center justify-center gap-2 text-[var(--success-text)] mb-2">
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                  </svg>
-                  <span className="font-medium">You're going!</span>
+              // Confirmed - You're going!
+              <div className="space-y-4">
+                <div className="bg-[var(--success-muted)] rounded-[var(--radius-lg)] p-4 text-center">
+                  <div className="flex items-center justify-center gap-2 text-[var(--success-text)] mb-2">
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span className="font-medium">You're going!</span>
+                  </div>
+                  <p className="text-[var(--text-sm)] text-[var(--text-secondary)]">
+                    We'll send the full address 24 hours before.
+                  </p>
                 </div>
-                <p className="text-[var(--text-sm)] text-[var(--text-secondary)]">
-                  We'll send the full address 24 hours before.
+
+                {/* Cancel link */}
+                <p className="text-[var(--text-xs)] text-[var(--text-muted)] text-center">
+                  No longer able to attend?{' '}
+                  <button
+                    onClick={() => setShowCancelModal(true)}
+                    className="text-[var(--primary)] hover:underline"
+                  >
+                    Cancel your RSVP
+                  </button>
+                </p>
+
+                {/* Get Ready for the Space - Expandable */}
+                <div className="border border-[var(--border-default)] rounded-[var(--radius-lg)] overflow-hidden">
+                  <button
+                    onClick={() => setShowGetReady(!showGetReady)}
+                    className="w-full flex items-center justify-between p-4 text-left hover:bg-[var(--bg-subtle)] transition-colors"
+                  >
+                    <span className="font-medium text-[var(--text-primary)]">Get Ready for the Space</span>
+                    <svg
+                      className={`w-5 h-5 text-[var(--text-muted)] transition-transform ${showGetReady ? 'rotate-180' : ''}`}
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth={2}
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+
+                  {showGetReady && (
+                    <div className="px-4 pb-4 border-t border-[var(--border-subtle)]">
+                      <div className="grid grid-cols-2 gap-4 pt-4">
+                        {/* Your Profile */}
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2 text-[var(--text-sm)] text-[var(--text-secondary)]">
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                            </svg>
+                            Your Profile
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Avatar name={user?.name || 'Guest'} size="sm" />
+                            <span className="text-[var(--text-sm)] text-[var(--text-primary)]">{user?.name}</span>
+                          </div>
+                          <Link href="/profile">
+                            <Button variant="ghost" size="sm" className="w-full mt-1">
+                              Update Profile
+                            </Button>
+                          </Link>
+                        </div>
+
+                        {/* Configure Reminders */}
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2 text-[var(--text-sm)] text-[var(--text-secondary)]">
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                            </svg>
+                            Reminders
+                          </div>
+                          <div className="space-y-2">
+                            <label className="flex items-center justify-between">
+                              <span className="text-[var(--text-sm)] text-[var(--text-primary)]">Text message</span>
+                              <button
+                                onClick={() => setReminderPrefs(p => ({ ...p, text: !p.text }))}
+                                className={`relative w-10 h-6 rounded-full transition-colors ${
+                                  reminderPrefs.text ? 'bg-[var(--primary)]' : 'bg-[var(--bg-subtle)]'
+                                }`}
+                              >
+                                <span className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${
+                                  reminderPrefs.text ? 'left-5' : 'left-1'
+                                }`} />
+                              </button>
+                            </label>
+                            <label className="flex items-center justify-between">
+                              <span className="text-[var(--text-sm)] text-[var(--text-primary)]">Email</span>
+                              <button
+                                onClick={() => setReminderPrefs(p => ({ ...p, email: !p.email }))}
+                                className={`relative w-10 h-6 rounded-full transition-colors ${
+                                  reminderPrefs.email ? 'bg-[var(--primary)]' : 'bg-[var(--bg-subtle)]'
+                                }`}
+                              >
+                                <span className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${
+                                  reminderPrefs.email ? 'left-5' : 'left-1'
+                                }`} />
+                              </button>
+                            </label>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : userInvitation?.status === 'pending' ? (
+              // Pending Approval
+              <div className="space-y-4">
+                <div className="bg-[var(--warning-muted)] rounded-[var(--radius-lg)] p-4">
+                  <div className="flex items-center gap-3 mb-2">
+                    <span className="text-2xl">🕐</span>
+                    <span className="font-medium text-[var(--text-primary)]">Pending Approval</span>
+                  </div>
+                  <p className="text-[var(--text-sm)] text-[var(--text-secondary)]">
+                    We'll notify you when the host approves your request.
+                  </p>
+                </div>
+
+                {/* Cancel link */}
+                <p className="text-[var(--text-xs)] text-[var(--text-muted)] text-center">
+                  No longer able to attend?{' '}
+                  <button
+                    onClick={() => setShowCancelModal(true)}
+                    className="text-[var(--primary)] hover:underline"
+                  >
+                    Cancel your request
+                  </button>
                 </p>
               </div>
             ) : userInvitation?.status === 'declined' ? (
@@ -567,6 +729,22 @@ export default function PublicRoomPage() {
                 <p className="text-[var(--text-sm)] text-[var(--text-secondary)]">
                   You declined this invitation. Contact the host if you changed your mind.
                 </p>
+              </div>
+            ) : userInvitation?.status === 'canceled' ? (
+              // Canceled
+              <div className="bg-[var(--bg-subtle)] rounded-[var(--radius-lg)] p-4 text-center">
+                <p className="text-[var(--text-sm)] text-[var(--text-secondary)]">
+                  You canceled your RSVP.
+                </p>
+                <Button
+                  variant="primary"
+                  size="md"
+                  className="mt-3"
+                  onClick={() => handleRSVP()}
+                  loading={rsvpLoading}
+                >
+                  Request to Join Again
+                </Button>
               </div>
             ) : (
               // Show RSVP button
@@ -934,6 +1112,44 @@ export default function PublicRoomPage() {
         onClose={() => setShowOnboardingReminder(false)}
         onContinueAnyway={handleContinueWithoutOnboarding}
       />
+
+      {/* Cancel RSVP Confirmation Modal */}
+      <Modal
+        open={showCancelModal}
+        onClose={() => setShowCancelModal(false)}
+        size="sm"
+        title="Cancel Registration?"
+        footer={
+          <div className="flex gap-3 justify-end">
+            <Button
+              variant="ghost"
+              onClick={() => setShowCancelModal(false)}
+              disabled={cancelLoading}
+            >
+              Keep My Spot
+            </Button>
+            <Button
+              variant="primary"
+              onClick={handleCancelRSVP}
+              disabled={cancelLoading}
+              className="!bg-[var(--error)] hover:!bg-[var(--error-hover)]"
+            >
+              {cancelLoading ? 'Canceling...' : 'Yes, Cancel'}
+            </Button>
+          </div>
+        }
+      >
+        <div className="text-center py-4">
+          <div className="text-4xl mb-4">😢</div>
+          <p className="text-[var(--text-secondary)]">
+            Are you sure you want to cancel your registration for{' '}
+            <span className="text-[var(--text-primary)] font-medium">{space?.name}</span>?
+          </p>
+          <p className="text-[var(--text-muted)] text-[var(--text-sm)] mt-2">
+            The host will be notified of your cancellation.
+          </p>
+        </div>
+      </Modal>
     </div>
   );
 }

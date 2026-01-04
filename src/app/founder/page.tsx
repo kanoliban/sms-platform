@@ -54,6 +54,45 @@ type ApplicationCounts = {
   all: number
 }
 
+type Lead = {
+  id: string
+  type: 'host' | 'attendee'
+  name: string
+  email: string | null
+  phone: string
+  event_idea: string | null
+  why_host: string | null
+  interests: string | null
+  neighborhoods: string | null
+  status: 'new' | 'contacted' | 'converted' | 'declined' | 'archived'
+  notes: string | null
+  contacted_at: string | null
+  converted_at: string | null
+  submission_count: number
+  created_at: string
+  updated_at: string
+  converted_user: {
+    id: string
+    name: string | null
+    phone: string
+  } | null
+}
+
+type LeadCounts = {
+  all: number
+  new: number
+  contacted: number
+  converted: number
+  declined: number
+  archived: number
+}
+
+type LeadTypeCounts = {
+  all: number
+  host: number
+  attendee: number
+}
+
 export default function FounderDashboard() {
   const [spaces, setSpaces] = useState<SpaceWithDetails[]>([])
   const [users, setUsers] = useState<UserWithStats[]>([])
@@ -65,7 +104,17 @@ export default function FounderDashboard() {
     noShowRate: 0,
   })
   const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState<'spaces' | 'users' | 'trust' | 'applications'>('spaces')
+  const [activeTab, setActiveTab] = useState<'spaces' | 'users' | 'trust' | 'applications' | 'leads'>('spaces')
+
+  // Leads state
+  const [leads, setLeads] = useState<Lead[]>([])
+  const [leadCounts, setLeadCounts] = useState<LeadCounts>({ all: 0, new: 0, contacted: 0, converted: 0, declined: 0, archived: 0 })
+  const [leadTypeCounts, setLeadTypeCounts] = useState<LeadTypeCounts>({ all: 0, host: 0, attendee: 0 })
+  const [leadStatusFilter, setLeadStatusFilter] = useState<'all' | 'new' | 'contacted' | 'converted' | 'declined' | 'archived'>('new')
+  const [leadTypeFilter, setLeadTypeFilter] = useState<'all' | 'host' | 'attendee'>('all')
+  const [leadsLoading, setLeadsLoading] = useState(false)
+  const [editingLeadId, setEditingLeadId] = useState<string | null>(null)
+  const [editingNotes, setEditingNotes] = useState('')
 
   // Host applications state
   const [applications, setApplications] = useState<HostApplication[]>([])
@@ -158,6 +207,69 @@ export default function FounderDashboard() {
       // Ignore errors loading counts
     }
   }
+
+  // Load leads
+  const loadLeads = useCallback(async (statusFilter: string = 'new', typeFilter: string = 'all') => {
+    setLeadsLoading(true)
+    try {
+      const params = new URLSearchParams()
+      if (statusFilter !== 'all') params.append('status', statusFilter)
+      if (typeFilter !== 'all') params.append('type', typeFilter)
+
+      const response = await fetch(`/api/leads?${params.toString()}`)
+      if (response.ok) {
+        const data = await response.json()
+        setLeads(data.leads || [])
+        setLeadCounts(data.counts || { all: 0, new: 0, contacted: 0, converted: 0, declined: 0, archived: 0 })
+        setLeadTypeCounts(data.typeCounts || { all: 0, host: 0, attendee: 0 })
+      }
+    } catch (err) {
+      console.error('Error loading leads:', err)
+    } finally {
+      setLeadsLoading(false)
+    }
+  }, [])
+
+  // Update lead status
+  async function handleLeadStatusChange(leadId: string, newStatus: string) {
+    try {
+      const response = await fetch('/api/leads', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: leadId, status: newStatus }),
+      })
+      if (response.ok) {
+        await loadLeads(leadStatusFilter, leadTypeFilter)
+      }
+    } catch (err) {
+      console.error('Error updating lead:', err)
+    }
+  }
+
+  // Update lead notes
+  async function handleLeadNotesUpdate(leadId: string, notes: string) {
+    try {
+      const response = await fetch('/api/leads', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: leadId, notes }),
+      })
+      if (response.ok) {
+        setEditingLeadId(null)
+        setEditingNotes('')
+        await loadLeads(leadStatusFilter, leadTypeFilter)
+      }
+    } catch (err) {
+      console.error('Error updating notes:', err)
+    }
+  }
+
+  // Load leads when tab or filters change
+  useEffect(() => {
+    if (activeTab === 'leads') {
+      loadLeads(leadStatusFilter, leadTypeFilter)
+    }
+  }, [activeTab, leadStatusFilter, leadTypeFilter, loadLeads])
 
   // Load host applications
   const loadApplications = useCallback(async (filter: string = 'pending') => {
@@ -392,6 +504,21 @@ export default function FounderDashboard() {
             {applicationCounts.pending > 0 && (
               <span className="bg-amber-500 text-black text-xs font-bold px-1.5 py-0.5 rounded-full">
                 {applicationCounts.pending}
+              </span>
+            )}
+          </button>
+          <button
+            onClick={() => setActiveTab('leads')}
+            className={`px-4 py-2 -mb-px border-b-2 transition-colors flex items-center gap-2 ${
+              activeTab === 'leads'
+                ? 'border-white text-white'
+                : 'border-transparent text-white/60 hover:text-white'
+            }`}
+          >
+            Leads
+            {leadCounts.new > 0 && (
+              <span className="bg-green-500 text-black text-xs font-bold px-1.5 py-0.5 rounded-full">
+                {leadCounts.new}
               </span>
             )}
           </button>
@@ -803,6 +930,260 @@ export default function FounderDashboard() {
                           </button>
                         </div>
                       )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Leads Tab */}
+        {activeTab === 'leads' && (
+          <div className="space-y-4">
+            {/* Filters */}
+            <div className="flex flex-wrap gap-4 mb-4">
+              {/* Status filter */}
+              <div className="flex gap-2">
+                {(['new', 'contacted', 'converted', 'declined', 'archived', 'all'] as const).map((filter) => (
+                  <button
+                    key={filter}
+                    onClick={() => setLeadStatusFilter(filter)}
+                    className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
+                      leadStatusFilter === filter
+                        ? 'bg-white text-black'
+                        : 'bg-zinc-800 text-white/80 hover:bg-zinc-700'
+                    }`}
+                  >
+                    {filter.charAt(0).toUpperCase() + filter.slice(1)}
+                    <span className="ml-1.5 opacity-60">({leadCounts[filter]})</span>
+                  </button>
+                ))}
+              </div>
+
+              {/* Type filter */}
+              <div className="flex gap-2 border-l border-white/20 pl-4">
+                {(['all', 'host', 'attendee'] as const).map((filter) => (
+                  <button
+                    key={filter}
+                    onClick={() => setLeadTypeFilter(filter)}
+                    className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
+                      leadTypeFilter === filter
+                        ? filter === 'host' ? 'bg-purple-600 text-white' :
+                          filter === 'attendee' ? 'bg-blue-600 text-white' :
+                          'bg-white text-black'
+                        : 'bg-zinc-800 text-white/80 hover:bg-zinc-700'
+                    }`}
+                  >
+                    {filter === 'all' ? 'All Types' : filter.charAt(0).toUpperCase() + filter.slice(1) + 's'}
+                    <span className="ml-1.5 opacity-60">({leadTypeCounts[filter]})</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {leadsLoading ? (
+              <div className="text-center text-white/60 p-8">Loading leads...</div>
+            ) : leads.length === 0 ? (
+              <div className="text-center text-white/60 p-8">
+                No {leadStatusFilter === 'all' ? '' : leadStatusFilter} leads
+                {leadTypeFilter !== 'all' && ` of type ${leadTypeFilter}`}
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {leads.map((lead) => (
+                  <div
+                    key={lead.id}
+                    className={`p-5 border rounded-lg ${
+                      lead.type === 'host'
+                        ? 'border-purple-700/50 bg-purple-900/10'
+                        : 'border-blue-700/50 bg-blue-900/10'
+                    }`}
+                  >
+                    <div className="flex justify-between items-start">
+                      {/* Lead Info */}
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-medium ${
+                            lead.type === 'host' ? 'bg-purple-600' : 'bg-blue-600'
+                          }`}>
+                            {lead.name.charAt(0).toUpperCase()}
+                          </div>
+                          <div>
+                            <h3 className="font-medium text-lg flex items-center gap-2">
+                              {lead.name}
+                              <span className={`px-2 py-0.5 text-xs uppercase tracking-wide rounded ${
+                                lead.type === 'host' ? 'bg-purple-700/50 text-purple-200' : 'bg-blue-700/50 text-blue-200'
+                              }`}>
+                                {lead.type}
+                              </span>
+                              {lead.submission_count > 1 && (
+                                <span className="px-2 py-0.5 text-xs bg-amber-700/50 text-amber-200 rounded">
+                                  {lead.submission_count}x submitted
+                                </span>
+                              )}
+                            </h3>
+                            <p className="text-sm text-white/60">
+                              <a href={`tel:${lead.phone}`} className="hover:text-white">
+                                {lead.phone.replace(/(\d{3})(\d{3})(\d{4})/, '($1) $2-$3')}
+                              </a>
+                              {lead.email && (
+                                <>
+                                  {' · '}
+                                  <a href={`mailto:${lead.email}`} className="hover:text-white">
+                                    {lead.email}
+                                  </a>
+                                </>
+                              )}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Type-specific content */}
+                        {lead.type === 'host' ? (
+                          <div className="mt-3 p-3 bg-zinc-800/50 rounded-lg">
+                            <div className="text-xs text-white/40 mb-1">Event Idea</div>
+                            <p className="text-sm text-white/90">{lead.event_idea || 'No idea provided'}</p>
+                            {lead.why_host && (
+                              <>
+                                <div className="text-xs text-white/40 mt-2 mb-1">Why Host?</div>
+                                <p className="text-sm text-white/70">{lead.why_host}</p>
+                              </>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="mt-3 p-3 bg-zinc-800/50 rounded-lg">
+                            <div className="text-xs text-white/40 mb-1">Interests</div>
+                            <p className="text-sm text-white/90">{lead.interests || 'No interests provided'}</p>
+                            {lead.neighborhoods && (
+                              <>
+                                <div className="text-xs text-white/40 mt-2 mb-1">Neighborhoods</div>
+                                <p className="text-sm text-white/70">{lead.neighborhoods}</p>
+                              </>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Notes section */}
+                        <div className="mt-3">
+                          {editingLeadId === lead.id ? (
+                            <div className="flex gap-2">
+                              <textarea
+                                value={editingNotes}
+                                onChange={(e) => setEditingNotes(e.target.value)}
+                                placeholder="Add notes about this lead..."
+                                className="flex-1 p-2 bg-zinc-800 border border-white/20 rounded text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-1 focus:ring-white/40"
+                                rows={2}
+                              />
+                              <div className="flex flex-col gap-1">
+                                <button
+                                  onClick={() => handleLeadNotesUpdate(lead.id, editingNotes)}
+                                  className="px-3 py-1 text-xs bg-green-700 hover:bg-green-600 rounded"
+                                >
+                                  Save
+                                </button>
+                                <button
+                                  onClick={() => { setEditingLeadId(null); setEditingNotes('') }}
+                                  className="px-3 py-1 text-xs bg-zinc-700 hover:bg-zinc-600 rounded"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <div
+                              onClick={() => { setEditingLeadId(lead.id); setEditingNotes(lead.notes || '') }}
+                              className="p-2 bg-zinc-800/30 rounded text-sm text-white/60 hover:bg-zinc-800/50 cursor-pointer"
+                            >
+                              {lead.notes || 'Click to add notes...'}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Timestamps */}
+                        <div className="mt-2 text-xs text-white/40">
+                          Submitted {new Date(lead.created_at).toLocaleDateString()}
+                          {lead.contacted_at && ` · Contacted ${new Date(lead.contacted_at).toLocaleDateString()}`}
+                          {lead.converted_at && ` · Converted ${new Date(lead.converted_at).toLocaleDateString()}`}
+                        </div>
+                      </div>
+
+                      {/* Actions */}
+                      <div className="flex flex-col gap-2 ml-4">
+                        {lead.status === 'new' && (
+                          <button
+                            onClick={() => handleLeadStatusChange(lead.id, 'contacted')}
+                            className="px-3 py-1.5 text-sm bg-amber-700 hover:bg-amber-600 rounded-lg transition-colors"
+                          >
+                            Mark Contacted
+                          </button>
+                        )}
+                        {lead.status === 'contacted' && (
+                          <>
+                            <button
+                              onClick={() => handleLeadStatusChange(lead.id, 'converted')}
+                              className="px-3 py-1.5 text-sm bg-green-700 hover:bg-green-600 rounded-lg transition-colors"
+                            >
+                              Converted
+                            </button>
+                            <button
+                              onClick={() => handleLeadStatusChange(lead.id, 'declined')}
+                              className="px-3 py-1.5 text-sm bg-red-700 hover:bg-red-600 rounded-lg transition-colors"
+                            >
+                              Declined
+                            </button>
+                          </>
+                        )}
+                        {(lead.status === 'declined' || lead.status === 'converted') && (
+                          <button
+                            onClick={() => handleLeadStatusChange(lead.id, 'archived')}
+                            className="px-3 py-1.5 text-sm bg-zinc-700 hover:bg-zinc-600 rounded-lg transition-colors"
+                          >
+                            Archive
+                          </button>
+                        )}
+                        {lead.status !== 'new' && (
+                          <button
+                            onClick={() => handleLeadStatusChange(lead.id, 'new')}
+                            className="px-3 py-1.5 text-sm bg-zinc-800 hover:bg-zinc-700 rounded-lg transition-colors"
+                          >
+                            Reset
+                          </button>
+                        )}
+
+                        {/* Quick contact links */}
+                        <div className="flex gap-2 mt-2">
+                          <a
+                            href={`sms:${lead.phone}`}
+                            className="p-2 bg-green-700/30 hover:bg-green-700/50 rounded-lg transition-colors"
+                            title="Send SMS"
+                          >
+                            <svg className="w-4 h-4 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                            </svg>
+                          </a>
+                          <a
+                            href={`tel:${lead.phone}`}
+                            className="p-2 bg-blue-700/30 hover:bg-blue-700/50 rounded-lg transition-colors"
+                            title="Call"
+                          >
+                            <svg className="w-4 h-4 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                            </svg>
+                          </a>
+                          {lead.email && (
+                            <a
+                              href={`mailto:${lead.email}`}
+                              className="p-2 bg-purple-700/30 hover:bg-purple-700/50 rounded-lg transition-colors"
+                              title="Email"
+                            >
+                              <svg className="w-4 h-4 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                              </svg>
+                            </a>
+                          )}
+                        </div>
+                      </div>
                     </div>
                   </div>
                 ))}

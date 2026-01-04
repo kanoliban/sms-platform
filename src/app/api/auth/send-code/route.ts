@@ -48,13 +48,15 @@ export async function POST(request: NextRequest) {
 
     if (!existingUser) {
       // Create new user with onboarding_completed = false
-      const { error: userError } = await supabase
+      const { data: newUser, error: userError } = await supabase
         .from('users')
         .insert({
           phone: normalizedPhone,
           role: 'guest',
           onboarding_completed: false,
         })
+        .select('id')
+        .single()
 
       if (userError) {
         console.error('Error creating user:', userError)
@@ -62,6 +64,23 @@ export async function POST(request: NextRequest) {
           { error: 'Failed to create user' },
           { status: 500 }
         )
+      }
+
+      // Check if this phone was a lead and mark as converted
+      if (newUser) {
+        const { error: leadError } = await supabase
+          .from('leads')
+          .update({
+            status: 'converted',
+            converted_user_id: newUser.id,
+            converted_at: new Date().toISOString(),
+          })
+          .eq('phone', normalizedPhone.replace(/\D/g, ''))
+
+        if (leadError) {
+          // Log but don't fail - lead conversion is not critical
+          console.error('Error updating lead:', leadError)
+        }
       }
     }
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import type { User, UserIntent, TonePreference } from '@/lib/supabase/types';
 import {
@@ -12,6 +12,11 @@ import {
   Avatar,
   Badge,
   Progress,
+  Toggle,
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
 } from '@/components/ui';
 import { PageContainer } from '@/components/layout';
 import { UserMenu, LoginModal, NotificationsDropdown } from '@/components/composed';
@@ -34,14 +39,54 @@ const TONE_OPTIONS: { value: TonePreference; label: string; description: string 
   { value: 'intense', label: 'Intense', description: 'High energy, challenging' },
 ];
 
+interface Settings {
+  notifications: {
+    spaceReminders: boolean;
+    inviteAlerts: boolean;
+    hostUpdates: boolean;
+    marketingEmails: boolean;
+  };
+  privacy: {
+    showProfile: boolean;
+    allowHostContact: boolean;
+    shareAttendance: boolean;
+  };
+}
+
+const DEFAULT_SETTINGS: Settings = {
+  notifications: {
+    spaceReminders: true,
+    inviteAlerts: true,
+    hostUpdates: true,
+    marketingEmails: false,
+  },
+  privacy: {
+    showProfile: true,
+    allowHostContact: true,
+    shareAttendance: false,
+  },
+};
+
 export default function ProfilePage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { addToast } = useToast();
   const { user: authUser, loading: authLoading } = useAuth();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
+
+  // Get initial tab from URL query param (?tab=settings)
+  const tabParam = searchParams.get('tab');
+  const [activeTab, setActiveTab] = useState(tabParam === 'settings' ? 'settings' : 'profile');
+
+  // Sync tab state when URL param changes
+  useEffect(() => {
+    if (tabParam === 'settings') {
+      setActiveTab('settings');
+    }
+  }, [tabParam]);
 
   // Notifications from hook
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications({ userId: authUser?.id });
@@ -53,11 +98,14 @@ export default function ProfilePage() {
     }
   }, [markAsRead, router]);
 
-  // Editable fields
+  // Profile fields
   const [name, setName] = useState('');
   const [bio, setBio] = useState('');
   const [intent, setIntent] = useState<UserIntent | null>(null);
   const [tonePreference, setTonePreference] = useState<TonePreference | null>(null);
+
+  // Settings state
+  const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
 
   useEffect(() => {
     if (!authLoading) {
@@ -72,10 +120,10 @@ export default function ProfilePage() {
       return;
     }
 
-    // Load user profile using auth context user
+    // Load user profile and preferences
     const supabase = createClient();
 
-    const { data: userData } = await supabase
+    const { data: userData, error } = await supabase
       .from('users')
       .select('*')
       .eq('id', authUser.id)
@@ -86,6 +134,24 @@ export default function ProfilePage() {
       setName(userData.name || '');
       setIntent(userData.intent);
       setTonePreference(userData.tone_preference);
+
+      // Load settings from preferences column
+      if (userData.preferences) {
+        setSettings({
+          notifications: {
+            ...DEFAULT_SETTINGS.notifications,
+            ...(userData.preferences as Settings).notifications,
+          },
+          privacy: {
+            ...DEFAULT_SETTINGS.privacy,
+            ...(userData.preferences as Settings).privacy,
+          },
+        });
+      }
+    }
+
+    if (error && error.code !== 'PGRST116' && error.code !== '42703') {
+      console.error('Error loading profile:', error.message || error.code || 'Unknown error');
     }
 
     setLoading(false);
@@ -104,26 +170,42 @@ export default function ProfilePage() {
         name,
         intent,
         tone_preference: tonePreference,
+        preferences: settings,
         updated_at: new Date().toISOString(),
       })
       .eq('id', user.id);
 
     if (error) {
+      console.error('Error saving profile:', error.message || error.code || 'Unknown error');
       addToast({
         variant: 'error',
-        title: 'Error saving profile',
+        title: 'Error saving',
         description: 'Please try again.',
       });
     } else {
       setUser(prev => prev ? { ...prev, name, intent, tone_preference: tonePreference } : null);
       addToast({
         variant: 'success',
-        title: 'Profile updated',
-        description: 'Your changes have been saved.',
+        title: 'Changes saved',
+        description: 'Your profile and settings have been updated.',
       });
     }
 
     setSaving(false);
+  };
+
+  const updateNotification = (key: keyof Settings['notifications'], value: boolean) => {
+    setSettings(prev => ({
+      ...prev,
+      notifications: { ...prev.notifications, [key]: value },
+    }));
+  };
+
+  const updatePrivacy = (key: keyof Settings['privacy'], value: boolean) => {
+    setSettings(prev => ({
+      ...prev,
+      privacy: { ...prev.privacy, [key]: value },
+    }));
   };
 
   const formatPhone = (phone: string) => {
@@ -249,146 +331,326 @@ export default function ProfilePage() {
             Profile
           </h1>
           <p className="text-[var(--text-sm)] text-[var(--text-secondary)] mt-1">
-            Manage your personal information and preferences
+            Manage your profile and settings
           </p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Profile Section */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Avatar & Basic Info */}
-            <Card className="p-6">
-              <div className="flex items-start gap-6 mb-6">
-                <div className="relative">
-                  <Avatar
-                    name={user.name || 'User'}
-                    size="lg"
-                    className="w-24 h-24"
-                  />
-                  <button
-                    type="button"
-                    className="absolute bottom-0 right-0 w-8 h-8 bg-[var(--primary)] rounded-full flex items-center justify-center text-white shadow-lg hover:bg-[var(--primary-hover)] transition-colors"
-                  >
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z" />
-                    </svg>
-                  </button>
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    <h2 className="text-[var(--text-xl)] font-semibold text-[var(--text-primary)]">
-                      {user.name || 'Anonymous'}
-                    </h2>
-                    {user.role === 'host' && (
-                      <Badge variant="primary" size="sm">Host</Badge>
-                    )}
-                  </div>
-                  <p className="text-[var(--text-sm)] text-[var(--text-secondary)]">
-                    {formatPhone(user.phone)}
-                  </p>
-                  <p className="text-[var(--text-xs)] text-[var(--text-muted)] mt-1">
-                    Member since {getMemberSince()}
-                  </p>
-                </div>
-              </div>
+          {/* Main Content with Tabs */}
+          <div className="lg:col-span-2">
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
+              <TabsList className="mb-6">
+                <TabsTrigger value="profile">Profile</TabsTrigger>
+                <TabsTrigger value="settings">Settings</TabsTrigger>
+              </TabsList>
 
-              {/* Editable Fields */}
-              <div className="space-y-5 pt-6 border-t border-[var(--border-subtle)]">
-                <div>
-                  <label className="block text-[var(--text-sm)] font-medium text-[var(--text-primary)] mb-2">
-                    Display Name
-                  </label>
-                  <Input
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="What should we call you?"
-                  />
-                </div>
+              {/* Profile Tab */}
+              <TabsContent value="profile">
+                <div className="space-y-6">
+                  {/* Avatar & Basic Info */}
+                  <Card className="p-6">
+                    <div className="flex items-start gap-6 mb-6">
+                      <div className="relative">
+                        <Avatar
+                          name={user.name || 'User'}
+                          size="lg"
+                          className="w-24 h-24"
+                        />
+                        <button
+                          type="button"
+                          className="absolute bottom-0 right-0 w-8 h-8 bg-[var(--primary)] rounded-full flex items-center justify-center text-white shadow-lg hover:bg-[var(--primary-hover)] transition-colors"
+                        >
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z" />
+                          </svg>
+                        </button>
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <h2 className="text-[var(--text-xl)] font-semibold text-[var(--text-primary)]">
+                            {user.name || 'Anonymous'}
+                          </h2>
+                          {user.role === 'host' && (
+                            <Badge variant="primary" size="sm">Host</Badge>
+                          )}
+                        </div>
+                        <p className="text-[var(--text-sm)] text-[var(--text-secondary)]">
+                          {formatPhone(user.phone)}
+                        </p>
+                        <p className="text-[var(--text-xs)] text-[var(--text-muted)] mt-1">
+                          Member since {getMemberSince()}
+                        </p>
+                      </div>
+                    </div>
 
-                <div>
-                  <label className="block text-[var(--text-sm)] font-medium text-[var(--text-primary)] mb-2">
-                    Bio
-                  </label>
-                  <Textarea
-                    value={bio}
-                    onChange={(e) => setBio(e.target.value)}
-                    placeholder="Tell others a bit about yourself..."
-                    rows={3}
-                  />
-                  <p className="text-[var(--text-xs)] text-[var(--text-muted)] mt-1">
-                    Visible to hosts and other guests
-                  </p>
-                </div>
-              </div>
-            </Card>
+                    {/* Editable Fields */}
+                    <div className="space-y-5 pt-6 border-t border-[var(--border-subtle)]">
+                      <div>
+                        <label className="block text-[var(--text-sm)] font-medium text-[var(--text-primary)] mb-2">
+                          Display Name
+                        </label>
+                        <Input
+                          value={name}
+                          onChange={(e) => setName(e.target.value)}
+                          placeholder="What should we call you?"
+                        />
+                      </div>
 
-            {/* Preferences */}
-            <Card className="p-6">
-              <h3 className="text-[var(--text-lg)] font-semibold text-[var(--text-primary)] mb-6">
-                Preferences
-              </h3>
+                      <div>
+                        <label className="block text-[var(--text-sm)] font-medium text-[var(--text-primary)] mb-2">
+                          Bio
+                        </label>
+                        <Textarea
+                          value={bio}
+                          onChange={(e) => setBio(e.target.value)}
+                          placeholder="Tell others a bit about yourself..."
+                          rows={3}
+                        />
+                        <p className="text-[var(--text-xs)] text-[var(--text-muted)] mt-1">
+                          Visible to hosts and other guests
+                        </p>
+                      </div>
+                    </div>
+                  </Card>
 
-              {/* Intent */}
-              <div className="mb-6">
-                <label className="block text-[var(--text-sm)] font-medium text-[var(--text-primary)] mb-3">
-                  What brings you to SMS?
-                </label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {INTENT_OPTIONS.map((option) => (
-                    <button
-                      key={option.value}
-                      type="button"
-                      onClick={() => setIntent(option.value)}
-                      className={`
-                        p-4 rounded-[var(--radius-lg)] border text-left
-                        transition-all duration-[var(--duration-normal)]
-                        ${intent === option.value
-                          ? 'bg-[var(--primary-muted)] border-[var(--primary)]'
-                          : 'bg-[var(--bg-subtle)] border-[var(--border-default)] hover:border-[var(--border-strong)]'
-                        }
-                      `}
-                    >
-                      <p className={`text-[var(--text-sm)] font-medium ${intent === option.value ? 'text-[var(--primary-light)]' : 'text-[var(--text-primary)]'}`}>
-                        {option.label}
-                      </p>
-                      <p className="text-[var(--text-xs)] text-[var(--text-muted)] mt-1">
-                        {option.description}
-                      </p>
-                    </button>
-                  ))}
-                </div>
-              </div>
+                  {/* Preferences */}
+                  <Card className="p-6">
+                    <h3 className="text-[var(--text-lg)] font-semibold text-[var(--text-primary)] mb-6">
+                      Preferences
+                    </h3>
 
-              {/* Tone Preference */}
-              <div>
-                <label className="block text-[var(--text-sm)] font-medium text-[var(--text-primary)] mb-3">
-                  Preferred vibe
-                </label>
-                <div className="flex flex-wrap gap-3">
-                  {TONE_OPTIONS.map((option) => (
-                    <button
-                      key={option.value}
-                      type="button"
-                      onClick={() => setTonePreference(option.value)}
-                      className={`
-                        px-4 py-2 rounded-full border text-[var(--text-sm)] font-medium
-                        transition-all duration-[var(--duration-normal)]
-                        ${tonePreference === option.value
-                          ? 'bg-[var(--primary)] border-[var(--primary)] text-white'
-                          : 'bg-[var(--bg-subtle)] border-[var(--border-default)] text-[var(--text-secondary)] hover:border-[var(--border-strong)]'
-                        }
-                      `}
-                    >
-                      {option.label}
-                    </button>
-                  ))}
+                    {/* Intent */}
+                    <div className="mb-6">
+                      <label className="block text-[var(--text-sm)] font-medium text-[var(--text-primary)] mb-3">
+                        What brings you to SMS?
+                      </label>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {INTENT_OPTIONS.map((option) => (
+                          <button
+                            key={option.value}
+                            type="button"
+                            onClick={() => setIntent(option.value)}
+                            className={`
+                              p-4 rounded-[var(--radius-lg)] border text-left
+                              transition-all duration-[var(--duration-normal)]
+                              ${intent === option.value
+                                ? 'bg-[var(--primary-muted)] border-[var(--primary)]'
+                                : 'bg-[var(--bg-subtle)] border-[var(--border-default)] hover:border-[var(--border-strong)]'
+                              }
+                            `}
+                          >
+                            <p className={`text-[var(--text-sm)] font-medium ${intent === option.value ? 'text-[var(--primary-light)]' : 'text-[var(--text-primary)]'}`}>
+                              {option.label}
+                            </p>
+                            <p className="text-[var(--text-xs)] text-[var(--text-muted)] mt-1">
+                              {option.description}
+                            </p>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Tone Preference */}
+                    <div>
+                      <label className="block text-[var(--text-sm)] font-medium text-[var(--text-primary)] mb-3">
+                        Preferred vibe
+                      </label>
+                      <div className="flex flex-wrap gap-3">
+                        {TONE_OPTIONS.map((option) => (
+                          <button
+                            key={option.value}
+                            type="button"
+                            onClick={() => setTonePreference(option.value)}
+                            className={`
+                              px-4 py-2 rounded-full border text-[var(--text-sm)] font-medium
+                              transition-all duration-[var(--duration-normal)]
+                              ${tonePreference === option.value
+                                ? 'bg-[var(--primary)] border-[var(--primary)] text-white'
+                                : 'bg-[var(--bg-subtle)] border-[var(--border-default)] text-[var(--text-secondary)] hover:border-[var(--border-strong)]'
+                              }
+                            `}
+                          >
+                            {option.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </Card>
                 </div>
-              </div>
-            </Card>
+              </TabsContent>
+
+              {/* Settings Tab */}
+              <TabsContent value="settings">
+                <div className="space-y-6">
+                  {/* Notifications */}
+                  <Card className="p-6">
+                    <h3 className="text-[var(--text-lg)] font-semibold text-[var(--text-primary)] mb-6">
+                      Notifications
+                    </h3>
+
+                    <div className="space-y-6">
+                      <div className="flex items-start justify-between gap-4 pb-6 border-b border-[var(--border-subtle)]">
+                        <div>
+                          <h4 className="text-[var(--text-sm)] font-medium text-[var(--text-primary)]">
+                            Space Reminders
+                          </h4>
+                          <p className="text-[var(--text-sm)] text-[var(--text-muted)] mt-1">
+                            Get SMS reminders before spaces you're attending
+                          </p>
+                        </div>
+                        <Toggle
+                          checked={settings.notifications.spaceReminders}
+                          onChange={(e) => updateNotification('spaceReminders', e.target.checked)}
+                        />
+                      </div>
+
+                      <div className="flex items-start justify-between gap-4 pb-6 border-b border-[var(--border-subtle)]">
+                        <div>
+                          <h4 className="text-[var(--text-sm)] font-medium text-[var(--text-primary)]">
+                            Invite Alerts
+                          </h4>
+                          <p className="text-[var(--text-sm)] text-[var(--text-muted)] mt-1">
+                            Get notified when you receive a space invitation
+                          </p>
+                        </div>
+                        <Toggle
+                          checked={settings.notifications.inviteAlerts}
+                          onChange={(e) => updateNotification('inviteAlerts', e.target.checked)}
+                        />
+                      </div>
+
+                      <div className="flex items-start justify-between gap-4 pb-6 border-b border-[var(--border-subtle)]">
+                        <div>
+                          <h4 className="text-[var(--text-sm)] font-medium text-[var(--text-primary)]">
+                            Host Updates
+                          </h4>
+                          <p className="text-[var(--text-sm)] text-[var(--text-muted)] mt-1">
+                            Receive blasts and updates from space hosts
+                          </p>
+                        </div>
+                        <Toggle
+                          checked={settings.notifications.hostUpdates}
+                          onChange={(e) => updateNotification('hostUpdates', e.target.checked)}
+                        />
+                      </div>
+
+                      <div className="flex items-start justify-between gap-4">
+                        <div>
+                          <h4 className="text-[var(--text-sm)] font-medium text-[var(--text-primary)]">
+                            Marketing Messages
+                          </h4>
+                          <p className="text-[var(--text-sm)] text-[var(--text-muted)] mt-1">
+                            Occasional updates about new features and spaces near you
+                          </p>
+                        </div>
+                        <Toggle
+                          checked={settings.notifications.marketingEmails}
+                          onChange={(e) => updateNotification('marketingEmails', e.target.checked)}
+                        />
+                      </div>
+                    </div>
+                  </Card>
+
+                  {/* Privacy */}
+                  <Card className="p-6">
+                    <h3 className="text-[var(--text-lg)] font-semibold text-[var(--text-primary)] mb-6">
+                      Privacy
+                    </h3>
+
+                    <div className="space-y-6">
+                      <div className="flex items-start justify-between gap-4 pb-6 border-b border-[var(--border-subtle)]">
+                        <div>
+                          <h4 className="text-[var(--text-sm)] font-medium text-[var(--text-primary)]">
+                            Show Profile to Others
+                          </h4>
+                          <p className="text-[var(--text-sm)] text-[var(--text-muted)] mt-1">
+                            Allow hosts and guests to see your profile information
+                          </p>
+                        </div>
+                        <Toggle
+                          checked={settings.privacy.showProfile}
+                          onChange={(e) => updatePrivacy('showProfile', e.target.checked)}
+                        />
+                      </div>
+
+                      <div className="flex items-start justify-between gap-4 pb-6 border-b border-[var(--border-subtle)]">
+                        <div>
+                          <h4 className="text-[var(--text-sm)] font-medium text-[var(--text-primary)]">
+                            Allow Host Contact
+                          </h4>
+                          <p className="text-[var(--text-sm)] text-[var(--text-muted)] mt-1">
+                            Let hosts reach out about upcoming spaces you might like
+                          </p>
+                        </div>
+                        <Toggle
+                          checked={settings.privacy.allowHostContact}
+                          onChange={(e) => updatePrivacy('allowHostContact', e.target.checked)}
+                        />
+                      </div>
+
+                      <div className="flex items-start justify-between gap-4">
+                        <div>
+                          <h4 className="text-[var(--text-sm)] font-medium text-[var(--text-primary)]">
+                            Share Attendance History
+                          </h4>
+                          <p className="text-[var(--text-sm)] text-[var(--text-muted)] mt-1">
+                            Allow others to see which spaces you've attended
+                          </p>
+                        </div>
+                        <Toggle
+                          checked={settings.privacy.shareAttendance}
+                          onChange={(e) => updatePrivacy('shareAttendance', e.target.checked)}
+                        />
+                      </div>
+                    </div>
+                  </Card>
+
+                  {/* Danger Zone */}
+                  <Card className="p-6 border-[var(--error-border)]">
+                    <h3 className="text-[var(--text-lg)] font-semibold text-[var(--error-text)] mb-4">
+                      Danger Zone
+                    </h3>
+                    <p className="text-[var(--text-sm)] text-[var(--text-secondary)] mb-6">
+                      These actions are permanent and cannot be undone.
+                    </p>
+
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between p-4 rounded-[var(--radius-lg)] border border-[var(--border-default)]">
+                        <div>
+                          <p className="text-[var(--text-sm)] font-medium text-[var(--text-primary)]">
+                            Export My Data
+                          </p>
+                          <p className="text-[var(--text-xs)] text-[var(--text-muted)]">
+                            Download all your data in a portable format
+                          </p>
+                        </div>
+                        <Button variant="secondary" size="sm">
+                          Export
+                        </Button>
+                      </div>
+
+                      <div className="flex items-center justify-between p-4 rounded-[var(--radius-lg)] border border-[var(--error-border)]">
+                        <div>
+                          <p className="text-[var(--text-sm)] font-medium text-[var(--error-text)]">
+                            Delete Account
+                          </p>
+                          <p className="text-[var(--text-xs)] text-[var(--text-muted)]">
+                            Permanently delete your account and all data
+                          </p>
+                        </div>
+                        <Button variant="destructive" size="sm">
+                          Delete
+                        </Button>
+                      </div>
+                    </div>
+                  </Card>
+                </div>
+              </TabsContent>
+            </Tabs>
 
             {/* Save Button */}
-            <div className="flex justify-end">
+            <div className="mt-8 flex justify-end">
               <Button
                 variant="primary"
                 onClick={handleSave}
@@ -491,14 +753,13 @@ export default function ProfilePage() {
                   <span className="text-[var(--text-sm)] text-[var(--text-primary)]">My Spaces</span>
                 </a>
                 <a
-                  href="/settings"
+                  href="/discover"
                   className="flex items-center gap-3 p-3 rounded-[var(--radius-lg)] bg-[var(--bg-subtle)] hover:bg-[var(--bg-surface)] border border-[var(--border-subtle)] hover:border-[var(--border-default)] transition-all"
                 >
                   <svg className="w-5 h-5 text-[var(--text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
                   </svg>
-                  <span className="text-[var(--text-sm)] text-[var(--text-primary)]">Settings</span>
+                  <span className="text-[var(--text-sm)] text-[var(--text-primary)]">Discover Spaces</span>
                 </a>
               </div>
             </Card>
