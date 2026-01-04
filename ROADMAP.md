@@ -255,6 +255,268 @@ To continue work, tell Claude:
 
 ---
 
+## Phase 6: Growth Engine (Referrals & Virality)
+
+> **Goal:** Turn every satisfied guest into a growth channel. This is the compound growth lever.
+
+### 6.1 Referral System - Database & API
+- [ ] **Status:** NOT STARTED
+- [ ] **Priority:** HIGH (Growth)
+- **Migration to create:** `supabase/migrations/010_referrals.sql`
+- **Tables:**
+  ```sql
+  -- Referral codes and tracking
+  referrals (
+    id uuid PRIMARY KEY,
+    referrer_id uuid REFERENCES users(id),
+    code varchar(8) UNIQUE,           -- e.g., "ALEX2024"
+    uses_count int DEFAULT 0,
+    max_uses int DEFAULT NULL,        -- NULL = unlimited
+    reward_cents int DEFAULT 500,     -- $5 credit per referral
+    created_at timestamptz
+  )
+
+  -- Track each referral conversion
+  referral_conversions (
+    id uuid PRIMARY KEY,
+    referral_id uuid REFERENCES referrals(id),
+    referee_id uuid REFERENCES users(id),
+    converted_at timestamptz,
+    first_rsvp_space_id uuid,         -- Which space they first joined
+    reward_claimed boolean DEFAULT false
+  )
+
+  -- User credits/wallet
+  user_credits (
+    user_id uuid PRIMARY KEY REFERENCES users(id),
+    balance_cents int DEFAULT 0,
+    lifetime_earned_cents int DEFAULT 0,
+    updated_at timestamptz
+  )
+
+  -- Credit transactions log
+  credit_transactions (
+    id uuid PRIMARY KEY,
+    user_id uuid REFERENCES users(id),
+    amount_cents int,                 -- positive = credit, negative = debit
+    type varchar(50),                 -- 'referral_bonus', 'referral_reward', 'checkout_applied'
+    reference_id uuid,                -- referral_id or invitation_id
+    created_at timestamptz
+  )
+  ```
+- **API to create:** `src/app/api/referrals/route.ts`
+  - `GET` - Get user's referral code + stats
+  - `POST` - Generate referral code (if doesn't exist)
+  - `GET /api/referrals/[code]` - Validate code, get referrer info
+
+### 6.2 Referral Code Generation & Sharing
+- [ ] **Status:** NOT STARTED
+- **Files to create/update:**
+  - `src/app/api/referrals/route.ts` - API endpoints
+  - `src/app/api/referrals/[code]/route.ts` - Code lookup
+  - `src/components/composed/referral-share-card.tsx` - Shareable card UI
+- **Logic:**
+  1. Generate unique 8-char code on first request (or user-customizable)
+  2. Referral link format: `sms.events/r/ALEXCODE`
+  3. Track clicks, signups, and first RSVPs
+  4. Show referrer their stats: shares, signups, earnings
+
+### 6.3 Referral Conversion Tracking
+- [ ] **Status:** NOT STARTED
+- **Integration points:**
+  - `src/app/api/auth/verify-code/route.ts` - Check for referral cookie on signup
+  - `src/app/api/stripe/webhook/route.ts` - Award credits on first RSVP
+  - `src/middleware.ts` - Store referral code in cookie from `/r/[code]` route
+- **Flow:**
+  1. Friend clicks `sms.events/r/ALEXCODE`
+  2. Cookie stored: `sms_referral=ALEXCODE` (30 days)
+  3. Friend signs up → `referral_conversions` row created
+  4. Friend completes first RSVP → Both get $5 credit
+  5. Referrer notified via SMS + notification
+
+### 6.4 Credits System & Checkout Integration
+- [ ] **Status:** NOT STARTED
+- **Files to update:**
+  - `src/app/api/credits/route.ts` - Get balance, transaction history
+  - `src/app/spaces/[id]/page.tsx` - Show "Apply $X credit" option
+  - `src/app/api/stripe/checkout/route.ts` - Reduce price by credit amount
+  - `src/app/api/stripe/webhook/route.ts` - Deduct credits on successful payment
+- **Rules:**
+  - Credits can cover up to 100% of room price
+  - Credits never expire
+  - Show balance in header/profile
+
+### 6.5 "Invite Friends" UI Integration
+- [ ] **Status:** NOT STARTED
+- **Files to update:**
+  - `src/app/spaces/[id]/success/page.tsx` - Prominent "Invite a friend, you both get $5" CTA
+  - `src/app/profile/page.tsx` - Referral stats section
+  - `src/components/composed/share-space-modal.tsx` - Add referral option
+- **Copy:**
+  - "Invite a friend → You both get $5 off your next room"
+  - "Your referral code: ALEXCODE"
+  - "You've earned $X from referrals"
+
+---
+
+## Phase 7: Retention & Community
+
+> **Goal:** Keep guests coming back and build network effects.
+
+### 7.1 Feedback Persistence (Fix Current Gap)
+- [ ] **Status:** NOT STARTED
+- [ ] **Priority:** HIGH (Data loss)
+- **Issue:** `src/app/spaces/[id]/feedback/page.tsx` simulates submission but doesn't save
+- **Migration:** `supabase/migrations/011_feedback.sql`
+  ```sql
+  feedback (
+    id uuid PRIMARY KEY,
+    space_id uuid REFERENCES spaces(id),
+    user_id uuid REFERENCES users(id),
+    overall_rating int CHECK (1-5),
+    would_recommend int CHECK (1-10),  -- NPS score
+    host_rating int CHECK (1-5),
+    highlights text,
+    suggestions text,
+    created_at timestamptz,
+    UNIQUE(space_id, user_id)
+  )
+  ```
+- **Files to update:**
+  - `src/app/api/feedback/route.ts` - POST to save feedback
+  - `src/app/spaces/[id]/feedback/page.tsx` - Call API instead of simulating
+  - `src/app/api/insights/route.ts` - Aggregate feedback for host insights
+
+### 7.2 Follow Hosts
+- [ ] **Status:** NOT STARTED
+- **Migration:** `supabase/migrations/012_follows.sql`
+  ```sql
+  follows (
+    follower_id uuid REFERENCES users(id),
+    host_id uuid REFERENCES users(id),
+    created_at timestamptz,
+    PRIMARY KEY (follower_id, host_id)
+  )
+  ```
+- **Files to create:**
+  - `src/app/api/follows/route.ts` - Follow/unfollow endpoints
+  - `src/components/host/follow-button.tsx` - UI component
+- **Integration:**
+  - Add follow button on space detail page (next to host info)
+  - Add follow button on host profile (if we create one)
+  - Notification when followed host creates new room
+
+### 7.3 "Followed Hosts" in Discover
+- [ ] **Status:** NOT STARTED
+- **Files to update:**
+  - `src/app/discover/page.tsx` - Add "From Hosts You Follow" section
+  - `src/app/api/spaces/route.ts` - Add `?following=true` filter
+- **UX:**
+  - If user follows hosts, show their rooms first
+  - "Hosts You Follow" section above general discover
+
+### 7.4 Post-Room Connections (Magic Moment)
+- [ ] **Status:** NOT STARTED
+- [ ] **Priority:** MEDIUM (Differentiator)
+- **Concept:** After room ends, let guests opt-in to share contact with others who also opt-in
+- **Migration:** `supabase/migrations/013_connections.sql`
+  ```sql
+  connection_optins (
+    id uuid PRIMARY KEY,
+    space_id uuid REFERENCES spaces(id),
+    user_id uuid REFERENCES users(id),
+    opted_in boolean DEFAULT false,
+    share_email boolean DEFAULT true,
+    share_phone boolean DEFAULT false,
+    created_at timestamptz,
+    UNIQUE(space_id, user_id)
+  )
+  ```
+- **Flow:**
+  1. After room completes, show "Stay connected?" prompt
+  2. Users opt-in with what to share (email/phone)
+  3. After 24h, match mutual opt-ins
+  4. Send email with list of connections
+- **Files:**
+  - `src/app/api/connections/route.ts` - Opt-in API
+  - `src/app/api/cron/match-connections/route.ts` - Daily matcher
+  - `src/app/spaces/[id]/connect/page.tsx` - Opt-in UI
+
+### 7.5 Personalized Recommendations
+- [ ] **Status:** NOT STARTED
+- [ ] **Priority:** LOW (Requires data)
+- **Concept:** "Rooms you might like" based on past attendance
+- **Factors:**
+  - Same host as rooms you've attended
+  - Same tone (chill, deep, playful, intense)
+  - Similar price range
+  - Same neighborhood
+- **Files:**
+  - `src/app/api/recommendations/route.ts` - Recommendation engine
+  - `src/app/discover/page.tsx` - "Recommended for You" section
+- **Note:** Requires sufficient user history; defer until after launch
+
+---
+
+## Phase 8: Trust & Safety (Scale Preparation)
+
+> **Goal:** Build moderation tools before they're urgently needed.
+
+### 8.1 Reporting System
+- [ ] **Status:** NOT STARTED
+- **Migration:** `supabase/migrations/014_reports.sql`
+  ```sql
+  reports (
+    id uuid PRIMARY KEY,
+    reporter_id uuid REFERENCES users(id),
+    reported_user_id uuid REFERENCES users(id),
+    reported_space_id uuid REFERENCES spaces(id),
+    type varchar(50),  -- 'harassment', 'no_show', 'inappropriate', 'spam', 'other'
+    description text,
+    status varchar(20) DEFAULT 'pending',  -- 'pending', 'reviewed', 'actioned', 'dismissed'
+    reviewed_by uuid REFERENCES users(id),
+    reviewed_at timestamptz,
+    created_at timestamptz
+  )
+  ```
+- **Files:**
+  - `src/app/api/reports/route.ts` - Submit report
+  - `src/components/composed/report-modal.tsx` - Report UI
+  - `src/app/founder/reports/page.tsx` - Admin review queue
+
+### 8.2 Guest Reputation (Mutual Reviews)
+- [ ] **Status:** NOT STARTED
+- **Concept:** Hosts can privately rate guests after room; affects guest's ability to join future rooms
+- **Migration:** `supabase/migrations/015_guest_reviews.sql`
+  ```sql
+  guest_reviews (
+    id uuid PRIMARY KEY,
+    host_id uuid REFERENCES users(id),
+    guest_id uuid REFERENCES users(id),
+    space_id uuid REFERENCES spaces(id),
+    rating int CHECK (1-5),
+    private_notes text,  -- Only visible to future hosts
+    flags text[],  -- ['late', 'disruptive', 'no_show', 'excellent']
+    created_at timestamptz,
+    UNIQUE(host_id, guest_id, space_id)
+  )
+  ```
+- **Integration:**
+  - Host sees guest's average rating when reviewing applications
+  - Auto-decline guests below threshold (host configurable)
+  - "Excellent" flag = priority for popular rooms
+
+### 8.3 Moderation Dashboard
+- [ ] **Status:** NOT STARTED
+- **File:** `src/app/founder/moderation/page.tsx`
+- **Features:**
+  - View all reports with context
+  - User lookup (history, rooms, reviews)
+  - Actions: warn, suspend, ban
+  - Audit log of all moderation actions
+
+---
+
 ## Technical Debt
 
 ### Remove Demo Fallbacks (Post-Launch)
@@ -314,6 +576,12 @@ After Supabase is configured in production, remove demo mode code from:
 | Cron - Capture | `src/app/api/cron/capture-payments/route.ts` | Ready |
 | Blasts | `src/app/api/blasts/route.ts` | Ready |
 | Notifications | `src/app/api/notifications/route.ts` | Ready |
+| **Referrals** | `src/app/api/referrals/route.ts` | Phase 6 |
+| **Credits** | `src/app/api/credits/route.ts` | Phase 6 |
+| **Feedback** | `src/app/api/feedback/route.ts` | Phase 7 |
+| **Follows** | `src/app/api/follows/route.ts` | Phase 7 |
+| **Connections** | `src/app/api/connections/route.ts` | Phase 7 |
+| **Reports** | `src/app/api/reports/route.ts` | Phase 8 |
 
 ### Key Lib Files
 | Purpose | File |
@@ -350,18 +618,42 @@ After Supabase is configured in production, remove demo mode code from:
 
 | Phase | Status | Description |
 |-------|--------|-------------|
-| Phase 1 | COMPLETE | Critical security & money |
-| Phase 2 | COMPLETE | Core host features |
-| Phase 3 | COMPLETE | Notifications system |
-| Phase 4 | COMPLETE | Polish & edge cases |
-| Phase 5 | COMPLETE | SEO & marketing foundation |
-| Tech Debt | COMPLETE | Demo fallbacks removed, error boundaries added |
+| Phase 1 | ✅ COMPLETE | Critical security & money |
+| Phase 2 | ✅ COMPLETE | Core host features |
+| Phase 3 | ✅ COMPLETE | Notifications system |
+| Phase 4 | ✅ COMPLETE | Polish & edge cases |
+| Phase 5 | ✅ COMPLETE | SEO & marketing foundation |
+| **Phase 6** | 🔴 NOT STARTED | **Growth Engine (Referrals)** ← START HERE |
+| Phase 7 | ⚪ NOT STARTED | Retention & Community |
+| Phase 8 | ⚪ NOT STARTED | Trust & Safety |
+| Tech Debt | ✅ COMPLETE | Demo fallbacks removed, error boundaries added |
 
-**Platform is launch-ready with SEO infrastructure in place.**
+---
 
-Optional remaining items:
-- Image optimization (WebP, lazy loading)
-- Page-specific OG images
-- Local directory listings
-- Blog/content strategy
-- Backlink building
+## Strategic Priority Order
+
+**Immediate (Growth Engine):**
+1. 6.1 Referral database + API
+2. 6.2 Referral code generation
+3. 6.3 Conversion tracking
+4. 6.4 Credits system
+5. 6.5 "Invite Friends" UI
+
+**Next (Retention):**
+1. 7.1 Feedback persistence (quick win, fixes data loss)
+2. 7.2 Follow hosts
+3. 7.4 Post-room connections
+
+**Later (Scale Prep):**
+1. 8.1 Reporting system
+2. 8.2 Guest reputation
+3. 8.3 Moderation dashboard
+
+---
+
+## Quick Start for Next Session
+
+```
+To build the referral system:
+"Read ROADMAP.md Phase 6.1 and implement the referrals database migration"
+```
