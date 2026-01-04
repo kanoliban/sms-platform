@@ -55,7 +55,8 @@ export async function POST(request: NextRequest) {
           name: userName,
           role,
           trust_score_overall: 100,
-          trust_status: 'trusted',
+          trust_status: 'active',
+          onboarding_completed: true,
         },
         { onConflict: 'phone' }
       )
@@ -77,9 +78,9 @@ export async function POST(request: NextRequest) {
       .setExpirationTime('7d')
       .sign(JWT_SECRET)
 
-    // Set cookie
+    // Set cookie (must match the name used in auth-context and verify-code)
     const cookieStore = await cookies()
-    cookieStore.set('sms_token', token, {
+    cookieStore.set('sms_auth_token', token, {
       httpOnly: true,
       secure: false, // Dev-only route, always insecure
       sameSite: 'lax',
@@ -95,6 +96,7 @@ export async function POST(request: NextRequest) {
         phone: user.phone,
         role: user.role,
       },
+      token, // Include token for API testing
       message: `Logged in as ${role}: ${userName}`,
     })
   } catch (error) {
@@ -124,4 +126,76 @@ export async function GET() {
       { role: 'founder', phone: '+15550000003', description: 'Full admin access' },
     ],
   })
+}
+
+// DELETE /api/dev/login - Reset dev user for testing
+// Clears host applications and resets role to guest
+export async function DELETE(request: NextRequest) {
+  if (process.env.NODE_ENV === 'production') {
+    return NextResponse.json(
+      { error: 'Dev endpoints disabled in production' },
+      { status: 403 }
+    )
+  }
+
+  try {
+    const { phone } = await request.json()
+
+    if (!phone) {
+      return NextResponse.json(
+        { error: 'Phone number required' },
+        { status: 400 }
+      )
+    }
+
+    const supabase = createAdminClient()
+
+    // Find the user
+    const { data: user, error: findError } = await supabase
+      .from('users')
+      .select('id')
+      .eq('phone', phone)
+      .single()
+
+    if (findError || !user) {
+      return NextResponse.json(
+        { error: 'User not found' },
+        { status: 404 }
+      )
+    }
+
+    // Delete all host applications for this user
+    const { error: deleteError } = await supabase
+      .from('host_applications')
+      .delete()
+      .eq('user_id', user.id)
+
+    if (deleteError) {
+      console.error('Error deleting applications:', deleteError)
+    }
+
+    // Reset user role to guest
+    const { error: updateError } = await supabase
+      .from('users')
+      .update({
+        role: 'guest',
+        host_application_status: null,
+      })
+      .eq('id', user.id)
+
+    if (updateError) {
+      console.error('Error resetting user:', updateError)
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: `Reset user ${phone} - cleared applications and set role to guest`,
+    })
+  } catch (error) {
+    console.error('Dev reset error:', error)
+    return NextResponse.json(
+      { error: 'Reset failed' },
+      { status: 500 }
+    )
+  }
 }
