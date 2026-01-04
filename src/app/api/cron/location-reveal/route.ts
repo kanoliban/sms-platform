@@ -99,6 +99,15 @@ export async function POST(request: NextRequest) {
             context: 'location_reveal',
             space_id: space.id,
           })
+
+          // Create in-app notification for guest
+          await supabase.from('notifications').insert({
+            user_id: guest.id,
+            type: 'location_reveal',
+            title: 'Location Revealed',
+            message: `The location for ${space.name} has been revealed! Check your SMS for the address.`,
+            space_id: space.id,
+          })
         }
 
         // Send reminder to host
