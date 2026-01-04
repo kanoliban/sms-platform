@@ -72,10 +72,20 @@ export async function POST(request: NextRequest) {
     }
 
     // Group by host
+    type SpaceWithInvitations = {
+      id: string
+      name: string
+      date: string
+      time: string
+      capacity: number
+      host_id: string
+      invitations: Array<{ id: string; status: string }> | null
+    }
+
     const hostDigests = new Map<string, {
       host: { id: string; name: string | null; phone: string }
-      tomorrow: typeof tomorrowSpaces
-      upcoming: typeof upcomingSpaces
+      tomorrow: SpaceWithInvitations[]
+      upcoming: SpaceWithInvitations[]
     }>()
 
     // Process tomorrow's spaces
@@ -88,7 +98,8 @@ export async function POST(request: NextRequest) {
       if (!hostDigests.has(host.id)) {
         hostDigests.set(host.id, { host, tomorrow: [], upcoming: [] })
       }
-      hostDigests.get(host.id)!.tomorrow!.push(space)
+      const digest = hostDigests.get(host.id)!
+      digest.tomorrow.push(space as unknown as SpaceWithInvitations)
     }
 
     // Process upcoming spaces
@@ -113,7 +124,8 @@ export async function POST(request: NextRequest) {
           upcoming: []
         })
       }
-      hostDigests.get(hostId)!.upcoming!.push(space)
+      const digest = hostDigests.get(hostId)!
+      digest.upcoming.push(space as unknown as SpaceWithInvitations)
     }
 
     let digestsSent = 0
@@ -179,7 +191,7 @@ export async function POST(request: NextRequest) {
     })
   } catch (err) {
     console.error('Host digest cron error:', err)
-    return NextResponse.json({ error: 'Cron job failed' }, { status: 500 })
+    return NextResponse.json({ error: 'Cron job failed', details: String(err) }, { status: 500 })
   }
 }
 
