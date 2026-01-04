@@ -143,12 +143,14 @@ export async function GET(request: NextRequest) {
 
       for (const fb of feedbackData) {
         if (fb.role === 'guest') {
-          if (fb.felt_different && scoreMap[fb.felt_different]) {
-            totalScore += scoreMap[fb.felt_different]
+          const feltScore = fb.felt_different ? scoreMap[fb.felt_different] : undefined
+          if (feltScore) {
+            totalScore += feltScore
             scoreCount++
           }
-          if (fb.attend_again && scoreMap[fb.attend_again]) {
-            totalScore += scoreMap[fb.attend_again]
+          const againScore = fb.attend_again ? scoreMap[fb.attend_again] : undefined
+          if (againScore) {
+            totalScore += againScore
             scoreCount++
           }
         }

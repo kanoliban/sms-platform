@@ -51,7 +51,7 @@ const statusToBadgeVariant: Record<string, 'going' | 'invited' | 'pending' | 'de
 function HostSpaceContent() {
   const params = useParams();
   const router = useRouter();
-  const spaceId = params.id as string;
+  const spaceId = typeof params.id === 'string' ? params.id : '';
   const host = useHostUser();
 
   const [space, setSpace] = useState<Space | null>(null);

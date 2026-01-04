@@ -130,7 +130,8 @@ export function Select({
         case ' ':
           e.preventDefault();
           if (highlightedIndex >= 0 && highlightedIndex < enabledOptions.length) {
-            handleChange(enabledOptions[highlightedIndex].value);
+            const option = enabledOptions[highlightedIndex];
+            if (option) handleChange(option.value);
           }
           break;
         case 'Escape':

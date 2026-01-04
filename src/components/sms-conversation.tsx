@@ -193,27 +193,30 @@ export function SMSConversation() {
         ? ATTENDEE_MESSAGES
         : LEARN_MORE_MESSAGES
 
-    if (currentMessageIndex < pathMessages.length) {
-      const timer = setTimeout(() => {
-        setShowTyping(false)
-        setMessages(prev => [...prev, pathMessages[currentMessageIndex]])
-        setCurrentMessageIndex(prev => prev + 1)
+    if (currentMessageIndex >= pathMessages.length) return
 
-        if (currentMessageIndex < pathMessages.length - 1) {
-          setTimeout(() => setShowTyping(true), 300)
-        } else {
-          setTimeout(() => {
-            if (selectedPath === 'learn') {
-              setShowFinalOptions(true)
-            } else {
-              setPhase('final_cta')
-            }
-          }, 800)
-        }
-      }, 1200)
+    const message = pathMessages[currentMessageIndex]
+    if (!message) return
 
-      return () => clearTimeout(timer)
-    }
+    const timer = setTimeout(() => {
+      setShowTyping(false)
+      setMessages(prev => [...prev, message])
+      setCurrentMessageIndex(prev => prev + 1)
+
+      if (currentMessageIndex < pathMessages.length - 1) {
+        setTimeout(() => setShowTyping(true), 300)
+      } else {
+        setTimeout(() => {
+          if (selectedPath === 'learn') {
+            setShowFinalOptions(true)
+          } else {
+            setPhase('final_cta')
+          }
+        }, 800)
+      }
+    }, 1200)
+
+    return () => clearTimeout(timer)
   }, [selectedPath, phase, currentMessageIndex])
 
   const handleOptionSelect = (option: { id: string; label: string }) => {

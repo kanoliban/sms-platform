@@ -71,21 +71,24 @@ export function EventConversation({ event, onBack, onRSVP, onNotify, animate = f
   }, [event.id])
 
   useEffect(() => {
-    if (currentIndex < eventMessages.length) {
-      const timer = setTimeout(() => {
-        setShowTyping(false)
-        setMessages(prev => [...prev, eventMessages[currentIndex]])
-        setCurrentIndex(prev => prev + 1)
+    if (currentIndex >= eventMessages.length) return
 
-        if (currentIndex < eventMessages.length - 1) {
-          setTimeout(() => setShowTyping(true), 200)
-        } else {
-          setTimeout(() => setShowCTA(true), 500)
-        }
-      }, currentIndex === 0 ? 800 : 600)
+    const message = eventMessages[currentIndex]
+    if (!message) return
 
-      return () => clearTimeout(timer)
-    }
+    const timer = setTimeout(() => {
+      setShowTyping(false)
+      setMessages(prev => [...prev, message])
+      setCurrentIndex(prev => prev + 1)
+
+      if (currentIndex < eventMessages.length - 1) {
+        setTimeout(() => setShowTyping(true), 200)
+      } else {
+        setTimeout(() => setShowCTA(true), 500)
+      }
+    }, currentIndex === 0 ? 800 : 600)
+
+    return () => clearTimeout(timer)
   }, [currentIndex, eventMessages.length])
 
   const isFull = event.spotsLeft === 'full'

@@ -37,7 +37,7 @@ const MOCK_SPACE: Space = {
   name: 'Dinner & Deep Talks',
   description: 'An intimate dinner for strangers who want real conversation.',
   tone: 'deep',
-  date: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+  date: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] ?? '',
   time: '19:00',
   duration_minutes: 180,
   location_address: '123 Example St, Minneapolis, MN',
@@ -86,7 +86,7 @@ function BlastsContent() {
   const router = useRouter();
   const host = useHostUser();
   const { addToast } = useToast();
-  const spaceId = params.id as string;
+  const spaceId = typeof params.id === 'string' ? params.id : '';
 
   const [space, setSpace] = useState<Space | null>(null);
   const [loading, setLoading] = useState(true);

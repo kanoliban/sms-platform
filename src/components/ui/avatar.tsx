@@ -30,10 +30,12 @@ const statusColors: Record<NonNullable<AvatarProps['status']>, string> = {
 
 function getInitials(name: string): string {
   const parts = name.trim().split(/\s+/);
+  const first = parts[0] ?? '';
   if (parts.length === 1) {
-    return parts[0].charAt(0).toUpperCase();
+    return first.charAt(0).toUpperCase();
   }
-  return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+  const last = parts[parts.length - 1] ?? '';
+  return (first.charAt(0) + last.charAt(0)).toUpperCase();
 }
 
 function getBackgroundColor(name: string): string {
@@ -45,9 +47,9 @@ function getBackgroundColor(name: string): string {
     'bg-[var(--tag-blue-bg)]',
     'bg-[var(--tag-purple-bg)]',
     'bg-[var(--tag-violet-bg)]',
-  ];
+  ] as const;
   const hash = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  return colors[hash % colors.length];
+  return colors[hash % colors.length] ?? colors[0];
 }
 
 function getTextColor(name: string): string {
@@ -59,9 +61,9 @@ function getTextColor(name: string): string {
     'text-[var(--tag-blue)]',
     'text-[var(--tag-purple)]',
     'text-[var(--tag-violet)]',
-  ];
+  ] as const;
   const hash = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  return colors[hash % colors.length];
+  return colors[hash % colors.length] ?? colors[0];
 }
 
 export function Avatar({

@@ -13,6 +13,13 @@
     "isolatedModules": true,
     "jsx": "react-jsx",
     "incremental": true,
+
+    // Extra strict options (beyond "strict": true)
+    "noUncheckedIndexedAccess": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "forceConsistentCasingInFileNames": true,
+
     "plugins": [
       {
         "name": "next"

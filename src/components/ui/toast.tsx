@@ -191,10 +191,9 @@ function ToastItem({ toast, onDismiss }: ToastItemProps) {
 
   // Auto dismiss
   useEffect(() => {
-    if (duration && duration > 0) {
-      const timer = setTimeout(onDismiss, duration);
-      return () => clearTimeout(timer);
-    }
+    if (!duration || duration <= 0) return
+    const timer = setTimeout(onDismiss, duration);
+    return () => clearTimeout(timer);
   }, [duration, onDismiss]);
 
   return (

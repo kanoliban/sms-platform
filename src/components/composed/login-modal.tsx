@@ -43,10 +43,9 @@ export function LoginModal({ open, onClose, onSuccess }: LoginModalProps) {
 
   // Resend cooldown timer
   useEffect(() => {
-    if (resendCooldown > 0) {
-      const timer = setTimeout(() => setResendCooldown(resendCooldown - 1), 1000)
-      return () => clearTimeout(timer)
-    }
+    if (resendCooldown <= 0) return
+    const timer = setTimeout(() => setResendCooldown(resendCooldown - 1), 1000)
+    return () => clearTimeout(timer)
   }, [resendCooldown])
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {

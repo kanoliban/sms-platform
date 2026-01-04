@@ -143,6 +143,7 @@ export default function HostOnboardingPage() {
   }
 
   const section = PHILOSOPHY_SECTIONS[currentSection]
+  if (!section) return null
 
   return (
     <div className="min-h-screen bg-[var(--bg-base)]">

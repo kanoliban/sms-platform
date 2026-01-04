@@ -59,7 +59,7 @@ function ApprovalsContent() {
   const params = useParams();
   const router = useRouter();
   const host = useHostUser();
-  const spaceId = params.id as string;
+  const spaceId = typeof params.id === 'string' ? params.id : '';
 
   const [space, setSpace] = useState<SpaceWithHost | null>(null);
   const [invitations, setInvitations] = useState<InvitationWithGuest[]>([]);
@@ -74,10 +74,9 @@ function ApprovalsContent() {
 
   // Auto-hide toast
   useEffect(() => {
-    if (toast) {
-      const timer = setTimeout(() => setToast(null), 3000);
-      return () => clearTimeout(timer);
-    }
+    if (!toast) return
+    const timer = setTimeout(() => setToast(null), 3000);
+    return () => clearTimeout(timer);
   }, [toast]);
 
   async function loadData() {

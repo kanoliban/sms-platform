@@ -31,7 +31,7 @@ const MONTHS = [
 ];
 
 function formatDate(date: Date, includeTime: boolean): string {
-  const month = MONTHS[date.getMonth()].slice(0, 3);
+  const month = (MONTHS[date.getMonth()] ?? 'Jan').slice(0, 3);
   const day = date.getDate();
   const year = date.getFullYear();
 

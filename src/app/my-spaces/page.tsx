@@ -95,12 +95,12 @@ export default function MyRoomsPage() {
 
   // Filter spaces by tab
   const upcomingSpaces = useMemo(() => {
-    const today = new Date().toISOString().split('T')[0];
+    const today = new Date().toISOString().split('T')[0] ?? '';
     return spaces.filter(r => r.date >= today && (r.user_status === 'going' || r.user_status === 'invited'));
   }, [spaces]);
 
   const pastRooms = useMemo(() => {
-    const today = new Date().toISOString().split('T')[0];
+    const today = new Date().toISOString().split('T')[0] ?? '';
     return spaces.filter(r => r.date < today || r.user_status === 'attended' || r.user_status === 'missed');
   }, [spaces]);
 

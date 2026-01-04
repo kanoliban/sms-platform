@@ -62,13 +62,16 @@ export async function POST(request: NextRequest) {
     if (hostError) throw new Error(`Host creation failed: ${hostError.message}`)
 
     // 2. Create test guests
-    const guestNames = ['Alice Guest', 'Bob Guest', 'Carol Guest', 'Dave Guest', 'Eve Guest']
+    const guestNames = ['Alice Guest', 'Bob Guest', 'Carol Guest', 'Dave Guest', 'Eve Guest'] as const
     for (let i = 0; i < guestNames.length; i++) {
+      const guestName = guestNames[i]
+      const guestId = TEST_IDS.guests[i]
+      if (!guestName || !guestId) continue
       await supabase.from('users').upsert({
-        id: TEST_IDS.guests[i],
+        id: guestId,
         phone: `+1555999000${i + 1}`,
-        email: `${guestNames[i].toLowerCase().replace(' ', '')}@example.com`,
-        name: guestNames[i],
+        email: `${guestName.toLowerCase().replace(' ', '')}@example.com`,
+        name: guestName,
         role: 'guest',
         trust_score_overall: 70 + (i * 3),
         trust_status: 'active',

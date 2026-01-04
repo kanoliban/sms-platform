@@ -39,7 +39,7 @@ const MOCK_SPACE: Space = {
   name: 'Dinner & Deep Talks',
   description: 'An intimate dinner for strangers who want real conversation.',
   tone: 'deep' as SpaceTone,
-  date: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+  date: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] ?? '',
   time: '19:00',
   duration_minutes: 180,
   location_address: '123 Example St, Minneapolis, MN',
@@ -141,7 +141,7 @@ function GuestListContent() {
   const params = useParams();
   const router = useRouter();
   const host = useHostUser();
-  const spaceId = params.id as string;
+  const spaceId = typeof params.id === 'string' ? params.id : '';
 
   const [space, setSpace] = useState<Space | null>(null);
   const [invitations, setInvitations] = useState<InvitationWithUser[]>([]);
@@ -289,7 +289,10 @@ function GuestListContent() {
     const currentIndex = sortedInvitations.findIndex(inv => inv.id === selectedGuest.id);
     const newIndex = direction === 'prev' ? currentIndex - 1 : currentIndex + 1;
     if (newIndex >= 0 && newIndex < sortedInvitations.length) {
-      setSelectedGuest(invitationToGuestDetail(sortedInvitations[newIndex]));
+      const nextInvitation = sortedInvitations[newIndex];
+      if (nextInvitation) {
+        setSelectedGuest(invitationToGuestDetail(nextInvitation));
+      }
     }
   }
 

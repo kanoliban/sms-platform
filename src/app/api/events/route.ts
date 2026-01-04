@@ -27,8 +27,8 @@ type NotionPage = {
 
 function formatDayOfWeek(dateStr: string): string {
   const date = new Date(dateStr)
-  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-  return days[date.getDay()]
+  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as const
+  return days[date.getDay()] ?? 'Sun'
 }
 
 function getPlainText(prop: NotionProperty | undefined): string {

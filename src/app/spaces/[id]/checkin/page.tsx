@@ -32,7 +32,7 @@ const MOCK_SPACE: SpaceWithHost = {
   name: 'Dinner & Deep Talks',
   description: 'Demo room',
   tone: 'deep' as SpaceTone,
-  date: new Date().toISOString().split('T')[0],
+  date: new Date().toISOString().split('T')[0] ?? '',
   time: '19:00',
   duration_minutes: 180,
   location_address: '123 Example St, Minneapolis, MN',
@@ -58,7 +58,7 @@ const toneConfig: Record<SpaceTone, { gradient: string }> = {
 export default function CheckInPage() {
   const params = useParams();
   const searchParams = useSearchParams();
-  const spaceId = params.id as string;
+  const spaceId = typeof params.id === 'string' ? params.id : '';
   const phoneParam = searchParams.get('phone');
 
   const [space, setSpace] = useState<SpaceWithHost | null>(null);

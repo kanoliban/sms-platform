@@ -14,7 +14,7 @@ type SpaceWithHost = Space & {
 function SuccessContent() {
   const params = useParams()
   const searchParams = useSearchParams()
-  const spaceId = params.id as string
+  const spaceId = typeof params.id === 'string' ? params.id : ''
   const invitationId = searchParams.get('invitation')
 
   const [space, setSpace] = useState<SpaceWithHost | null>(null)
