@@ -193,6 +193,78 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // --- 1-Hour Reminder: Send reminder notifications to guests ---
+    // Find spaces happening in approximately 1 hour (45min to 75min window)
+    const min1h = new Date(now.getTime() + 45 * 60 * 1000)
+    const max1h = new Date(now.getTime() + 75 * 60 * 1000)
+
+    const { data: upcomingSpaces, error: upcomingError } = await supabase
+      .from('spaces')
+      .select(`
+        id,
+        name,
+        date,
+        time,
+        location_address,
+        location_hint,
+        invitations (
+          id,
+          status,
+          user:users (
+            id,
+            name,
+            phone
+          )
+        )
+      `)
+      .in('status', ['open', 'full', 'confirmed'])
+      .eq('location_revealed', true)
+
+    let remindersSent = 0
+    if (!upcomingError && upcomingSpaces) {
+      for (const space of upcomingSpaces) {
+        const spaceDateTime = new Date(`${space.date}T${space.time}`)
+        const minutesUntilSpace = (spaceDateTime.getTime() - now.getTime()) / (1000 * 60)
+
+        // Check if space is in the 1-hour window (45-75 minutes)
+        if (minutesUntilSpace < 45 || minutesUntilSpace > 75) {
+          continue
+        }
+
+        const acceptedGuests = space.invitations?.filter(
+          (inv: { status: string }) => inv.status === 'accepted'
+        ) || []
+
+        for (const invitation of acceptedGuests) {
+          const guest = invitation.user
+          if (!guest?.id) continue
+
+          // Check if we already sent a reminder notification for this guest/space
+          const { count: existingReminder } = await supabase
+            .from('notifications')
+            .select('*', { count: 'exact', head: true })
+            .eq('user_id', guest.id)
+            .eq('space_id', space.id)
+            .eq('type', 'reminder')
+
+          if (existingReminder && existingReminder > 0) {
+            continue // Already sent reminder
+          }
+
+          // Create reminder notification
+          await supabase.from('notifications').insert({
+            user_id: guest.id,
+            type: 'reminder',
+            title: 'Starting Soon',
+            message: `${space.name} starts in about 1 hour! Head to ${space.location_hint || space.location_address}`,
+            space_id: space.id,
+          })
+
+          remindersSent++
+        }
+      }
+    }
+
     // --- Auto-complete spaces that have ended ---
     // Find spaces that are past their end time and still in active status
     const { data: endedSpaces, error: endedError } = await supabase
@@ -227,6 +299,7 @@ export async function POST(request: NextRequest) {
       locationReveals: processed,
       errors,
       promptsSent,
+      remindersSent,
       autoCompleted: completedCount,
     })
   } catch (err) {

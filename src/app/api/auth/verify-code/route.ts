@@ -4,10 +4,14 @@ import { checkVerificationCode, normalizePhoneNumber } from '@/lib/twilio/client
 import { cookies } from 'next/headers'
 import { SignJWT } from 'jose'
 
-// Secret key for JWT signing
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || 'sms-platform-secret-key-change-in-production'
-)
+// Secret key for JWT signing - MUST be set in production
+function getJwtSecret(): Uint8Array {
+  const secret = process.env.JWT_SECRET
+  if (!secret) {
+    throw new Error('JWT_SECRET environment variable is required')
+  }
+  return new TextEncoder().encode(secret)
+}
 
 // POST /api/auth/verify-code - Verify code via Twilio Verify and create session
 export async function POST(request: NextRequest) {
@@ -67,7 +71,7 @@ export async function POST(request: NextRequest) {
       .setProtectedHeader({ alg: 'HS256' })
       .setIssuedAt()
       .setExpirationTime('7d')
-      .sign(JWT_SECRET)
+      .sign(getJwtSecret())
 
     // Set HTTP-only cookie with the token
     const cookieStore = await cookies()

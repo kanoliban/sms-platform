@@ -4,9 +4,13 @@ import { jwtVerify } from 'jose'
 import { createServerClient, createAdminClient } from '@/lib/supabase/server'
 import { createCheckoutSession } from '@/lib/stripe/client'
 
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || 'sms-platform-secret-key-change-in-production'
-)
+function getJwtSecret(): Uint8Array {
+  const secret = process.env.JWT_SECRET
+  if (!secret) {
+    throw new Error('JWT_SECRET environment variable is required')
+  }
+  return new TextEncoder().encode(secret)
+}
 
 // POST /api/rsvp - Create a Stripe checkout session to accept invitation
 export async function POST(request: NextRequest) {
@@ -24,7 +28,7 @@ export async function POST(request: NextRequest) {
     // Verify JWT token
     let payload
     try {
-      const verified = await jwtVerify(token, JWT_SECRET)
+      const verified = await jwtVerify(token, getJwtSecret())
       payload = verified.payload
     } catch {
       return NextResponse.json(

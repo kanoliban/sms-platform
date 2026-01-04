@@ -43,7 +43,7 @@ To continue work, tell Claude:
 > These must be fixed before any real users or money flows through the system.
 
 ### 1.1 Fix JWT Secret Vulnerability
-- [ ] **Status:** Not started
+- [x] **Status:** COMPLETED (2026-01-03)
 - **Priority:** CRITICAL
 - **File:** `src/app/api/auth/verify-code/route.ts`
 - **Issue:** Line 7-8 has weak default: `'sms-platform-secret-key-change-in-production'`
