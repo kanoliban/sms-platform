@@ -161,7 +161,7 @@ export async function POST(request: NextRequest) {
         // Create notification too
         await supabase.from('notifications').insert({
           user_id: hostId,
-          type: 'digest',
+          type: 'reminder',
           title: 'Daily Digest',
           message: tomorrow && tomorrow.length > 0
             ? `You have ${tomorrow.length} space${tomorrow.length > 1 ? 's' : ''} tomorrow`
