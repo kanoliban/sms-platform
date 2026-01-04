@@ -1,10 +1,12 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
+import { GoogleAnalytics } from '@next/third-parties/google'
 import './globals.css'
 import { ToastProvider } from '@/components/ui/toast'
 import { AuthProvider } from '@/lib/auth/auth-context'
 import { StructuredData } from '@/components/seo/structured-data'
+import { DevToolbar } from '@/components/dev/dev-toolbar'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -67,9 +69,11 @@ export default function RootLayout({
         <AuthProvider>
           <ToastProvider>
             {children}
+            {process.env.NODE_ENV === 'development' && <DevToolbar />}
           </ToastProvider>
         </AuthProvider>
         <Analytics />
+        <GoogleAnalytics gaId="G-4Q8R9PDFKZ" />
         <StructuredData />
       </body>
     </html>
