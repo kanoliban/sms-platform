@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import type { Space, User, Invitation } from '@/lib/supabase/types';
 import {
@@ -23,16 +23,13 @@ import {
   GuestDetailSlideOver,
   type GuestDetail,
 } from '@/components/composed';
+import { HostGuard, useHostUser } from '@/components/auth';
+import { createClient } from '@/lib/supabase/client';
 
 type SpaceTone = 'chill' | 'playful' | 'deep' | 'intense';
 
 type InvitationWithUser = Invitation & {
   user: Pick<User, 'id' | 'name' | 'phone' | 'trust_score_overall'>;
-};
-
-// Check if Supabase is configured
-const isSupabaseConfigured = () => {
-  return !!(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
 };
 
 // Mock data for demo mode
@@ -140,14 +137,16 @@ const filterLabels: Record<FilterOption, string> = {
   declined: 'Declined',
 };
 
-export default function GuestListPage() {
+function GuestListContent() {
   const params = useParams();
+  const router = useRouter();
+  const host = useHostUser();
   const spaceId = params.id as string;
 
   const [space, setSpace] = useState<Space | null>(null);
   const [invitations, setInvitations] = useState<InvitationWithUser[]>([]);
   const [loading, setLoading] = useState(true);
-  const [demoMode, setDemoMode] = useState(false);
+  const [unauthorized, setUnauthorized] = useState(false);
   const [filter, setFilter] = useState<FilterOption>('all');
   const [sort, setSort] = useState<SortOption>('recent');
   const [searchQuery, setSearchQuery] = useState('');
@@ -156,19 +155,10 @@ export default function GuestListPage() {
 
   useEffect(() => {
     loadRoom();
-  }, [spaceId]);
+  }, [spaceId, host.id]);
 
   async function loadRoom() {
-    if (!isSupabaseConfigured() || spaceId.startsWith('demo-')) {
-      setDemoMode(true);
-      setSpace(MOCK_SPACE);
-      setInvitations(MOCK_INVITATIONS);
-      setLoading(false);
-      return;
-    }
-
     try {
-      const { createClient } = await import('@/lib/supabase/client');
       const supabase = createClient();
 
       const { data: spaceData } = await supabase
@@ -177,9 +167,19 @@ export default function GuestListPage() {
         .eq('id', spaceId)
         .single();
 
-      if (spaceData) {
-        setSpace(spaceData);
+      if (!spaceData) {
+        setLoading(false);
+        return;
       }
+
+      // Verify ownership
+      if (spaceData.host_id !== host.id) {
+        setUnauthorized(true);
+        setLoading(false);
+        return;
+      }
+
+      setSpace(spaceData);
 
       const { data: invData } = await supabase
         .from('invitations')
@@ -301,6 +301,28 @@ export default function GuestListPage() {
     );
   }
 
+  if (unauthorized) {
+    return (
+      <div className="min-h-screen bg-[var(--bg-base)] flex items-center justify-center">
+        <div className="text-center max-w-md">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[var(--error-muted)] flex items-center justify-center">
+            <svg className="w-8 h-8 text-[var(--error)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+          <h1 className="text-[var(--text-2xl)] font-bold text-[var(--text-primary)] mb-2">Access Denied</h1>
+          <p className="text-[var(--text-secondary)] mb-6">You don&apos;t have permission to view this space&apos;s guests.</p>
+          <button
+            onClick={() => router.push('/host')}
+            className="px-4 py-2 bg-[var(--primary)] text-white rounded-[var(--radius-md)] hover:opacity-90 transition-opacity"
+          >
+            Go to Host Hub
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   if (!space) {
     return (
       <div className="min-h-screen bg-[var(--bg-base)] flex items-center justify-center">
@@ -316,12 +338,6 @@ export default function GuestListPage() {
 
   return (
     <div className="min-h-screen bg-[var(--bg-base)]">
-      {/* Demo Banner */}
-      {demoMode && (
-        <div className="bg-[var(--warning-muted)] border-b border-[var(--warning-border)] px-6 py-3 text-center text-[var(--warning-text)] text-[var(--text-sm)]">
-          Demo Mode
-        </div>
-      )}
 
       {/* Header */}
       <header className="border-b border-[var(--border-subtle)] sticky top-0 bg-[var(--bg-base)]/95 backdrop-blur z-10">

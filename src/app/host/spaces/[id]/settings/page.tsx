@@ -16,16 +16,13 @@ import {
 } from '@/components/ui';
 import { PageContainer } from '@/components/layout';
 import { AppHeader } from '@/components/composed';
+import { HostGuard, useHostUser } from '@/components/auth';
+import { createClient } from '@/lib/supabase/client';
 
 type SpaceTone = 'chill' | 'playful' | 'deep' | 'intense';
 
 type SpaceWithHost = Space & {
   host: Pick<User, 'id' | 'name'>;
-};
-
-// Check if Supabase is configured
-const isSupabaseConfigured = () => {
-  return !!(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
 };
 
 // Mock data for demo mode
@@ -57,15 +54,16 @@ const toneOptions: { value: SpaceTone; label: string; description: string }[] = 
   { value: 'intense', label: 'Intense', description: 'High energy, challenging' },
 ];
 
-export default function RoomSettingsPage() {
+function RoomSettingsContent() {
   const params = useParams();
   const router = useRouter();
+  const host = useHostUser();
   const spaceId = params.id as string;
 
   const [space, setSpace] = useState<SpaceWithHost | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [demoMode, setDemoMode] = useState(false);
+  const [unauthorized, setUnauthorized] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
   // Form state
@@ -83,7 +81,7 @@ export default function RoomSettingsPage() {
 
   useEffect(() => {
     loadRoom();
-  }, [spaceId]);
+  }, [spaceId, host.id]);
 
   useEffect(() => {
     if (toast) {
@@ -93,16 +91,7 @@ export default function RoomSettingsPage() {
   }, [toast]);
 
   async function loadRoom() {
-    if (!isSupabaseConfigured() || spaceId.startsWith('demo-')) {
-      setDemoMode(true);
-      setSpace(MOCK_SPACE);
-      populateForm(MOCK_SPACE);
-      setLoading(false);
-      return;
-    }
-
     try {
-      const { createClient } = await import('@/lib/supabase/client');
       const supabase = createClient();
 
       const { data: spaceData } = await supabase
@@ -114,10 +103,20 @@ export default function RoomSettingsPage() {
         .eq('id', spaceId)
         .single();
 
-      if (spaceData) {
-        setSpace(spaceData as SpaceWithHost);
-        populateForm(spaceData as SpaceWithHost);
+      if (!spaceData) {
+        setLoading(false);
+        return;
       }
+
+      // Verify ownership
+      if (spaceData.host_id !== host.id) {
+        setUnauthorized(true);
+        setLoading(false);
+        return;
+      }
+
+      setSpace(spaceData as SpaceWithHost);
+      populateForm(spaceData as SpaceWithHost);
     } catch (err) {
       console.error('Failed to load room:', err);
     }

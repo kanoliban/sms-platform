@@ -1,23 +1,18 @@
-import { cn } from '@/lib/utils';
-
 interface SkeletonProps {
   className?: string;
 }
 
-export function Skeleton({ className }: SkeletonProps) {
+export function Skeleton({ className = '' }: SkeletonProps) {
   return (
     <div
-      className={cn(
-        'animate-pulse rounded-[var(--radius-md)] bg-[var(--bg-subtle)]',
-        className
-      )}
+      className={`animate-pulse rounded-[var(--radius-md)] bg-[var(--bg-subtle)] ${className}`.trim()}
     />
   );
 }
 
-export function SkeletonCard({ className }: SkeletonProps) {
+export function SkeletonCard({ className = '' }: SkeletonProps) {
   return (
-    <div className={cn('rounded-[var(--radius-xl)] border border-[var(--border-subtle)] p-6', className)}>
+    <div className={`rounded-[var(--radius-xl)] border border-[var(--border-subtle)] p-6 ${className}`.trim()}>
       <div className="space-y-4">
         <Skeleton className="h-4 w-3/4" />
         <Skeleton className="h-4 w-1/2" />

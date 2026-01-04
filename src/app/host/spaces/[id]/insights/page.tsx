@@ -1,12 +1,14 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import type { Space } from '@/lib/supabase/types';
 import { Card, Progress } from '@/components/ui';
 import { PageContainer } from '@/components/layout';
 import { StatsCard } from '@/components/composed';
+import { HostGuard, useHostUser } from '@/components/auth';
+import { createClient } from '@/lib/supabase/client';
 
 type SpaceTone = 'chill' | 'playful' | 'deep' | 'intense';
 
@@ -44,11 +46,6 @@ interface SpaceInsights {
     outstanding: number;
   };
 }
-
-// Check if Supabase is configured
-const isSupabaseConfigured = () => {
-  return !!(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
-};
 
 // Mock data for demo mode
 const MOCK_SPACE: Space = {
@@ -106,42 +103,45 @@ const MOCK_INSIGHTS: SpaceInsights = {
   },
 };
 
-export default function InsightsPage() {
+function InsightsContent() {
   const params = useParams();
+  const router = useRouter();
+  const host = useHostUser();
   const spaceId = params.id as string;
 
   const [space, setSpace] = useState<Space | null>(null);
   const [insights, setInsights] = useState<SpaceInsights | null>(null);
   const [loading, setLoading] = useState(true);
-  const [demoMode, setDemoMode] = useState(false);
+  const [unauthorized, setUnauthorized] = useState(false);
 
   useEffect(() => {
     loadInsights();
-  }, [spaceId]);
+  }, [spaceId, host.id]);
 
   async function loadInsights() {
-    if (!isSupabaseConfigured() || spaceId.startsWith('demo-')) {
-      setDemoMode(true);
-      setSpace(MOCK_SPACE);
-      setInsights(MOCK_INSIGHTS);
-      setLoading(false);
-      return;
-    }
-
     try {
-      const { createClient } = await import('@/lib/supabase/client');
       const supabase = createClient();
 
-      // Database uses 'rooms' table, UI calls them 'spaces'
+      // Database uses 'spaces' table
       const { data: spaceData } = await supabase
-        .from('rooms')
+        .from('spaces')
         .select('*')
         .eq('id', spaceId)
         .single();
 
-      if (spaceData) {
-        setSpace(spaceData);
+      if (!spaceData) {
+        setLoading(false);
+        return;
       }
+
+      // Verify ownership
+      if (spaceData.host_id !== host.id) {
+        setUnauthorized(true);
+        setLoading(false);
+        return;
+      }
+
+      setSpace(spaceData);
 
       // Fetch real insights from API
       const res = await fetch(`/api/insights?space_id=${spaceId}`);

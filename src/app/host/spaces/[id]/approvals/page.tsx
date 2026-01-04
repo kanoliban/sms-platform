@@ -15,6 +15,8 @@ import {
 } from '@/components/ui';
 import { PageContainer } from '@/components/layout';
 import { EmptyState, AppHeader } from '@/components/composed';
+import { HostGuard, useHostUser } from '@/components/auth';
+import { createClient } from '@/lib/supabase/client';
 
 type SpaceTone = 'chill' | 'playful' | 'deep' | 'intense';
 
@@ -24,11 +26,6 @@ type SpaceWithHost = Space & {
 
 type InvitationWithGuest = Invitation & {
   guest?: Pick<User, 'id' | 'name' | 'phone'> | null;
-};
-
-// Check if Supabase is configured
-const isSupabaseConfigured = () => {
-  return !!(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
 };
 
 // Mock data for demo mode
@@ -125,21 +122,22 @@ function formatPhone(phone: string): string {
   return phone;
 }
 
-export default function ApprovalsPage() {
+function ApprovalsContent() {
   const params = useParams();
   const router = useRouter();
+  const host = useHostUser();
   const spaceId = params.id as string;
 
   const [space, setSpace] = useState<SpaceWithHost | null>(null);
   const [invitations, setInvitations] = useState<InvitationWithGuest[]>([]);
   const [loading, setLoading] = useState(true);
-  const [demoMode, setDemoMode] = useState(false);
+  const [unauthorized, setUnauthorized] = useState(false);
   const [processingIds, setProcessingIds] = useState<Set<string>>(new Set());
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
   useEffect(() => {
     loadData();
-  }, [spaceId]);
+  }, [spaceId, host.id]);
 
   // Auto-hide toast
   useEffect(() => {
@@ -150,16 +148,7 @@ export default function ApprovalsPage() {
   }, [toast]);
 
   async function loadData() {
-    if (!isSupabaseConfigured() || spaceId.startsWith('demo-')) {
-      setDemoMode(true);
-      setSpace(MOCK_SPACE);
-      setInvitations(MOCK_PENDING_INVITATIONS);
-      setLoading(false);
-      return;
-    }
-
     try {
-      const { createClient } = await import('@/lib/supabase/client');
       const supabase = createClient();
 
       // Load room with host
@@ -172,9 +161,19 @@ export default function ApprovalsPage() {
         .eq('id', spaceId)
         .single();
 
-      if (spaceData) {
-        setSpace(spaceData as SpaceWithHost);
+      if (!spaceData) {
+        setLoading(false);
+        return;
       }
+
+      // Verify ownership
+      if (spaceData.host_id !== host.id) {
+        setUnauthorized(true);
+        setLoading(false);
+        return;
+      }
+
+      setSpace(spaceData as SpaceWithHost);
 
       // Load pending invitations
       const { data: invData } = await supabase
@@ -290,6 +289,28 @@ export default function ApprovalsPage() {
     );
   }
 
+  if (unauthorized) {
+    return (
+      <div className="min-h-screen bg-[var(--bg-base)] flex items-center justify-center">
+        <div className="text-center max-w-md">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[var(--error-muted)] flex items-center justify-center">
+            <svg className="w-8 h-8 text-[var(--error)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+          <h1 className="text-[var(--text-2xl)] font-bold text-[var(--text-primary)] mb-2">Access Denied</h1>
+          <p className="text-[var(--text-secondary)] mb-6">You don&apos;t have permission to manage approvals for this space.</p>
+          <button
+            onClick={() => router.push('/host')}
+            className="px-4 py-2 bg-[var(--primary)] text-white rounded-[var(--radius-md)] hover:opacity-90 transition-opacity"
+          >
+            Go to Host Hub
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   if (!space) {
     return (
       <div className="min-h-screen bg-[var(--bg-base)] flex items-center justify-center">
@@ -306,13 +327,6 @@ export default function ApprovalsPage() {
   return (
     <div className="min-h-screen bg-[var(--bg-base)]">
       <AppHeader />
-
-      {/* Demo Banner */}
-      {demoMode && (
-        <div className="bg-[var(--warning-muted)] border-b border-[var(--warning-border)] px-6 py-3 text-center text-[var(--warning-text)] text-[var(--text-sm)]">
-          Demo Mode - Changes will not persist
-        </div>
-      )}
 
       <PageContainer size="lg" className="py-8">
         {/* Back Link & Title */}

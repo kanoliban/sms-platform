@@ -16,6 +16,8 @@ import {
 import { PageContainer } from '@/components/layout';
 import { EmptyState, AppHeader } from '@/components/composed';
 import { useToast } from '@/components/ui/toast';
+import { HostGuard, useHostUser } from '@/components/auth';
+import { createClient } from '@/lib/supabase/client';
 
 type RecipientFilter = 'all' | 'confirmed' | 'invited';
 
@@ -27,11 +29,6 @@ interface Blast {
   sent_at: string;
   sent_by: string;
 }
-
-// Check if Supabase is configured
-const isSupabaseConfigured = () => {
-  return !!(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
-};
 
 // Mock room data
 const MOCK_SPACE: Space = {
@@ -84,15 +81,16 @@ const MOCK_BLASTS: Blast[] = [
 // SMS character limit (standard is 160, but we allow longer)
 const SMS_SEGMENT_LENGTH = 160;
 
-export default function BlastsPage() {
+function BlastsContent() {
   const params = useParams();
   const router = useRouter();
+  const host = useHostUser();
   const { addToast } = useToast();
   const spaceId = params.id as string;
 
   const [space, setSpace] = useState<Space | null>(null);
   const [loading, setLoading] = useState(true);
-  const [demoMode, setDemoMode] = useState(false);
+  const [unauthorized, setUnauthorized] = useState(false);
   const [blasts, setBlasts] = useState<Blast[]>([]);
   const [guestCounts, setGuestCounts] = useState({ confirmed: 0, invited: 0, total: 0 });
 
@@ -103,29 +101,31 @@ export default function BlastsPage() {
 
   useEffect(() => {
     loadData();
-  }, [spaceId]);
+  }, [spaceId, host.id]);
 
   async function loadData() {
-    if (!isSupabaseConfigured()) {
-      setDemoMode(true);
-      setSpace(MOCK_SPACE);
-      setBlasts(MOCK_BLASTS);
-      setGuestCounts(MOCK_GUEST_COUNTS);
-      setLoading(false);
-      return;
-    }
+    try {
+      const supabase = createClient();
 
-    const { createClient } = await import('@/lib/supabase/client');
-    const supabase = createClient();
+      // Load room
+      const { data: spaceData } = await supabase
+        .from('spaces')
+        .select('*')
+        .eq('id', spaceId)
+        .single();
 
-    // Load room
-    const { data: spaceData } = await supabase
-      .from('spaces')
-      .select('*')
-      .eq('id', spaceId)
-      .single();
+      if (!spaceData) {
+        setLoading(false);
+        return;
+      }
 
-    if (spaceData) {
+      // Verify ownership
+      if (spaceData.host_id !== host.id) {
+        setUnauthorized(true);
+        setLoading(false);
+        return;
+      }
+
       setSpace(spaceData);
 
       // Get guest counts
@@ -154,6 +154,8 @@ export default function BlastsPage() {
       } catch (err) {
         console.error('Failed to load blasts:', err);
       }
+    } catch (err) {
+      console.error('Failed to load data:', err);
     }
 
     setLoading(false);
@@ -283,6 +285,28 @@ export default function BlastsPage() {
     );
   }
 
+  if (unauthorized) {
+    return (
+      <div className="min-h-screen bg-[var(--bg-base)] flex items-center justify-center">
+        <div className="text-center max-w-md">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[var(--error-muted)] flex items-center justify-center">
+            <svg className="w-8 h-8 text-[var(--error)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+          <h1 className="text-[var(--text-2xl)] font-bold text-[var(--text-primary)] mb-2">Access Denied</h1>
+          <p className="text-[var(--text-secondary)] mb-6">You don&apos;t have permission to send blasts for this space.</p>
+          <button
+            onClick={() => router.push('/host')}
+            className="px-4 py-2 bg-[var(--primary)] text-white rounded-[var(--radius-md)] hover:opacity-90 transition-opacity"
+          >
+            Go to Host Hub
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   if (!space) {
     return (
       <div className="min-h-screen bg-[var(--bg-base)]">
@@ -310,13 +334,6 @@ export default function BlastsPage() {
   return (
     <div className="min-h-screen bg-[var(--bg-base)]">
       <AppHeader />
-
-      {/* Demo Mode Banner */}
-      {demoMode && (
-        <div className="bg-[var(--warning-muted)] border-b border-[var(--warning-border)] px-6 py-3 text-center text-[var(--warning-text)] text-[var(--text-sm)]">
-          Demo Mode - Supabase not configured
-        </div>
-      )}
 
       <PageContainer size="lg" className="py-8">
         {/* Breadcrumb & Header */}

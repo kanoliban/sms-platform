@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { QRCodeSVG } from 'qrcode.react';
 import type { Space, User, Invitation } from '@/lib/supabase/types';
@@ -18,104 +18,19 @@ import {
 } from '@/components/ui';
 import { PageContainer } from '@/components/layout';
 import {
-  StatsCard,
   StatsGrid,
   GuestRow,
-  EmptyState,
   NoGuestsEmptyState,
   ShareSpaceModal,
 } from '@/components/composed';
+import { HostGuard, useHostUser } from '@/components/auth';
+import { createClient } from '@/lib/supabase/client';
 
 type SpaceTone = 'chill' | 'playful' | 'deep' | 'intense';
 
 type InvitationWithUser = Invitation & {
   user: Pick<User, 'id' | 'name' | 'phone' | 'trust_score_overall'>;
 };
-
-// Check if Supabase is configured
-const isSupabaseConfigured = () => {
-  return !!(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
-};
-
-// Mock data for demo mode
-const MOCK_SPACE: Space = {
-  id: 'demo-1',
-  host_id: 'demo-host',
-  name: 'Dinner & Deep Talks',
-  description: 'An intimate dinner for strangers who want real conversation.',
-  tone: 'deep' as SpaceTone,
-  date: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-  time: '19:00',
-  duration_minutes: 180,
-  location_address: '123 Example St, Minneapolis, MN',
-  location_hint: 'Northeast Minneapolis',
-  capacity: 8,
-  price_cents: 4500,
-  status: 'open',
-  location_revealed: false,
-  feedback_requested: false,
-  created_at: new Date().toISOString(),
-  updated_at: new Date().toISOString(),
-};
-
-const MOCK_INVITATIONS: InvitationWithUser[] = [
-  {
-    id: '1',
-    space_id: 'demo-1',
-    user_id: 'user-1',
-    status: 'accepted',
-    created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-    sent_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-    responded_at: new Date(Date.now() - 1.5 * 24 * 60 * 60 * 1000).toISOString(),
-    amount_cents: 4500,
-    captured: true,
-    attended: null,
-    stripe_payment_intent_id: 'pi_demo_1',
-    user: { id: 'user-1', name: 'Sarah K.', phone: '+16125551234', trust_score_overall: 85 },
-  },
-  {
-    id: '2',
-    space_id: 'demo-1',
-    user_id: 'user-2',
-    status: 'accepted',
-    created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-    sent_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-    responded_at: new Date(Date.now() - 0.5 * 24 * 60 * 60 * 1000).toISOString(),
-    amount_cents: 4500,
-    captured: true,
-    attended: null,
-    stripe_payment_intent_id: 'pi_demo_2',
-    user: { id: 'user-2', name: 'Marcus T.', phone: '+16125555678', trust_score_overall: 92 },
-  },
-  {
-    id: '3',
-    space_id: 'demo-1',
-    user_id: 'user-3',
-    status: 'sent',
-    created_at: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(),
-    sent_at: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(),
-    responded_at: null,
-    amount_cents: null,
-    captured: false,
-    attended: null,
-    stripe_payment_intent_id: null,
-    user: { id: 'user-3', name: 'Elena R.', phone: '+16125559012', trust_score_overall: 78 },
-  },
-  {
-    id: '4',
-    space_id: 'demo-1',
-    user_id: 'user-4',
-    status: 'pending',
-    created_at: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(),
-    sent_at: null,
-    responded_at: null,
-    amount_cents: null,
-    captured: false,
-    attended: null,
-    stripe_payment_intent_id: null,
-    user: { id: 'user-4', name: 'James W.', phone: '+16125553456', trust_score_overall: 88 },
-  },
-];
 
 // Tone configuration
 const toneConfig: Record<SpaceTone, { label: string; gradient: string }> = {
@@ -133,71 +48,68 @@ const statusToBadgeVariant: Record<string, 'going' | 'invited' | 'pending' | 'de
   declined: 'declined',
 };
 
-export default function HostDashboard() {
+function HostSpaceContent() {
   const params = useParams();
+  const router = useRouter();
   const spaceId = params.id as string;
+  const host = useHostUser();
 
   const [space, setSpace] = useState<Space | null>(null);
   const [invitations, setInvitations] = useState<InvitationWithUser[]>([]);
   const [loading, setLoading] = useState(true);
-  const [demoMode, setDemoMode] = useState(false);
+  const [unauthorized, setUnauthorized] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
   const [phoneInput, setPhoneInput] = useState('');
   const [sending, setSending] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-  const [showQR, setShowQR] = useState(false);
   const [copied, setCopied] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
 
   useEffect(() => {
     loadRoom();
-  }, [spaceId]);
+  }, [spaceId, host.id]);
 
   async function loadRoom() {
-    // Check for demo mode
-    if (!isSupabaseConfigured() || spaceId.startsWith('demo-')) {
-      setDemoMode(true);
-      setSpace(MOCK_SPACE);
-      setInvitations(MOCK_INVITATIONS);
+    const supabase = createClient();
+
+    // Get room
+    const { data: spaceData } = await supabase
+      .from('spaces')
+      .select('*')
+      .eq('id', spaceId)
+      .single();
+
+    if (!spaceData) {
       setLoading(false);
       return;
     }
 
-    try {
-      const { createClient } = await import('@/lib/supabase/client');
-      const supabase = createClient();
+    // Verify ownership - only allow access if user owns this space
+    if (spaceData.host_id !== host.id) {
+      setUnauthorized(true);
+      setLoading(false);
+      return;
+    }
 
-      // Get room
-      const { data: spaceData } = await supabase
-        .from('spaces')
-        .select('*')
-        .eq('id', spaceId)
-        .single();
+    setSpace(spaceData);
 
-      if (spaceData) {
-        setSpace(spaceData);
+    // Get invitations with user info
+    const { data: invitationsData } = await supabase
+      .from('invitations')
+      .select(`
+        *,
+        user:users (
+          id,
+          name,
+          phone,
+          trust_score_overall
+        )
+      `)
+      .eq('space_id', spaceId)
+      .order('created_at', { ascending: true });
 
-        // Get invitations with user info
-        const { data: invitationsData } = await supabase
-          .from('invitations')
-          .select(`
-            *,
-            user:users (
-              id,
-              name,
-              phone,
-              trust_score_overall
-            )
-          `)
-          .eq('space_id', spaceId)
-          .order('created_at', { ascending: true });
-
-        if (invitationsData) {
-          setInvitations(invitationsData as InvitationWithUser[]);
-        }
-      }
-    } catch (err) {
-      console.error('Failed to load room:', err);
+    if (invitationsData) {
+      setInvitations(invitationsData as InvitationWithUser[]);
     }
 
     setLoading(false);
@@ -206,31 +118,6 @@ export default function HostDashboard() {
   async function sendInvitation(phone: string) {
     setSending(true);
     setMessage(null);
-
-    // Demo mode simulation
-    if (demoMode) {
-      await new Promise((r) => setTimeout(r, 1000));
-      setMessage({ type: 'success', text: `Invitation sent to ${phone}` });
-      setPhoneInput('');
-      // Add mock invitation
-      const newInvitation: InvitationWithUser = {
-        id: `new-${Date.now()}`,
-        space_id: spaceId,
-        user_id: `user-${Date.now()}`,
-        status: 'sent',
-        created_at: new Date().toISOString(),
-        sent_at: new Date().toISOString(),
-        responded_at: null,
-        amount_cents: null,
-        captured: false,
-        attended: null,
-        stripe_payment_intent_id: null,
-        user: { id: `user-${Date.now()}`, name: phone, phone, trust_score_overall: 75 },
-      };
-      setInvitations([...invitations, newInvitation]);
-      setSending(false);
-      return;
-    }
 
     try {
       const response = await fetch('/api/invitations', {
@@ -262,13 +149,6 @@ export default function HostDashboard() {
   }
 
   async function markAttendance(invitationId: string, attended: boolean) {
-    if (demoMode) {
-      setInvitations(invitations.map(inv =>
-        inv.id === invitationId ? { ...inv, attended } : inv
-      ));
-      return;
-    }
-
     try {
       const response = await fetch(`/api/invitations/${invitationId}`, {
         method: 'PATCH',
@@ -287,11 +167,6 @@ export default function HostDashboard() {
   }
 
   async function updateSpaceStatus(status: Space['status']) {
-    if (demoMode) {
-      setSpace(space ? { ...space, status } : null);
-      return;
-    }
-
     try {
       const response = await fetch(`/api/spaces?id=${spaceId}`, {
         method: 'PATCH',
@@ -320,6 +195,32 @@ export default function HostDashboard() {
     return (
       <div className="min-h-screen bg-[var(--bg-base)] flex items-center justify-center">
         <div className="text-[var(--text-secondary)]">Loading...</div>
+      </div>
+    );
+  }
+
+  if (unauthorized) {
+    return (
+      <div className="min-h-screen bg-[var(--bg-base)] flex items-center justify-center p-4">
+        <div className="max-w-md text-center">
+          <div className="w-16 h-16 bg-[var(--bg-subtle)] rounded-full flex items-center justify-center mx-auto mb-6">
+            <svg className="w-8 h-8 text-[var(--text-secondary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+          </div>
+          <h1 className="text-2xl font-semibold text-[var(--text-primary)] mb-2">
+            Access Denied
+          </h1>
+          <p className="text-[var(--text-secondary)] mb-6">
+            You don't have permission to manage this space. Only the host who created this space can access it.
+          </p>
+          <button
+            onClick={() => router.push('/host')}
+            className="px-6 py-3 bg-[var(--primary)] text-white rounded-lg font-medium hover:bg-[var(--primary-hover)] transition-colors"
+          >
+            Back to Dashboard
+          </button>
+        </div>
       </div>
     );
   }
@@ -367,13 +268,6 @@ export default function HostDashboard() {
 
   return (
     <div className="min-h-screen bg-[var(--bg-base)]">
-      {/* Demo Banner */}
-      {demoMode && (
-        <div className="bg-[var(--warning-muted)] border-b border-[var(--warning-border)] px-6 py-3 text-center text-[var(--warning-text)] text-[var(--text-sm)]">
-          Demo Mode — This is a sample dashboard
-        </div>
-      )}
-
       {/* Header */}
       <header className="border-b border-[var(--border-subtle)] sticky top-0 bg-[var(--bg-base)]/95 backdrop-blur z-10">
         <PageContainer>
@@ -766,7 +660,7 @@ export default function HostDashboard() {
 {`SMS ROOM INVITATION
 
 You're invited to: ${space.name}
-Hosted by: SMS Host
+Hosted by: ${host.name || 'SMS Host'}
 ${new Date(space.date).toLocaleDateString('en-US', {
   weekday: 'short',
   month: 'short',
@@ -818,5 +712,13 @@ Cancel 48+ hours before: no charge.`}
         }}
       />
     </div>
+  );
+}
+
+export default function HostSpacePage() {
+  return (
+    <HostGuard>
+      <HostSpaceContent />
+    </HostGuard>
   );
 }
