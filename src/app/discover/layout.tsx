@@ -7,6 +7,9 @@ export const metadata: Metadata = {
     title: 'Discover Spaces | SMS',
     description: 'Find and join social gatherings in Minneapolis. Browse upcoming spaces where strangers meet with intention.',
   },
+  alternates: {
+    canonical: 'https://strangersmeetingstrangers.com/discover',
+  },
 }
 
 export default function DiscoverLayout({
