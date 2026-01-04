@@ -121,7 +121,14 @@ export default function HostOnboardingPage() {
     }
   }
 
-  if (user?.role === 'host' || user?.role === 'founder') {
+  // Redirect if not logged in
+  if (!user) {
+    router.push('/login?redirect=/host/onboarding')
+    return null
+  }
+
+  // Already a host - redirect to host hub
+  if (user.role === 'host' || user.role === 'founder') {
     router.push('/host')
     return null
   }

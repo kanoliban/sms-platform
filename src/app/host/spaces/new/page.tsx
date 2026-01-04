@@ -12,6 +12,7 @@ import {
   Badge,
 } from '@/components/ui';
 import { TwoColumn, PageContainer } from '@/components/layout';
+import { HostGuard, useHostUser } from '@/components/auth';
 
 type SpaceTone = 'chill' | 'playful' | 'deep' | 'intense';
 
@@ -50,8 +51,9 @@ const durationOptions = [
   { value: 180, label: '3 hours' },
 ];
 
-export default function CreateRoom() {
+function CreateRoomContent() {
   const router = useRouter();
+  const host = useHostUser();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -488,5 +490,13 @@ export default function CreateRoom() {
         />
       </PageContainer>
     </div>
+  );
+}
+
+export default function CreateRoomPage() {
+  return (
+    <HostGuard>
+      <CreateRoomContent />
+    </HostGuard>
   );
 }
