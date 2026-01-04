@@ -6,6 +6,7 @@ import type { Space, User } from '@/lib/supabase/types';
 import { Button, Card } from '@/components/ui';
 import { PageContainer } from '@/components/layout';
 import { SpaceCard, StatsGrid, EmptyState, AppHeader } from '@/components/composed';
+import { createClient } from '@/lib/supabase/client';
 
 type SpaceTone = 'chill' | 'playful' | 'deep' | 'intense';
 
@@ -14,122 +15,16 @@ type SpaceWithCounts = Space & {
   total_invited: number;
 };
 
-// Check if Supabase is configured
-const isSupabaseConfigured = () => {
-  return !!(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
-};
-
-// Mock data for demo/preview mode
-const MOCK_SPACES: SpaceWithCounts[] = [
-  {
-    id: 'demo-1',
-    host_id: 'demo-host',
-    name: 'Dinner & Deep Talks',
-    description: 'An intimate dinner for strangers who want real conversation',
-    tone: 'deep',
-    date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    time: '19:00',
-    duration_minutes: 180,
-    location_address: '123 Example St, Minneapolis, MN',
-    location_hint: 'Northeast Minneapolis',
-    capacity: 8,
-    price_cents: 4500,
-    status: 'open',
-    location_revealed: false,
-    feedback_requested: false,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    accepted_count: 5,
-    total_invited: 12,
-  },
-  {
-    id: 'demo-2',
-    host_id: 'demo-host',
-    name: 'Strangers & Vinyl',
-    description: 'Listen to records, meet new people',
-    tone: 'chill',
-    date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    time: '20:00',
-    duration_minutes: 120,
-    location_address: '456 Demo Ave, Minneapolis, MN',
-    location_hint: 'Uptown',
-    capacity: 12,
-    price_cents: 2500,
-    status: 'draft',
-    location_revealed: false,
-    feedback_requested: false,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    accepted_count: 0,
-    total_invited: 0,
-  },
-  {
-    id: 'demo-3',
-    host_id: 'demo-host',
-    name: 'Game Night Strangers',
-    description: 'Board games and new friendships',
-    tone: 'playful',
-    date: new Date(Date.now() + 21 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    time: '18:00',
-    duration_minutes: 150,
-    location_address: '789 Fun Blvd, Minneapolis, MN',
-    location_hint: 'Downtown',
-    capacity: 10,
-    price_cents: 2000,
-    status: 'confirmed',
-    location_revealed: true,
-    feedback_requested: false,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    accepted_count: 8,
-    total_invited: 10,
-  },
-];
-
-const MOCK_HOST: User = {
-  id: 'demo-host',
-  phone: '+1234567890',
-  email: 'demo@example.com',
-  name: 'Demo Host',
-  role: 'host',
-  intent: 'human_connection',
-  tone_preference: 'deep',
-  trust_score_overall: 75,
-  trust_reliability: 80,
-  trust_social: 70,
-  trust_safety: 75,
-  trust_tenure: 50,
-  trust_status: 'active',
-  spaces_attended: 15,
-  spaces_hosted: 8,
-  no_shows: 0,
-  created_at: new Date().toISOString(),
-  updated_at: new Date().toISOString(),
-};
-
 export default function HostDashboard() {
   const [spaces, setSpaces] = useState<SpaceWithCounts[]>([]);
   const [loading, setLoading] = useState(true);
   const [host, setHost] = useState<User | null>(null);
-  const [demoMode, setDemoMode] = useState(false);
 
   useEffect(() => {
     loadData();
   }, []);
 
   async function loadData() {
-    // Check if Supabase is configured
-    if (!isSupabaseConfigured()) {
-      // Use mock data for demo
-      setDemoMode(true);
-      setHost(MOCK_HOST);
-      setSpaces(MOCK_SPACES);
-      setLoading(false);
-      return;
-    }
-
-    // Dynamic import to avoid build-time errors
-    const { createClient } = await import('@/lib/supabase/client');
     const supabase = createClient();
 
     // For MVP, we'll use a simple phone-based lookup
@@ -189,13 +84,6 @@ export default function HostDashboard() {
   return (
     <div className="min-h-screen bg-[var(--bg-base)]">
       <AppHeader />
-
-      {/* Demo Mode Banner */}
-      {demoMode && (
-        <div className="bg-[var(--warning-muted)] border-b border-[var(--warning-border)] px-6 py-3 text-center text-[var(--warning-text)] text-[var(--text-sm)]">
-          Demo Mode - Supabase not configured
-        </div>
-      )}
 
       <PageContainer size="lg" className="py-8">
         {/* Welcome & Quick Action */}

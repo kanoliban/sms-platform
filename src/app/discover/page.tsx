@@ -4,11 +4,12 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { Space } from '@/lib/supabase/types';
-import { Input, Card, Badge, Button } from '@/components/ui';
+import { Input, Card, Button } from '@/components/ui';
 import { PageContainer } from '@/components/layout';
 import { SpaceCard, EmptyState, UserMenu, LoginModal, NotificationsDropdown } from '@/components/composed';
 import { useAuth } from '@/lib/auth/auth-context';
 import { useNotifications } from '@/hooks/use-notifications';
+import { createClient } from '@/lib/supabase/client';
 
 type SpaceTone = 'chill' | 'playful' | 'deep' | 'intense';
 
@@ -16,141 +17,6 @@ type SpaceWithHost = Space & {
   host: { name: string };
   guest_count: number;
 };
-
-// Check if Supabase is configured
-const isSupabaseConfigured = () => {
-  return !!(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
-};
-
-// Mock spaces for demo mode
-const MOCK_ROOMS: SpaceWithHost[] = [
-  {
-    id: 'demo-1',
-    host_id: 'host-1',
-    name: 'Dinner & Deep Talks',
-    description: 'An intimate dinner for strangers who want real conversation. No small talk, just the good stuff.',
-    tone: 'deep',
-    date: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    time: '19:00',
-    duration_minutes: 180,
-    location_address: '123 Example St, Minneapolis, MN',
-    location_hint: 'Northeast Minneapolis',
-    capacity: 8,
-    price_cents: 4500,
-    status: 'open',
-    location_revealed: false,
-    feedback_requested: false,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    host: { name: 'Sarah K.' },
-    guest_count: 5,
-  },
-  {
-    id: 'demo-2',
-    host_id: 'host-2',
-    name: 'Strangers & Vinyl',
-    description: 'Listen to records, share stories, meet new people. Bring your favorite album.',
-    tone: 'chill',
-    date: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    time: '20:00',
-    duration_minutes: 120,
-    location_address: '456 Demo Ave, Minneapolis, MN',
-    location_hint: 'Uptown',
-    capacity: 12,
-    price_cents: 2500,
-    status: 'open',
-    location_revealed: false,
-    feedback_requested: false,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    host: { name: 'Marcus T.' },
-    guest_count: 8,
-  },
-  {
-    id: 'demo-3',
-    host_id: 'host-3',
-    name: 'Game Night Strangers',
-    description: 'Board games and new friendships. All skill levels welcome.',
-    tone: 'playful',
-    date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    time: '18:00',
-    duration_minutes: 150,
-    location_address: '789 Fun Blvd, Minneapolis, MN',
-    location_hint: 'Downtown',
-    capacity: 10,
-    price_cents: 2000,
-    status: 'open',
-    location_revealed: false,
-    feedback_requested: false,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    host: { name: 'Alex R.' },
-    guest_count: 6,
-  },
-  {
-    id: 'demo-4',
-    host_id: 'host-4',
-    name: 'Debate Club for Strangers',
-    description: 'Structured debates on hot topics. Come with opinions, leave with friends.',
-    tone: 'intense',
-    date: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    time: '19:30',
-    duration_minutes: 120,
-    location_address: '321 Debate Way, Minneapolis, MN',
-    location_hint: 'North Loop',
-    capacity: 16,
-    price_cents: 3000,
-    status: 'open',
-    location_revealed: false,
-    feedback_requested: false,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    host: { name: 'Jordan P.' },
-    guest_count: 10,
-  },
-  {
-    id: 'demo-5',
-    host_id: 'host-5',
-    name: 'Sunrise Yoga & Coffee',
-    description: 'Start your morning with strangers. Yoga, meditation, then great coffee.',
-    tone: 'chill',
-    date: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    time: '06:30',
-    duration_minutes: 90,
-    location_address: '555 Zen St, Minneapolis, MN',
-    location_hint: 'Loring Park',
-    capacity: 15,
-    price_cents: 1500,
-    status: 'open',
-    location_revealed: false,
-    feedback_requested: false,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    host: { name: 'Maya L.' },
-    guest_count: 12,
-  },
-  {
-    id: 'demo-6',
-    host_id: 'host-6',
-    name: 'Strangers Cook Together',
-    description: 'Learn to make authentic Thai food with other curious strangers.',
-    tone: 'playful',
-    date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    time: '17:00',
-    duration_minutes: 180,
-    location_address: '888 Kitchen Lane, Minneapolis, MN',
-    location_hint: 'Seward',
-    capacity: 8,
-    price_cents: 6500,
-    status: 'open',
-    location_revealed: false,
-    feedback_requested: false,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    host: { name: 'Chris N.' },
-    guest_count: 4,
-  },
-];
 
 const TONE_OPTIONS: { value: SpaceTone | 'all'; label: string; color: string }[] = [
   { value: 'all', label: 'All Vibes', color: 'var(--text-secondary)' },
@@ -165,7 +31,6 @@ export default function DiscoverPage() {
   const { user, loading: authLoading } = useAuth();
   const [spaces, setSpaces] = useState<SpaceWithHost[]>([]);
   const [loading, setLoading] = useState(true);
-  const [demoMode, setDemoMode] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
 
   // Notifications from hook
@@ -188,14 +53,6 @@ export default function DiscoverPage() {
   }, []);
 
   async function loadSpaces() {
-    if (!isSupabaseConfigured()) {
-      setDemoMode(true);
-      setSpaces(MOCK_ROOMS);
-      setLoading(false);
-      return;
-    }
-
-    const { createClient } = await import('@/lib/supabase/client');
     const supabase = createClient();
 
     // Get open spaces with host info
@@ -252,21 +109,6 @@ export default function DiscoverPage() {
     });
   }, [spaces, searchQuery, selectedTone, priceFilter]);
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const today = new Date();
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-
-    if (date.toDateString() === today.toDateString()) {
-      return 'Today';
-    } else if (date.toDateString() === tomorrow.toDateString()) {
-      return 'Tomorrow';
-    } else {
-      return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-    }
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen bg-[var(--bg-base)] flex items-center justify-center">
@@ -316,13 +158,6 @@ export default function DiscoverPage() {
           </div>
         </PageContainer>
       </header>
-
-      {/* Demo Mode Banner */}
-      {demoMode && (
-        <div className="bg-[var(--warning-muted)] border-b border-[var(--warning-border)] px-6 py-3 text-center text-[var(--warning-text)] text-[var(--text-sm)]">
-          Demo Mode - Supabase not configured
-        </div>
-      )}
 
       {/* Hero Section */}
       <div className="border-b border-[var(--border-subtle)]">
@@ -444,11 +279,7 @@ export default function DiscoverPage() {
                 </svg>
               }
               title="No spaces found"
-              description={
-                searchQuery || selectedTone !== 'all' || priceFilter !== 'all'
-                  ? "Try adjusting your filters to find more spaces."
-                  : "Check back soon for new spaces in your area."
-              }
+              description="Check back soon for new spaces in your area."
             />
           </Card>
         ) : (

@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
         location_hint,
         host_id,
         status,
-        host:users!spaces_host_id_fkey (
+        host:users!host_id (
           id,
           name
         ),

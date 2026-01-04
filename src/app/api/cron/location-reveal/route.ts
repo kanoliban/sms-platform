@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
       .from('spaces')
       .select(`
         *,
-        host:users!spaces_host_id_fkey (
+        host:users!host_id (
           id,
           name,
           phone
@@ -163,7 +163,7 @@ export async function POST(request: NextRequest) {
         *,
         space:spaces (
           *,
-          host:users!spaces_host_id_fkey (
+          host:users!host_id (
             id,
             name,
             phone

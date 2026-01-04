@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
         time,
         capacity,
         host_id,
-        host:users!spaces_host_id_fkey (
+        host:users!host_id (
           id,
           name,
           phone

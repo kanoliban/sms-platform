@@ -26,11 +26,6 @@ export async function POST(request: NextRequest) {
         time,
         capacity,
         host_id,
-        host:users!spaces_host_id_fkey (
-          id,
-          name,
-          phone
-        ),
         invitations (
           id,
           status

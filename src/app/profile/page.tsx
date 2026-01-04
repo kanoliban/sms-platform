@@ -18,33 +18,7 @@ import { UserMenu, LoginModal, NotificationsDropdown } from '@/components/compos
 import { useToast } from '@/components/ui/toast';
 import { useAuth } from '@/lib/auth/auth-context';
 import { useNotifications } from '@/hooks/use-notifications';
-
-// Check if Supabase is configured
-const isSupabaseConfigured = () => {
-  return !!(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
-};
-
-// Mock user for demo mode
-const MOCK_USER: User = {
-  id: 'demo-user',
-  phone: '+16125551234',
-  email: 'alex@example.com',
-  name: 'Alex Johnson',
-  role: 'guest',
-  intent: 'human_connection',
-  tone_preference: 'deep',
-  trust_score_overall: 78,
-  trust_reliability: 85,
-  trust_social: 72,
-  trust_safety: 80,
-  trust_tenure: 60,
-  trust_status: 'active',
-  spaces_attended: 12,
-  spaces_hosted: 3,
-  no_shows: 0,
-  created_at: new Date(Date.now() - 180 * 24 * 60 * 60 * 1000).toISOString(),
-  updated_at: new Date().toISOString(),
-};
+import { createClient } from '@/lib/supabase/client';
 
 const INTENT_OPTIONS: { value: UserIntent; label: string; description: string }[] = [
   { value: 'human_connection', label: 'Human Connection', description: 'Meaningful conversations and real friendships' },
@@ -67,7 +41,6 @@ export default function ProfilePage() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [demoMode, setDemoMode] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
 
   // Notifications from hook
@@ -95,20 +68,11 @@ export default function ProfilePage() {
   async function loadProfile() {
     // No authenticated user
     if (!authUser) {
-      // Check for demo mode
-      if (!isSupabaseConfigured()) {
-        setDemoMode(true);
-        setUser(MOCK_USER);
-        setName(MOCK_USER.name || '');
-        setIntent(MOCK_USER.intent);
-        setTonePreference(MOCK_USER.tone_preference);
-      }
       setLoading(false);
       return;
     }
 
     // Load user profile using auth context user
-    const { createClient } = await import('@/lib/supabase/client');
     const supabase = createClient();
 
     const { data: userData } = await supabase
@@ -132,19 +96,6 @@ export default function ProfilePage() {
 
     setSaving(true);
 
-    if (demoMode) {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setUser(prev => prev ? { ...prev, name, intent, tone_preference: tonePreference } : null);
-      addToast({
-        variant: 'success',
-        title: 'Profile updated',
-        description: 'Your changes have been saved.',
-      });
-      setSaving(false);
-      return;
-    }
-
-    const { createClient } = await import('@/lib/supabase/client');
     const supabase = createClient();
 
     const { error } = await supabase
@@ -203,8 +154,8 @@ export default function ProfilePage() {
     );
   }
 
-  // Not authenticated and not in demo mode - show sign in prompt
-  if (!user && !demoMode) {
+  // Not authenticated - show sign in prompt
+  if (!user) {
     return (
       <div className="min-h-screen bg-[var(--bg-base)]">
         {/* Header */}
@@ -257,11 +208,6 @@ export default function ProfilePage() {
     );
   }
 
-  // TypeScript guard - user must exist at this point (either from auth or demo mode)
-  if (!user) {
-    return null;
-  }
-
   return (
     <div className="min-h-screen bg-[var(--bg-base)]">
       {/* Header with UserMenu */}
@@ -295,13 +241,6 @@ export default function ProfilePage() {
           </div>
         </PageContainer>
       </header>
-
-      {/* Demo Mode Banner */}
-      {demoMode && (
-        <div className="bg-[var(--warning-muted)] border-b border-[var(--warning-border)] px-6 py-3 text-center text-[var(--warning-text)] text-[var(--text-sm)]">
-          Demo Mode - Supabase not configured
-        </div>
-      )}
 
       <PageContainer size="md" className="py-8">
         {/* Page Title */}
