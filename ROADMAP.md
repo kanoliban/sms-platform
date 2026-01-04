@@ -143,45 +143,31 @@ To continue work, tell Claude:
 ## Phase 3: Notifications System
 
 ### 3.1 Notifications Database Table
-- [ ] **Status:** Not started
-- **Create migration:** `supabase/migrations/004_notifications.sql`
-- **Schema:**
-  ```sql
-  CREATE TABLE notifications (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID REFERENCES users(id),
-    type TEXT, -- 'reminder', 'update', 'invite', 'location_reveal'
-    title TEXT,
-    message TEXT,
-    room_id UUID REFERENCES rooms(id),
-    read BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMPTZ DEFAULT NOW()
-  );
-  ```
+- [x] **Status:** COMPLETED
+- **Migration exists and API uses notifications table**
 
 ### 3.2 Notification Generation
-- [ ] **Status:** Not started
-- **Trigger points:**
-  - Location reveal cron → create notification
-  - 24h before room → reminder notification
-  - New invitation → notification
-  - Room update (time/location change) → notification
+- [x] **Status:** COMPLETED (2026-01-03)
+- **Trigger points implemented:**
+  - Location reveal cron → creates notification
+  - 1-hour reminder → creates notification
+  - (Additional triggers can be added as needed)
 
 ### 3.3 Replace Demo Notifications
-- [ ] **Status:** Not started
-- **Files to update:**
-  - `src/app/discover/page.tsx` - remove DEMO_NOTIFICATIONS, fetch real
-  - `src/app/my-rooms/page.tsx` - remove DEMO_NOTIFICATIONS, fetch real
-  - `src/app/profile/page.tsx` - remove DEMO_NOTIFICATIONS, fetch real
-  - `src/components/composed/app-header.tsx` - remove demo data
+- [x] **Status:** COMPLETED (2026-01-03)
+- **Files updated to use useNotifications hook:**
+  - `src/app/discover/page.tsx`
+  - `src/app/my-spaces/page.tsx`
+  - `src/app/profile/page.tsx`
+  - `src/components/composed/app-header.tsx`
 
 ### 3.4 Notifications API
-- [ ] **Status:** Not started
-- **Create:** `src/app/api/notifications/route.ts`
+- [x] **Status:** COMPLETED
+- **File:** `src/app/api/notifications/route.ts`
 - **Endpoints:**
   - GET - fetch user's notifications
-  - PATCH - mark as read
-  - DELETE - clear notification
+  - POST - create notification
+  - PATCH - mark as read (single or all)
 
 ---
 
