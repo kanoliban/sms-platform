@@ -7,10 +7,11 @@ type SignupType = 'host' | 'attendee'
 interface SignupViewProps {
   type: SignupType
   onBack: () => void
+  onSuccess?: (type: SignupType, name: string) => void
   animate?: boolean
 }
 
-export function SignupView({ type, onBack, animate = false }: SignupViewProps) {
+export function SignupView({ type, onBack, onSuccess, animate = false }: SignupViewProps) {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -37,7 +38,13 @@ export function SignupView({ type, onBack, animate = false }: SignupViewProps) {
       })
 
       if (!response.ok) throw new Error('Failed to submit')
-      setSubmitted(true)
+
+      // Call success callback to return to conversation with confirmation
+      if (onSuccess) {
+        onSuccess(type, formData.name)
+      } else {
+        setSubmitted(true)
+      }
     } catch {
       setError('Something went wrong. Please try again.')
     } finally {

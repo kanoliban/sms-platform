@@ -248,6 +248,42 @@ export function SMSConversation() {
     }
   }
 
+  const handleSignupSuccess = (type: 'host' | 'attendee', name: string) => {
+    const firstName = name.split(' ')[0]
+    const timestamp = Date.now()
+    setAnimateView(true)
+    setView('home')
+
+    // Confirmation messages from SMS
+    const msg1: MessageType = type === 'host'
+      ? { id: `confirm-${timestamp}`, text: `Got it, ${firstName}! 🙌`, variant: 'received', showTail: false }
+      : { id: `confirm-${timestamp}`, text: `You're in the pool, ${firstName}! 🎱`, variant: 'received', showTail: false }
+
+    const msg2: MessageType = type === 'host'
+      ? { id: `confirm2-${timestamp}`, text: "I'll review your application and text you within 48 hours.", variant: 'received', showTail: false }
+      : { id: `confirm2-${timestamp}`, text: "I'll text you when the right space opens up.", variant: 'received', showTail: false }
+
+    const msg3: MessageType = { id: `confirm3-${timestamp}`, text: "Keep an eye on your texts.", variant: 'received', showTail: true }
+
+    // Add confirmation messages after a brief delay
+    setTimeout(() => {
+      setShowTyping(true)
+
+      setTimeout(() => {
+        setShowTyping(false)
+        setMessages(prev => [...prev, msg1])
+
+        setTimeout(() => {
+          setMessages(prev => [...prev, msg2])
+
+          setTimeout(() => {
+            setMessages(prev => [...prev, msg3])
+          }, 600)
+        }, 500)
+      }, 1200)
+    }, 300)
+  }
+
   const handleEventRSVP = () => {
     setSignupType('attendee')
     setAnimateView(true)
@@ -399,6 +435,7 @@ export function SMSConversation() {
           <SignupView
             type={signupType}
             onBack={handleBackFromSignup}
+            onSuccess={handleSignupSuccess}
             animate={animateView}
           />
         )}

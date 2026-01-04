@@ -107,6 +107,9 @@ export default function ProfilePage() {
   // Settings state
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
 
+  // Trust Score tooltip
+  const [showTrustTooltip, setShowTrustTooltip] = useState(false);
+
   useEffect(() => {
     if (!authLoading) {
       loadProfile();
@@ -666,9 +669,32 @@ export default function ProfilePage() {
           <div className="space-y-6">
             {/* Trust Score */}
             <Card className="p-5">
-              <h3 className="text-[var(--text-sm)] font-semibold text-[var(--text-primary)] mb-4">
-                Trust Score
-              </h3>
+              <div className="flex items-center gap-2 mb-4">
+                <h3 className="text-[var(--text-sm)] font-semibold text-[var(--text-primary)]">
+                  Trust Score
+                </h3>
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setShowTrustTooltip(!showTrustTooltip)}
+                    onMouseEnter={() => setShowTrustTooltip(true)}
+                    onMouseLeave={() => setShowTrustTooltip(false)}
+                    className="w-4 h-4 rounded-full border border-[var(--text-muted)] text-[var(--text-muted)] flex items-center justify-center text-[10px] font-medium hover:border-[var(--text-secondary)] hover:text-[var(--text-secondary)] transition-colors"
+                    aria-label="What is Trust Score?"
+                  >
+                    ?
+                  </button>
+                  {showTrustTooltip && (
+                    <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-64 p-3 bg-[var(--bg-elevated)] border border-[var(--border-default)] rounded-[var(--radius-lg)] shadow-[var(--shadow-xl)] z-50">
+                      <p className="text-[var(--text-xs)] text-[var(--text-secondary)] leading-relaxed">
+                        <strong className="text-[var(--text-primary)] block mb-1">Why Trust Score?</strong>
+                        Meeting strangers requires genuine trust. This score reflects your track record in our community—showing up when you say you will, contributing positively, and helping create safe spaces for everyone. It's not about points; it's about building real connections.
+                      </p>
+                      <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[6px] border-t-[var(--border-default)]" />
+                    </div>
+                  )}
+                </div>
+              </div>
               <div className="text-center mb-6">
                 <span
                   className="text-[var(--text-4xl)] font-bold"
