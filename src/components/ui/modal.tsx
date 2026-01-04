@@ -1,6 +1,7 @@
 'use client';
 
 import {
+  useState,
   useEffect,
   useCallback,
   type ReactNode,
@@ -44,6 +45,13 @@ export function Modal({
   children,
   ...props
 }: ModalProps) {
+  // Track mounted state to avoid hydration mismatch with createPortal
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   // Handle escape key
   const handleEscape = useCallback(
     (e: KeyboardEvent) => {
@@ -66,7 +74,8 @@ export function Modal({
     };
   }, [open, handleEscape]);
 
-  if (typeof window === 'undefined') return null;
+  // Don't render portal until mounted (prevents hydration mismatch)
+  if (!mounted) return null;
 
   const content = (
     <div
