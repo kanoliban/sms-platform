@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerClient, createAdminClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/server'
 
 // GET /api/notifications?user_id=xxx - Get notifications for a user
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createServerClient()
+    const supabase = createAdminClient()
     const { searchParams } = new URL(request.url)
     const userId = searchParams.get('user_id')
     const limit = parseInt(searchParams.get('limit') || '20', 10)
@@ -103,7 +103,7 @@ export async function POST(request: NextRequest) {
 // PATCH /api/notifications - Mark notifications as read
 export async function PATCH(request: NextRequest) {
   try {
-    const supabase = createServerClient()
+    const supabase = createAdminClient()
     const body = await request.json()
 
     const { notification_ids, user_id, mark_all_read } = body
