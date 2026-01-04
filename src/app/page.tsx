@@ -82,7 +82,7 @@ export default function Home() {
         <div className="max-w-md text-center lg:text-left">
           {/* Tagline */}
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold italic tracking-tight mb-4">
-            Strangers Meeting Strangers.
+            Strangers Meeting Strangers
           </h1>
           <p className="text-2xl md:text-3xl font-semibold mb-8">
             Hosted by You.

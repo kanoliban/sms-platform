@@ -168,7 +168,7 @@ export function SMSConversation() {
     }, 1500)
 
     const timer3 = setTimeout(() => {
-      setMessages(prev => [...prev, { id: '2', text: "Strangers Meeting Strangers.", variant: 'received', showTail: true }])
+      setMessages(prev => [...prev, { id: '2', text: "Strangers Meeting Strangers", variant: 'received', showTail: true }])
     }, 2200)
 
     const timer4 = setTimeout(() => {
