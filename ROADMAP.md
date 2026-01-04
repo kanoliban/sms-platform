@@ -51,7 +51,7 @@ To continue work, tell Claude:
 - **Also check:** `src/app/api/auth/me/route.ts`, `src/app/api/rsvp/route.ts`
 
 ### 1.2 Add Host Auth Guards
-- [ ] **Status:** Not started
+- [x] **Status:** COMPLETED (2026-01-03)
 - **Priority:** CRITICAL
 - **Issue:** Anyone can access `/host/*` pages without being a host
 - **Files to protect:**

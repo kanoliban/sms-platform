@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { HostAuthGuard } from '@/components/auth/host-auth-guard'
 
 export const metadata: Metadata = {
   title: 'Host Dashboard',
@@ -14,5 +15,5 @@ export default function HostLayout({
 }: {
   children: React.ReactNode
 }) {
-  return children
+  return <HostAuthGuard>{children}</HostAuthGuard>
 }
