@@ -77,7 +77,10 @@ export default function SettingsPage() {
       .single();
 
     if (error) {
-      console.error('Error loading settings:', error);
+      // Only log if it's not a "column doesn't exist" or "no rows" error
+      if (error.code !== 'PGRST116' && error.code !== '42703') {
+        console.error('Error loading settings:', error.message || error.code || 'Unknown error');
+      }
       setSettings(DEFAULT_SETTINGS);
     } else if (userData?.preferences) {
       // Merge with defaults to handle missing keys
