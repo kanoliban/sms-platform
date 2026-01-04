@@ -996,8 +996,8 @@ export default function PublicRoomPage() {
       <header className="border-b border-[var(--border-subtle)] sticky top-0 bg-[var(--bg-base)]/95 backdrop-blur z-10">
         <PageContainer>
           <div className="flex justify-between items-center h-16">
-            <Link href="/" className="font-bold italic text-xl tracking-tight text-[var(--text-primary)] hover:opacity-80 transition-opacity">
-              SMS
+            <Link href="/" className="text-xl tracking-tight text-[var(--text-primary)] hover:opacity-80 transition-opacity">
+              <strong><em>SMS</em></strong>
             </Link>
             <div className="flex items-center gap-4">
               <Button variant="ghost" size="sm" onClick={copyLink}>
@@ -1047,7 +1047,7 @@ export default function PublicRoomPage() {
       <footer className="border-t border-[var(--border-subtle)] py-8">
         <PageContainer>
           <div className="flex justify-between items-center text-[var(--text-sm)] text-[var(--text-muted)]">
-            <Link href="/" className="font-bold italic hover:text-[var(--text-secondary)] transition-colors">SMS</Link>
+            <Link href="/" className="hover:text-[var(--text-secondary)] transition-colors"><strong><em>SMS</em></strong></Link>
             <div className="flex items-center gap-4">
               <Link href="/help" className="hover:text-[var(--text-secondary)] transition-colors">Help</Link>
               <span>Strangers Meeting Strangers</span>

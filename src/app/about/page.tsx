@@ -8,8 +8,8 @@ export default function AboutPage() {
       {/* Minimal header */}
       <header className="fixed top-0 left-0 right-0 z-50 px-6 py-6">
         <div className="max-w-3xl mx-auto">
-          <Link href="/" className="font-bold italic text-xl text-white hover:opacity-80 transition-opacity">
-            SMS
+          <Link href="/" className="text-xl text-white hover:opacity-80 transition-opacity">
+            <strong><em>SMS</em></strong>
           </Link>
         </div>
       </header>
@@ -52,7 +52,7 @@ export default function AboutPage() {
               Hi <em>Strangers</em>,
             </p>
             <p className="text-lg md:text-xl leading-relaxed opacity-80 mb-6">
-              This is Liban <span className="opacity-50">(pronounced lee-ben)</span>. I organized this thing called Strangers Meeting Strangers (<span className="font-bold italic text-white">SMS</span> for short). I need to tell you something.
+              This is Liban <span className="opacity-50">(pronounced lee-ben)</span>. I organized this thing called Strangers Meeting Strangers (<strong className="text-white"><em>SMS</em></strong> for short). I need to tell you something.
             </p>
             <p className="text-lg md:text-xl leading-relaxed opacity-80 mb-6">
               A few years ago, I moved back home here to Minneapolis. I was gone for about 10 years. I didn't know if I was going to come back home. And something changed.
@@ -100,7 +100,7 @@ export default function AboutPage() {
               In this yearning, I contemplated and bet my life—specifically my life savings. I took massive risks, leveraging all my assets for margins so I could buy as many stocks as I could, so that I could have more capital to try to build an inkling of an idea.
             </p>
             <p className="text-lg md:text-xl leading-relaxed opacity-80 mb-6">
-              That idea was not <span className="font-bold italic text-white">SMS</span>.
+              That idea was not <strong className="text-white"><em>SMS</em></strong>.
             </p>
             <p className="text-lg md:text-xl leading-relaxed opacity-80 mb-6">
               I wanted and needed anything to figure out or to find an anchor. Something to replace what the military gave me. I very much enjoyed "Humans of New York." Reading Brandon's blog, the strangers he would encounter, the exquisite stories he would document behind a singular photo—it was so poetic and tantalizing in nature it would pull at my string.
@@ -176,7 +176,7 @@ export default function AboutPage() {
               <em>Strangers meeting strangers.</em>
             </p>
             <p className="text-lg md:text-xl leading-relaxed opacity-80 mb-6">
-              I could almost immediately feel <span className="font-bold italic text-white">SMS</span> generating a life of its own, separate from Life of Humans—and I listened.
+              I could almost immediately feel <strong className="text-white"><em>SMS</em></strong> generating a life of its own, separate from Life of Humans—and I listened.
             </p>
             <p className="text-lg md:text-xl leading-relaxed opacity-80 mb-6">
               But it wasn't actually immediate, because only the words "Strangers Meeting Strangers" came to me. Looking back, I think things come to me first as a name, and only then does it carry an idea.
@@ -188,7 +188,7 @@ export default function AboutPage() {
               As I stared, someone approached us and invited us to step in and grab a headphone. We picked it up, put it on, and immediately felt "connected-in" and realized it was a silent disco party. Just when I thought I understood what it was—someone's voice came over the headset and I noticed everyone could hear the same thing.
             </p>
             <p className="text-lg md:text-xl leading-relaxed opacity-80">
-              And just like that, Eureka. I could feel the birth of <span className="font-bold italic text-white">SMS</span>.
+              And just like that, Eureka. I could feel the birth of <strong className="text-white"><em>SMS</em></strong>.
             </p>
           </section>
 
@@ -255,7 +255,7 @@ export default function AboutPage() {
                 Salons created space for men to talk about weakness and vulnerability
               </li>
               <li className="relative before:content-[''] before:absolute before:left-[-1.5rem] before:top-[0.6em] before:w-2 before:h-2 before:bg-[#34c759] before:rounded-full">
-                Tiny <span className="font-bold italic text-white">SMS</span> gatherings happened on lakes, in coffee shops, on sailing boats
+                Tiny <strong className="text-white"><em>SMS</em></strong> gatherings happened on lakes, in coffee shops, on sailing boats
               </li>
             </ul>
             <p className="text-lg md:text-xl leading-relaxed opacity-80 mb-6">
@@ -278,10 +278,10 @@ export default function AboutPage() {
               I was exhausted.
             </p>
             <p className="text-lg md:text-xl leading-relaxed opacity-80 mb-6">
-              Every event ran through me. Every detail. Every decision. Every relationship. <span className="font-bold italic text-white">SMS</span> wasn't a platform. It was me. I was the bottleneck, the brand, the logistics, the vision, the execution—all of it funneled through one person who was already tired when this started.
+              Every event ran through me. Every detail. Every decision. Every relationship. <strong className="text-white"><em>SMS</em></strong> wasn't a platform. It was me. I was the bottleneck, the brand, the logistics, the vision, the execution—all of it funneled through one person who was already tired when this started.
             </p>
             <p className="text-lg md:text-xl leading-relaxed opacity-80 mb-6">
-              People would ask: "Can I host an <span className="font-bold italic text-white">SMS</span>?"
+              People would ask: "Can I host an <strong className="text-white"><em>SMS</em></strong>?"
             </p>
             <p className="text-lg md:text-xl leading-relaxed opacity-80 mb-6">
               And I'd say yes, but then I'd have to be involved. I'd have to manage it. I'd have to make sure it felt right. Because the brand was fragile—it was just me and whatever trust I'd built.
@@ -297,22 +297,22 @@ export default function AboutPage() {
               The Logo
             </h2>
             <p className="text-lg md:text-xl leading-relaxed opacity-80 mb-6">
-              My friend Janine—a nuclear reactor of energy who had supported <span className="font-bold italic text-white">SMS</span> from the beginning—wanted to host her own event. And in her own way, she made it simple:
+              My friend Janine—a nuclear reactor of energy who had supported <strong className="text-white"><em>SMS</em></strong> from the beginning—wanted to host her own event. And in her own way, she made it simple:
             </p>
             <p className="text-lg md:text-xl leading-relaxed opacity-80 mb-6">
               "Liban, just give me the logo."
             </p>
             <p className="text-lg md:text-xl leading-relaxed opacity-80 mb-6">
-              That's all she needed. The logo. The permission. The ability to say "this is <span className="font-bold italic text-white">SMS</span>" without going through me.
+              That's all she needed. The logo. The permission. The ability to say "this is <strong className="text-white"><em>SMS</em></strong>" without going through me.
             </p>
             <p className="text-lg md:text-xl leading-relaxed opacity-80 mb-6">
-              And I realized: the thing I built to escape loneliness had become its own kind of trap. I couldn't step away. I couldn't rest. I couldn't even attend an <span className="font-bold italic text-white">SMS</span> in Tokyo without first building a franchise system.
+              And I realized: the thing I built to escape loneliness had become its own kind of trap. I couldn't step away. I couldn't rest. I couldn't even attend an <strong className="text-white"><em>SMS</em></strong> in Tokyo without first building a franchise system.
             </p>
             <p className="text-lg md:text-xl leading-relaxed opacity-80 mb-6">
-              What if, instead, we opened <span className="font-bold italic text-white">SMS</span> to the public?
+              What if, instead, we opened <strong className="text-white"><em>SMS</em></strong> to the public?
             </p>
             <p className="text-base md:text-lg leading-relaxed opacity-60 italic">
-              P.S. Thank you, Weldon, the man behind the evolution of <span className="font-bold italic text-white">SMS</span> (story for another time).
+              P.S. Thank you, Weldon, the man behind the evolution of <strong className="text-white"><em>SMS</em></strong> (story for another time).
             </p>
           </section>
 
@@ -322,10 +322,10 @@ export default function AboutPage() {
               The Evolution
             </h2>
             <p className="text-lg md:text-xl leading-relaxed opacity-80 mb-6">
-              <span className="font-bold italic text-white">SMS</span> becomes the infrastructure for strangers to meet strangers—everywhere, hosted by anyone.
+              <strong className="text-white"><em>SMS</em></strong> becomes the infrastructure for strangers to meet strangers—everywhere, hosted by anyone.
             </p>
             <p className="text-lg md:text-xl leading-relaxed opacity-80 mb-6">
-              <strong className="opacity-100">For hosts:</strong> You have an impulse to gather people. You open your door. <span className="font-bold italic text-white">SMS</span> handles the rest—the invitations, the RSVPs, the trust layer that took three years to build.
+              <strong className="opacity-100">For hosts:</strong> You have an impulse to gather people. You open your door. <strong className="text-white"><em>SMS</em></strong> handles the rest—the invitations, the RSVPs, the trust layer that took three years to build.
             </p>
             <p className="text-lg md:text-xl leading-relaxed opacity-80 mb-6">
               <strong className="opacity-100">For attendees:</strong> You tell us what you're into. You wait—not for a feed to scroll, but for an invitation. When the right gathering happens near you, we reach out. You say yes. You show up.
@@ -382,7 +382,7 @@ export default function AboutPage() {
               The Close
             </h2>
             <p className="text-lg md:text-xl leading-relaxed opacity-80 mb-6">
-              I bought <span className="font-bold italic text-white">SMS</span> for $95,000.
+              I bought <strong className="text-white"><em>SMS</em></strong> for $95,000.
             </p>
             <p className="text-lg md:text-xl leading-relaxed opacity-80 mb-6">
               That's what it cost. Everything I had. That was the price of admission to this life.
@@ -412,8 +412,8 @@ export default function AboutPage() {
             </p>
 
             <div className="mt-16 pt-8 border-t border-white/10 text-center">
-              <Link href="/" className="font-bold italic text-2xl text-white hover:opacity-80 transition-opacity">
-                SMS
+              <Link href="/" className="text-2xl text-white hover:opacity-80 transition-opacity">
+                <strong><em>SMS</em></strong>
               </Link>
               <p className="text-xs opacity-30 mt-2 tracking-widest">
                 MINNEAPOLIS · SINCE 2022

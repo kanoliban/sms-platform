@@ -157,8 +157,8 @@ export default function DiscoverPage() {
       <header className="sticky top-0 z-[var(--z-header)] bg-[var(--bg-base)]/80 backdrop-blur-md border-b border-[var(--border-subtle)]">
         <PageContainer>
           <div className="flex justify-between items-center h-16">
-            <Link href="/" className="font-bold text-xl tracking-tight text-[var(--text-primary)] hover:opacity-80 transition-opacity">
-              SMS
+            <Link href="/" className="text-xl tracking-tight text-[var(--text-primary)] hover:opacity-80 transition-opacity">
+              <strong><em>SMS</em></strong>
             </Link>
             <nav className="hidden md:flex items-center gap-6">
               <Link href="/discover" className="text-[var(--text-sm)] text-[var(--text-primary)] font-medium">

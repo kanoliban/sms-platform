@@ -266,8 +266,8 @@ export default function ProfilePage() {
         <header className="sticky top-0 z-[var(--z-header)] bg-[var(--bg-base)]/80 backdrop-blur-md border-b border-[var(--border-subtle)]">
           <PageContainer>
             <div className="flex justify-between items-center h-16">
-              <Link href="/" className="font-bold text-xl tracking-tight text-[var(--text-primary)] hover:opacity-80 transition-opacity">
-                SMS
+              <Link href="/" className="text-xl tracking-tight text-[var(--text-primary)] hover:opacity-80 transition-opacity">
+                <strong><em>SMS</em></strong>
               </Link>
               <div className="flex items-center gap-4">
                 <Link href="/discover" className="text-[var(--text-sm)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]">
@@ -292,7 +292,7 @@ export default function ProfilePage() {
               Sign in to view your profile
             </h1>
             <p className="text-[var(--text-secondary)] mb-6">
-              Join SMS to start meeting strangers and attending spaces.
+              Join <strong className="text-[var(--text-primary)]"><em>SMS</em></strong> to start meeting strangers and attending spaces.
             </p>
             <Button variant="primary" onClick={() => setShowLoginModal(true)}>
               Sign In
@@ -318,8 +318,8 @@ export default function ProfilePage() {
       <header className="sticky top-0 z-[var(--z-header)] bg-[var(--bg-base)]/80 backdrop-blur-md border-b border-[var(--border-subtle)]">
         <PageContainer>
           <div className="flex justify-between items-center h-16">
-            <Link href="/" className="font-bold text-xl tracking-tight text-[var(--text-primary)] hover:opacity-80 transition-opacity">
-              SMS
+            <Link href="/" className="text-xl tracking-tight text-[var(--text-primary)] hover:opacity-80 transition-opacity">
+              <strong><em>SMS</em></strong>
             </Link>
             <nav className="hidden md:flex items-center gap-6">
               <Link href="/discover" className="text-[var(--text-sm)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]">
@@ -445,7 +445,7 @@ export default function ProfilePage() {
                     {/* Intent */}
                     <div className="mb-6">
                       <label className="block text-[var(--text-sm)] font-medium text-[var(--text-primary)] mb-3">
-                        What brings you to SMS?
+                        What brings you to <strong><em>SMS</em></strong>?
                       </label>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         {INTENT_OPTIONS.map((option) => (

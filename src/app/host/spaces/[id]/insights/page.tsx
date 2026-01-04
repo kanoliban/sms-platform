@@ -211,8 +211,8 @@ function InsightsContent() {
         <PageContainer>
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-4">
-              <Link href="/" className="font-bold italic text-xl tracking-tight text-[var(--text-primary)] hover:opacity-80 transition-opacity">
-                SMS
+              <Link href="/" className="text-xl tracking-tight text-[var(--text-primary)] hover:opacity-80 transition-opacity">
+                <strong><em>SMS</em></strong>
               </Link>
               <span className="text-[var(--text-muted)]">/</span>
               <Link href={`/host/spaces/${spaceId}`} className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">

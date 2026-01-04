@@ -211,8 +211,8 @@ export default function HelpPage() {
       <header className="border-b border-[var(--border-subtle)] sticky top-0 bg-[var(--bg-base)]/95 backdrop-blur z-10">
         <PageContainer>
           <div className="flex justify-between items-center h-16">
-            <Link href="/" className="font-bold italic text-xl tracking-tight text-[var(--text-primary)] hover:opacity-80 transition-opacity">
-              SMS
+            <Link href="/" className="text-xl tracking-tight text-[var(--text-primary)] hover:opacity-80 transition-opacity">
+              <strong><em>SMS</em></strong>
             </Link>
             <nav className="flex items-center gap-4">
               <Link

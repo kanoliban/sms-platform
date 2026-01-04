@@ -335,8 +335,8 @@ export default function LoginPage() {
       <header className="border-b border-[var(--border-subtle)]">
         <PageContainer>
           <div className="flex justify-between items-center h-16">
-            <Link href="/" className="font-bold italic text-xl tracking-tight text-[var(--text-primary)] hover:opacity-80 transition-opacity">
-              SMS
+            <Link href="/" className="text-xl tracking-tight text-[var(--text-primary)] hover:opacity-80 transition-opacity">
+              <strong><em>SMS</em></strong>
             </Link>
           </div>
         </PageContainer>

@@ -199,8 +199,8 @@ export default function CheckInPage() {
       {/* Header */}
       <header className="border-b border-[var(--border-subtle)]">
         <div className="max-w-md mx-auto px-6 py-4">
-          <Link href="/" className="font-bold italic text-xl tracking-tight text-[var(--text-primary)] hover:opacity-80 transition-opacity">
-            SMS
+          <Link href="/" className="text-xl tracking-tight text-[var(--text-primary)] hover:opacity-80 transition-opacity">
+            <strong><em>SMS</em></strong>
           </Link>
         </div>
       </header>

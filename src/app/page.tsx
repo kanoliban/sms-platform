@@ -18,7 +18,7 @@ export default function Home() {
       {/* Header */}
       <header className="fixed top-0 left-0 right-0 z-50 px-6 py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="font-bold italic text-xl">SMS</div>
+          <div className="text-xl"><strong><em>SMS</em></strong></div>
           <div className="flex items-center gap-4">
             {!loading && (
               user ? (
@@ -179,7 +179,7 @@ export default function Home() {
         <div className="max-w-2xl mx-auto text-center">
           <p className="text-sm uppercase tracking-widest opacity-40 mb-6">The Story</p>
           <p className="text-xl md:text-2xl leading-relaxed opacity-80 mb-8">
-            I lost 90% of my life savings. I call it a purchase. This is how <span className="font-bold italic text-white">SMS</span> was born.
+            I lost 90% of my life savings. I call it a purchase. This is how <strong className="text-white"><em>SMS</em></strong> was born.
           </p>
           <a
             href="/about"
@@ -198,7 +198,7 @@ export default function Home() {
         </p>
         <p className="font-medium">— Liban</p>
         <div className="mt-8">
-          <div className="font-bold italic text-lg opacity-40">SMS</div>
+          <div className="text-lg opacity-40"><strong><em>SMS</em></strong></div>
           <p className="text-xs opacity-30 mt-2 tracking-widest">
             MINNEAPOLIS · SINCE 2022
           </p>

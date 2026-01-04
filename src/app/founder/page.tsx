@@ -426,8 +426,8 @@ export default function FounderDashboard() {
       <header className="border-b border-white/10 p-6">
         <div className="max-w-6xl mx-auto flex justify-between items-center">
           <div>
-            <Link href="/" className="font-bold italic text-xl tracking-tight">
-              SMS
+            <Link href="/" className="text-xl tracking-tight">
+              <strong><em>SMS</em></strong>
             </Link>
             <span className="text-white/40 ml-4">Founder Dashboard</span>
           </div>
