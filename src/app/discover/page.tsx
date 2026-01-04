@@ -6,39 +6,9 @@ import { useRouter } from 'next/navigation';
 import type { Space } from '@/lib/supabase/types';
 import { Input, Card, Badge, Button } from '@/components/ui';
 import { PageContainer } from '@/components/layout';
-import { SpaceCard, EmptyState, UserMenu, LoginModal, NotificationsDropdown, type Notification } from '@/components/composed';
+import { SpaceCard, EmptyState, UserMenu, LoginModal, NotificationsDropdown } from '@/components/composed';
 import { useAuth } from '@/lib/auth/auth-context';
-
-// Demo notifications
-const DEMO_NOTIFICATIONS: Notification[] = [
-  {
-    id: '1',
-    type: 'reminder',
-    title: 'Space Tomorrow',
-    message: 'Dinner & Deep Talks is tomorrow at 7 PM',
-    timestamp: '2h ago',
-    read: false,
-    space: { id: 'demo-1', name: 'Dinner & Deep Talks' },
-  },
-  {
-    id: '2',
-    type: 'update',
-    title: 'Location Revealed',
-    message: 'The location for Game Night has been revealed! Check it out.',
-    timestamp: 'Yesterday',
-    read: false,
-    space: { id: 'demo-3', name: 'Game Night Strangers' },
-  },
-  {
-    id: '3',
-    type: 'invite_accepted',
-    title: 'You\'re in!',
-    message: 'Your request to join Strangers & Vinyl was approved',
-    timestamp: '3 days ago',
-    read: true,
-    space: { id: 'demo-2', name: 'Strangers & Vinyl' },
-  },
-];
+import { useNotifications } from '@/hooks/use-notifications';
 
 type SpaceTone = 'chill' | 'playful' | 'deep' | 'intense';
 
@@ -198,24 +168,15 @@ export default function DiscoverPage() {
   const [demoMode, setDemoMode] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
 
-  // Notifications state
-  const [notifications, setNotifications] = useState<Notification[]>(DEMO_NOTIFICATIONS);
-  const unreadCount = notifications.filter(n => !n.read).length;
+  // Notifications from hook
+  const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications({ userId: user?.id });
 
-  const handleMarkAllRead = useCallback(() => {
-    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-  }, []);
-
-  const handleMarkRead = useCallback((id: string) => {
-    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
-  }, []);
-
-  const handleNotificationClick = useCallback((notification: Notification) => {
-    handleMarkRead(notification.id);
+  const handleNotificationClick = useCallback((notification: { id: string; space?: { id: string } }) => {
+    markAsRead(notification.id);
     if (notification.space?.id) {
       router.push(`/spaces/${notification.space.id}`);
     }
-  }, [handleMarkRead, router]);
+  }, [markAsRead, router]);
 
   // Filters
   const [searchQuery, setSearchQuery] = useState('');
@@ -339,8 +300,8 @@ export default function DiscoverPage() {
                 <NotificationsDropdown
                   notifications={notifications}
                   unreadCount={unreadCount}
-                  onMarkAllRead={handleMarkAllRead}
-                  onMarkRead={handleMarkRead}
+                  onMarkAllRead={markAllAsRead}
+                  onMarkRead={markAsRead}
                   onNotificationClick={handleNotificationClick}
                 />
               )}

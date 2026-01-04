@@ -107,7 +107,7 @@ To continue work, tell Claude:
 ## Phase 2: Core Host Features
 
 ### 2.1 Blasts API
-- [ ] **Status:** Not started
+- [x] **Status:** COMPLETED (2026-01-03)
 - **File to create:** `src/app/api/blasts/route.ts`
 - **UI exists at:** `src/app/host/rooms/[id]/blasts/page.tsx`
 - **TODO in code:** Line 1 of blasts page has `// TODO: Load blast history from database when table exists`
@@ -117,7 +117,7 @@ To continue work, tell Claude:
   3. GET endpoint to fetch blast history
 
 ### 2.2 Host Onboarding Page
-- [ ] **Status:** Not started
+- [x] **Status:** COMPLETED (2026-01-03)
 - **File to create:** `src/app/host/onboarding/page.tsx`
 - **Referenced at:** `src/app/host/page.tsx` line 319 (`/host/onboarding`)
 - **Requirements:**
@@ -128,14 +128,15 @@ To continue work, tell Claude:
   5. Optional: Stripe Connect for host payouts
 
 ### 2.3 Insights Page (Real Data)
-- [ ] **Status:** Not started
-- **File:** `src/app/host/rooms/[id]/insights/page.tsx`
-- **Currently:** All mock data
-- **Metrics to implement:**
+- [x] **Status:** COMPLETED (2026-01-03)
+- **File:** `src/app/host/spaces/[id]/insights/page.tsx`
+- **API:** `src/app/api/insights/route.ts`
+- **Metrics implemented:**
   - Attendance rate (attended / accepted)
-  - Revenue (sum of captured payments)
+  - Revenue (sum of captured payments vs projected)
   - Response rate (accepted / invited)
-  - Feedback scores aggregate
+  - Feedback scores aggregate (from guest feedback)
+  - Average time to RSVP (from responded_at - created_at)
 
 ---
 

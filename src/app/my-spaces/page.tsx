@@ -6,30 +6,9 @@ import { useRouter } from 'next/navigation';
 import type { Space } from '@/lib/supabase/types';
 import { Card, Badge, Tabs, TabsList, TabsTrigger, TabsContent, Button } from '@/components/ui';
 import { PageContainer, Header } from '@/components/layout';
-import { SpaceCard, EmptyState, UserMenu, LoginModal, NotificationsDropdown, type Notification } from '@/components/composed';
+import { SpaceCard, EmptyState, UserMenu, LoginModal, NotificationsDropdown } from '@/components/composed';
 import { useAuth } from '@/lib/auth/auth-context';
-
-// Demo notifications for my-rooms
-const DEMO_NOTIFICATIONS: Notification[] = [
-  {
-    id: '1',
-    type: 'reminder',
-    title: 'Space Tomorrow',
-    message: 'Dinner & Deep Talks is tomorrow at 7 PM',
-    timestamp: '2h ago',
-    read: false,
-    space: { id: 'room-1', name: 'Dinner & Deep Talks' },
-  },
-  {
-    id: '2',
-    type: 'update',
-    title: 'Location Revealed',
-    message: 'The location for your upcoming room has been revealed!',
-    timestamp: 'Yesterday',
-    read: false,
-    space: { id: 'room-3', name: 'Game Night Strangers' },
-  },
-];
+import { useNotifications } from '@/hooks/use-notifications';
 
 type SpaceTone = 'chill' | 'playful' | 'deep' | 'intense';
 
@@ -145,24 +124,15 @@ export default function MyRoomsPage() {
   const [activeTab, setActiveTab] = useState('upcoming');
   const [showLoginModal, setShowLoginModal] = useState(false);
 
-  // Notifications state
-  const [notifications, setNotifications] = useState<Notification[]>(DEMO_NOTIFICATIONS);
-  const unreadCount = notifications.filter(n => !n.read).length;
+  // Notifications from hook
+  const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications({ userId: user?.id });
 
-  const handleMarkAllRead = useCallback(() => {
-    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-  }, []);
-
-  const handleMarkRead = useCallback((id: string) => {
-    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
-  }, []);
-
-  const handleNotificationClick = useCallback((notification: Notification) => {
-    handleMarkRead(notification.id);
+  const handleNotificationClick = useCallback((notification: { id: string; space?: { id: string } }) => {
+    markAsRead(notification.id);
     if (notification.space?.id) {
       router.push(`/spaces/${notification.space.id}`);
     }
-  }, [handleMarkRead, router]);
+  }, [markAsRead, router]);
 
   useEffect(() => {
     if (!authLoading) {
@@ -326,8 +296,8 @@ export default function MyRoomsPage() {
                 <NotificationsDropdown
                   notifications={notifications}
                   unreadCount={unreadCount}
-                  onMarkAllRead={handleMarkAllRead}
-                  onMarkRead={handleMarkRead}
+                  onMarkAllRead={markAllAsRead}
+                  onMarkRead={markAsRead}
                   onNotificationClick={handleNotificationClick}
                 />
               )}

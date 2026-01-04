@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import { useAuth } from '@/lib/auth/auth-context'
 import { Button, Card } from '@/components/ui'
 import { PageContainer } from '@/components/layout'
@@ -13,7 +13,11 @@ interface HostAuthGuardProps {
 export function HostAuthGuard({ children }: HostAuthGuardProps) {
   const { user, loading } = useAuth()
   const router = useRouter()
+  const pathname = usePathname()
   const [showLoginPrompt, setShowLoginPrompt] = useState(false)
+
+  // Allow onboarding page for any logged-in user (not just hosts)
+  const isOnboardingPage = pathname === '/host/onboarding'
 
   useEffect(() => {
     if (!loading && !user) {
@@ -59,7 +63,8 @@ export function HostAuthGuard({ children }: HostAuthGuardProps) {
   // Check if user is a host or founder
   const isHost = user.role === 'host' || user.role === 'founder'
 
-  if (!isHost) {
+  // Allow logged-in non-hosts to access onboarding
+  if (!isHost && !isOnboardingPage) {
     return (
       <div className="min-h-screen bg-[var(--bg-base)]">
         <PageContainer size="sm" className="py-16">

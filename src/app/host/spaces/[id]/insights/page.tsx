@@ -16,12 +16,19 @@ interface SpaceInsights {
     confirmed: number;
     conversionRate: number;
     revenue: number;
+    revenueIsCaptured?: boolean;
+    attendanceRate?: number;
+    attended?: number;
   };
   engagement: {
     pageViews: number;
     uniqueVisitors: number;
     shares: number;
     avgTimeToRsvp: string;
+  };
+  feedback?: {
+    score: number | null;
+    count: number;
   };
   guestBreakdown: {
     status: string;
@@ -70,6 +77,9 @@ const MOCK_INSIGHTS: SpaceInsights = {
     confirmed: 6,
     conversionRate: 75,
     revenue: 270,
+    revenueIsCaptured: true,
+    attendanceRate: 83,
+    attended: 5,
   },
   engagement: {
     pageViews: 342,
@@ -77,11 +87,15 @@ const MOCK_INSIGHTS: SpaceInsights = {
     shares: 12,
     avgTimeToRsvp: '2.4 hours',
   },
+  feedback: {
+    score: 87,
+    count: 4,
+  },
   guestBreakdown: [
     { status: 'going', label: 'Going', count: 6, percentage: 75, color: 'var(--status-going-bg)' },
+    { status: 'attended', label: 'Attended', count: 5, percentage: 83, color: 'var(--success)' },
     { status: 'invited', label: 'Invited', count: 3, percentage: 37.5, color: 'var(--status-invited-bg)' },
     { status: 'pending', label: 'Pending Approval', count: 2, percentage: 25, color: 'var(--status-pending-bg)' },
-    { status: 'waitlist', label: 'Waitlist', count: 4, percentage: 50, color: 'var(--status-waitlist-bg)' },
     { status: 'declined', label: 'Declined', count: 9, percentage: 37.5, color: 'var(--status-declined-bg)' },
   ],
   inviteStats: {
@@ -118,8 +132,9 @@ export default function InsightsPage() {
       const { createClient } = await import('@/lib/supabase/client');
       const supabase = createClient();
 
+      // Database uses 'rooms' table, UI calls them 'spaces'
       const { data: spaceData } = await supabase
-        .from('spaces')
+        .from('rooms')
         .select('*')
         .eq('id', spaceId)
         .single();
@@ -208,7 +223,7 @@ export default function InsightsPage() {
           {/* Overview Stats */}
           <section>
             <h2 className="text-[var(--text-lg)] font-semibold text-[var(--text-primary)] mb-4">Overview</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               <StatsCard
                 label="Total Guests"
                 value={insights.overview.totalGuests}
@@ -239,8 +254,12 @@ export default function InsightsPage() {
                 }
                 variant="highlight"
               />
+            </div>
+
+            {/* Second row - Post-event metrics */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
               <StatsCard
-                label="Revenue"
+                label={insights.overview.revenueIsCaptured ? "Revenue (Captured)" : "Revenue (Projected)"}
                 value={`$${insights.overview.revenue}`}
                 icon={
                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -249,6 +268,30 @@ export default function InsightsPage() {
                 }
                 variant="highlight"
               />
+              {insights.overview.attendanceRate !== undefined && (
+                <StatsCard
+                  label={`Attendance Rate (${insights.overview.attended || 0} attended)`}
+                  value={`${insights.overview.attendanceRate}%`}
+                  icon={
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
+                    </svg>
+                  }
+                  variant={insights.overview.attendanceRate >= 80 ? "success" : "default"}
+                />
+              )}
+              {insights.feedback && insights.feedback.score !== null && (
+                <StatsCard
+                  label={`Feedback Score (${insights.feedback.count} responses)`}
+                  value={`${insights.feedback.score}%`}
+                  icon={
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />
+                    </svg>
+                  }
+                  variant={insights.feedback.score >= 80 ? "success" : insights.feedback.score >= 60 ? "highlight" : "default"}
+                />
+              )}
             </div>
           </section>
 

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase/server'
 
-// GET /api/insights?space_id=xxx - Get insights for a space
+// GET /api/insights?space_id=xxx - Get insights for a space/room
 export async function GET(request: NextRequest) {
   try {
     const supabase = createServerClient()
@@ -12,26 +12,36 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'space_id required' }, { status: 400 })
     }
 
-    // Get space details
-    const { data: space, error: spaceError } = await supabase
-      .from('spaces')
+    // Get room details (UI uses "space" but DB uses "room")
+    const { data: room, error: roomError } = await supabase
+      .from('rooms')
       .select('*')
       .eq('id', spaceId)
       .single()
 
-    if (spaceError || !space) {
+    if (roomError || !room) {
       return NextResponse.json({ error: 'Space not found' }, { status: 404 })
     }
 
-    // Get all invitations for this space
+    // Get all invitations for this room with attendance and payment data
     const { data: invitations, error: invError } = await supabase
       .from('invitations')
-      .select('id, status, created_at, stripe_payment_intent_id')
-      .eq('space_id', spaceId)
+      .select('id, status, created_at, responded_at, attended, captured, amount_cents')
+      .eq('room_id', spaceId)
 
     if (invError) {
       console.error('Error fetching invitations:', invError)
       return NextResponse.json({ error: 'Failed to fetch invitations' }, { status: 500 })
+    }
+
+    // Get feedback for this room
+    const { data: feedbackData, error: feedbackError } = await supabase
+      .from('feedback')
+      .select('felt_different, attend_again, role')
+      .eq('room_id', spaceId)
+
+    if (feedbackError) {
+      console.error('Error fetching feedback:', feedbackError)
     }
 
     // Calculate invitation stats
@@ -41,6 +51,8 @@ export async function GET(request: NextRequest) {
       declined: 0,
       pending: 0,
       expired: 0,
+      attended: 0,
+      capturedRevenueCents: 0,
     }
 
     for (const inv of invitations || []) {
@@ -61,6 +73,16 @@ export async function GET(request: NextRequest) {
           stats.expired++
           break
       }
+
+      // Count attended guests
+      if (inv.attended === true) {
+        stats.attended++
+      }
+
+      // Sum captured payments (actual revenue)
+      if (inv.captured === true && inv.amount_cents) {
+        stats.capturedRevenueCents += inv.amount_cents
+      }
     }
 
     const totalInvitations = invitations?.length || 0
@@ -68,16 +90,75 @@ export async function GET(request: NextRequest) {
       ? Math.round((stats.accepted / totalInvitations) * 100)
       : 0
 
-    // Calculate revenue (accepted invitations × price)
-    const revenue = stats.accepted * (space.price_cents / 100)
+    // Calculate attendance rate (attended / accepted)
+    const attendanceRate = stats.accepted > 0
+      ? Math.round((stats.attended / stats.accepted) * 100)
+      : 0
+
+    // Calculate revenue - show captured if available, otherwise projected
+    const capturedRevenue = stats.capturedRevenueCents / 100
+    const projectedRevenue = stats.accepted * (room.price_cents / 100)
+    const revenue = capturedRevenue > 0 ? capturedRevenue : projectedRevenue
+    const revenueIsCaptured = capturedRevenue > 0
 
     // Calculate average time to RSVP
     let avgTimeToRsvp = 'N/A'
-    const acceptedInvitations = invitations?.filter(i => i.status === 'accepted') || []
-    if (acceptedInvitations.length > 0) {
-      // For now, we'll use a placeholder since we don't track the exact acceptance time
-      // In a full implementation, we'd calculate: (accepted_at - created_at) average
-      avgTimeToRsvp = '~24 hours'
+    const respondedInvitations = invitations?.filter(i => i.responded_at && i.created_at) || []
+    if (respondedInvitations.length > 0) {
+      const totalMs = respondedInvitations.reduce((sum, inv) => {
+        const created = new Date(inv.created_at).getTime()
+        const responded = new Date(inv.responded_at!).getTime()
+        return sum + (responded - created)
+      }, 0)
+      const avgMs = totalMs / respondedInvitations.length
+      const avgHours = Math.round(avgMs / (1000 * 60 * 60))
+      if (avgHours < 1) {
+        avgTimeToRsvp = '< 1 hour'
+      } else if (avgHours < 24) {
+        avgTimeToRsvp = `~${avgHours} hours`
+      } else {
+        const avgDays = Math.round(avgHours / 24)
+        avgTimeToRsvp = `~${avgDays} day${avgDays > 1 ? 's' : ''}`
+      }
+    }
+
+    // Calculate feedback scores
+    let feedbackScore = null
+    let feedbackCount = 0
+    if (feedbackData && feedbackData.length > 0) {
+      // Score mapping for qualitative feedback
+      const scoreMap: Record<string, number> = {
+        // felt_different
+        'much': 3,
+        'somewhat': 2,
+        'not_really': 1,
+        // attend_again
+        'definitely': 3,
+        'maybe': 2,
+        'no': 1,
+      }
+
+      let totalScore = 0
+      let scoreCount = 0
+
+      for (const fb of feedbackData) {
+        if (fb.role === 'guest') {
+          if (fb.felt_different && scoreMap[fb.felt_different]) {
+            totalScore += scoreMap[fb.felt_different]
+            scoreCount++
+          }
+          if (fb.attend_again && scoreMap[fb.attend_again]) {
+            totalScore += scoreMap[fb.attend_again]
+            scoreCount++
+          }
+        }
+      }
+
+      if (scoreCount > 0) {
+        // Convert to percentage (3 = 100%, 1 = 33%)
+        feedbackScore = Math.round((totalScore / scoreCount / 3) * 100)
+        feedbackCount = feedbackData.filter(f => f.role === 'guest').length
+      }
     }
 
     // Build guest breakdown for visualization
@@ -86,8 +167,15 @@ export async function GET(request: NextRequest) {
         status: 'going',
         label: 'Going',
         count: stats.accepted,
-        percentage: totalInvitations > 0 ? (stats.accepted / space.capacity) * 100 : 0,
+        percentage: room.capacity > 0 ? (stats.accepted / room.capacity) * 100 : 0,
         color: 'var(--status-going-bg)',
+      },
+      {
+        status: 'attended',
+        label: 'Attended',
+        count: stats.attended,
+        percentage: stats.accepted > 0 ? (stats.attended / stats.accepted) * 100 : 0,
+        color: 'var(--success)',
       },
       {
         status: 'invited',
@@ -118,14 +206,21 @@ export async function GET(request: NextRequest) {
         confirmed: stats.accepted,
         conversionRate,
         revenue,
+        revenueIsCaptured,
+        attendanceRate,
+        attended: stats.attended,
       },
       engagement: {
-        // These would require analytics integration (Vercel Analytics, PostHog, etc.)
-        // For now, we return placeholders
+        // Page views, unique visitors, shares require analytics integration
+        // (Vercel Analytics, PostHog, etc.)
         pageViews: 0,
         uniqueVisitors: 0,
         shares: 0,
         avgTimeToRsvp,
+      },
+      feedback: {
+        score: feedbackScore,
+        count: feedbackCount,
       },
       guestBreakdown,
       inviteStats: {

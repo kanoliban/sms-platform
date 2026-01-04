@@ -14,30 +14,10 @@ import {
   Progress,
 } from '@/components/ui';
 import { PageContainer } from '@/components/layout';
-import { UserMenu, LoginModal, NotificationsDropdown, type Notification } from '@/components/composed';
+import { UserMenu, LoginModal, NotificationsDropdown } from '@/components/composed';
 import { useToast } from '@/components/ui/toast';
 import { useAuth } from '@/lib/auth/auth-context';
-
-// Demo notifications for profile
-const DEMO_NOTIFICATIONS: Notification[] = [
-  {
-    id: '1',
-    type: 'update',
-    title: 'Profile Complete',
-    message: 'Your profile is 80% complete. Add a bio to reach 100%!',
-    timestamp: '1d ago',
-    read: false,
-  },
-  {
-    id: '2',
-    type: 'invite_accepted',
-    title: 'New Connection',
-    message: 'You met 5 new people at Dinner & Deep Talks',
-    timestamp: '3d ago',
-    read: true,
-    space: { id: 'room-1', name: 'Dinner & Deep Talks' },
-  },
-];
+import { useNotifications } from '@/hooks/use-notifications';
 
 // Check if Supabase is configured
 const isSupabaseConfigured = () => {
@@ -89,25 +69,15 @@ export default function ProfilePage() {
   const [demoMode, setDemoMode] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
 
-  // Notifications state
-  const [notifications, setNotifications] = useState<Notification[]>(DEMO_NOTIFICATIONS);
-  const unreadCount = notifications.filter(n => !n.read).length;
+  // Notifications from hook
+  const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications({ userId: authUser?.id });
 
-  // Notification handlers
-  const handleMarkAllRead = useCallback(() => {
-    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-  }, []);
-
-  const handleMarkRead = useCallback((id: string) => {
-    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
-  }, []);
-
-  const handleNotificationClick = useCallback((notification: Notification) => {
-    handleMarkRead(notification.id);
+  const handleNotificationClick = useCallback((notification: { id: string; space?: { id: string } }) => {
+    markAsRead(notification.id);
     if (notification.space?.id) {
       router.push(`/spaces/${notification.space.id}`);
     }
-  }, [handleMarkRead, router]);
+  }, [markAsRead, router]);
 
   // Editable fields
   const [name, setName] = useState('');
@@ -315,8 +285,8 @@ export default function ProfilePage() {
               <NotificationsDropdown
                 notifications={notifications}
                 unreadCount={unreadCount}
-                onMarkAllRead={handleMarkAllRead}
-                onMarkRead={handleMarkRead}
+                onMarkAllRead={markAllAsRead}
+                onMarkRead={markAsRead}
                 onNotificationClick={handleNotificationClick}
               />
               <UserMenu />
