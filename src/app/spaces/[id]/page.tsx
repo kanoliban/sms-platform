@@ -149,33 +149,12 @@ export default function PublicRoomPage() {
     }
 
     try {
-      const { createClient } = await import('@/lib/supabase/client');
-      const supabase = createClient();
+      // Use API endpoint to avoid RLS issues with browser client
+      const res = await fetch(`/api/spaces/${spaceId}`);
 
-      const { data: spaceData } = await supabase
-        .from('spaces')
-        .select(`
-          *,
-          host:users!spaces_host_id_fkey (
-            id,
-            name
-          )
-        `)
-        .eq('id', spaceId)
-        .single();
-
-      if (spaceData) {
-        // Get accepted count
-        const { count } = await supabase
-          .from('invitations')
-          .select('*', { count: 'exact', head: true })
-          .eq('space_id', spaceId)
-          .eq('status', 'accepted');
-
-        setSpace({
-          ...spaceData,
-          accepted_count: count || 0,
-        } as SpaceWithHost);
+      if (res.ok) {
+        const data = await res.json();
+        setSpace(data.space as SpaceWithHost);
       }
     } catch (err) {
       console.error('Failed to load room:', err);
@@ -243,6 +222,17 @@ export default function PublicRoomPage() {
 
       if (!response.ok) {
         throw new Error(data.error || 'Failed to process RSVP');
+      }
+
+      // Handle dev mode (no Stripe)
+      if (data.dev_mode && data.redirect_url) {
+        toast({
+          variant: 'success',
+          title: 'RSVP Accepted!',
+          description: data.message || 'Your spot is confirmed (dev mode).',
+        });
+        window.location.href = data.redirect_url;
+        return;
       }
 
       // Redirect to Stripe checkout
@@ -589,11 +579,7 @@ export default function PublicRoomPage() {
                 disabled={rsvpLoading || isPast || spotsLeft <= 0}
               >
                 {rsvpLoading ? 'Processing...' : (
-                  userInvitation?.status === 'sent' || userInvitation?.status === 'pending'
-                    ? 'Accept Invitation'
-                    : user
-                      ? 'Request to Join'
-                      : 'Sign in to Join'
+                  user ? 'Request to Join' : 'Sign in to Join'
                 )}
               </Button>
             )}

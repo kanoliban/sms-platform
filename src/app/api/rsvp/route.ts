@@ -175,6 +175,22 @@ export async function POST(request: NextRequest) {
     const successUrl = `${baseUrl}/spaces/${space_id}/success?invitation=${invitationId}`
     const cancelUrl = `${baseUrl}/spaces/${space_id}`
 
+    // DEV MODE: Skip Stripe if not configured (for testing)
+    if (process.env.NODE_ENV === 'development' && !process.env.STRIPE_SECRET_KEY) {
+      // Auto-accept invitation in dev mode
+      const adminSupabase = createAdminClient()
+      await adminSupabase
+        .from('invitations')
+        .update({ status: 'accepted' })
+        .eq('id', invitationId)
+
+      return NextResponse.json({
+        dev_mode: true,
+        message: 'RSVP accepted (dev mode - no payment required)',
+        redirect_url: successUrl,
+      })
+    }
+
     // Create Stripe checkout session
     const session = await createCheckoutSession(
       space.price_cents,
