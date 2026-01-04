@@ -2,13 +2,13 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
 import { sendSms } from '@/lib/twilio/client'
 import { locationRevealMessage, hostLocationReminderMessage } from '@/lib/twilio/messages'
-import { sendLocationReveal, sendEventReminder } from '@/lib/email'
+import { sendLocationReveal } from '@/lib/email'
 
 // POST /api/cron/location-reveal
 // Vercel Cron: runs every 15 minutes (*/15 * * * *)
-// Handles multiple space lifecycle tasks:
+// Handles space lifecycle tasks:
 // 1. Location reveal - send address to guests 24h before
-// 2. Pocket Liban - send prompts to hosts at scheduled times
+// 2. 1-hour reminder notifications
 // 3. Auto-complete - mark spaces as completed after they end
 export async function POST(request: NextRequest) {
   try {
@@ -156,64 +156,6 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // --- Pocket Liban: Send host prompts ---
-    const { data: prompts, error: promptsError } = await supabase
-      .from('host_prompts')
-      .select(`
-        *,
-        space:spaces (
-          *,
-          host:users!host_id (
-            id,
-            name,
-            phone
-          )
-        )
-      `)
-      .eq('sent', false)
-      .lte('send_at', now.toISOString())
-      .order('send_at', { ascending: true })
-
-    let promptsSent = 0
-    if (!promptsError && prompts) {
-      for (const prompt of prompts) {
-        const space = prompt.space
-        const host = space?.host
-
-        // Skip if space is canceled or completed
-        if (space?.status === 'canceled' || space?.status === 'completed') {
-          await supabase
-            .from('host_prompts')
-            .update({ sent: true })
-            .eq('id', prompt.id)
-          continue
-        }
-
-        if (!host?.phone) continue
-
-        try {
-          await sendSms(host.phone, prompt.message)
-
-          await supabase
-            .from('host_prompts')
-            .update({ sent: true })
-            .eq('id', prompt.id)
-
-          await supabase.from('sms_conversations').insert({
-            user_id: host.id,
-            direction: 'outbound',
-            message: prompt.message,
-            context: `pocket_liban_${prompt.prompt_type}`,
-            space_id: space.id,
-          })
-
-          promptsSent++
-        } catch (err) {
-          console.error(`Error sending prompt ${prompt.id}:`, err)
-        }
-      }
-    }
-
     // --- 1-Hour Reminder: Send reminder notifications to guests ---
     // Find spaces happening in approximately 1 hour (45min to 75min window)
     const min1h = new Date(now.getTime() + 45 * 60 * 1000)
@@ -321,7 +263,6 @@ export async function POST(request: NextRequest) {
       message: `Space lifecycle processed`,
       locationReveals: processed,
       errors,
-      promptsSent,
       remindersSent,
       autoCompleted: completedCount,
     })

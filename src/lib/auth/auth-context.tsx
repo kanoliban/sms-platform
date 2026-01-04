@@ -10,6 +10,8 @@ export interface SMSUser {
   phone: string
   role: 'guest' | 'host' | 'founder'
   intent: string | null
+  user_intent: 'attend' | 'host' | 'both' | null
+  onboarding_completed: boolean
   tone_preference: string | null
   trust_score_overall: number
   trust_status: string

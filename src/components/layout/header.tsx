@@ -52,7 +52,7 @@ export function Header({
           >
             {logo || (
               <span className="text-[var(--text-xl)] font-bold tracking-tight">
-                SMS
+                <strong><em>SMS</em></strong>
               </span>
             )}
           </Link>

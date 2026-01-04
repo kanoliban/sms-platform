@@ -3,7 +3,7 @@
 
 -- Rate limits table for tracking request counts
 CREATE TABLE IF NOT EXISTS rate_limits (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   key TEXT NOT NULL,  -- Composite key like 'otp:+15551234567' or 'invite:user-uuid'
   created_at TIMESTAMPTZ DEFAULT NOW()
 );

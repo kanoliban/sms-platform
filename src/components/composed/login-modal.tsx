@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useCallback, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { Modal } from '@/components/ui/modal'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -24,12 +25,13 @@ function formatPhoneDisplay(value: string): string {
 }
 
 export function LoginModal({ open, onClose, onSuccess }: LoginModalProps) {
+  const router = useRouter()
   const [step, setStep] = useState<Step>('phone')
   const [phone, setPhone] = useState('')
   const [code, setCode] = useState('')
   const [loading, setLoading] = useState(false)
   const [resendCooldown, setResendCooldown] = useState(0)
-  const { sendCode, verifyCode } = useAuth()
+  const { sendCode, verifyCode, user, refreshUser } = useAuth()
 
   // Reset state when modal closes
   useEffect(() => {
@@ -108,15 +110,26 @@ export function LoginModal({ open, onClose, onSuccess }: LoginModalProps) {
       return
     }
 
+    // Refresh user to get latest data including onboarding_completed
+    await refreshUser()
+
     toast({
       variant: 'success',
       title: 'Welcome!',
       description: 'You have been signed in.',
     })
 
-    onSuccess?.()
     onClose()
-  }, [phone, code, verifyCode, onClose, onSuccess])
+
+    // Check if user needs onboarding (fetch fresh user data)
+    const res = await fetch('/api/auth/me')
+    const data = await res.json()
+    if (data.user && data.user.onboarding_completed === false) {
+      router.push('/onboarding')
+    } else {
+      onSuccess?.()
+    }
+  }, [phone, code, verifyCode, onClose, onSuccess, refreshUser, router])
 
   const handleResendCode = useCallback(async () => {
     if (resendCooldown > 0) return

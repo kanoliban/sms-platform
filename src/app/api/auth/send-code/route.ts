@@ -47,12 +47,13 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (!existingUser) {
-      // Create new user
+      // Create new user with onboarding_completed = false
       const { error: userError } = await supabase
         .from('users')
         .insert({
           phone: normalizedPhone,
           role: 'guest',
+          onboarding_completed: false,
         })
 
       if (userError) {
