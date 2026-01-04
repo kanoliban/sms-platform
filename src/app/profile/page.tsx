@@ -28,6 +28,7 @@ const isSupabaseConfigured = () => {
 const MOCK_USER: User = {
   id: 'demo-user',
   phone: '+16125551234',
+  email: 'alex@example.com',
   name: 'Alex Johnson',
   role: 'guest',
   intent: 'human_connection',

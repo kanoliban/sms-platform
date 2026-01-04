@@ -88,8 +88,32 @@ export async function POST(request: NextRequest) {
       .eq('status', 'accepted')
 
     if (acceptedCount && acceptedCount >= space.capacity) {
+      // Check if user is already on waitlist
+      const { data: waitlistEntry } = await supabase
+        .from('waitlist')
+        .select('id, position, status')
+        .eq('room_id', space_id)
+        .eq('user_id', userId)
+        .single()
+
+      // Get current waitlist count
+      const { count: waitlistCount } = await supabase
+        .from('waitlist')
+        .select('*', { count: 'exact', head: true })
+        .eq('room_id', space_id)
+        .eq('status', 'waiting')
+
       return NextResponse.json(
-        { error: 'This space is full' },
+        {
+          error: 'This space is full',
+          code: 'SPACE_FULL',
+          waitlist: {
+            available: true,
+            currentCount: waitlistCount || 0,
+            userPosition: waitlistEntry?.status === 'waiting' ? waitlistEntry.position : null,
+            alreadyOnWaitlist: waitlistEntry?.status === 'waiting'
+          }
+        },
         { status: 400 }
       )
     }

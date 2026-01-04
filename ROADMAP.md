@@ -191,17 +191,23 @@ To continue work, tell Claude:
 - **Fix:** Added `preferences` JSONB column on users table
 
 ### 4.3 Email Notifications
-- [ ] **Status:** Not started
+- [x] **Status:** COMPLETED (2026-01-03)
 - **File exists:** `src/lib/email.ts` (22KB, already implemented)
-- **Not integrated anywhere**
-- **Add:** Email confirmations, reminders as backup to SMS
+- **Integrated into:**
+  - `src/app/api/stripe/webhook/route.ts` - RSVP confirmation email
+  - `src/app/api/cron/location-reveal/route.ts` - Location reveal email
+  - `src/app/api/cron/post-space/route.ts` - Feedback request email
+  - `src/app/api/cron/waitlist-promotion/route.ts` - Waitlist notification email
+- **Note:** Emails are sent as backup alongside SMS notifications
 
 ### 4.4 Rate Limiting
-- [ ] **Status:** Not started
-- **Files:**
-  - `src/app/api/auth/send-code/route.ts` - limit OTP requests
-  - `src/app/api/invitations/route.ts` - limit invite sends
-- **Solution:** Use Vercel KV or Upstash Redis for rate limiting
+- [x] **Status:** COMPLETED (2026-01-03)
+- **Migration:** `007_rate_limits.sql` (rate_limits table)
+- **Utility:** `src/lib/rate-limit.ts` (Supabase-backed rate limiting)
+- **Protected endpoints:**
+  - `src/app/api/auth/send-code/route.ts` - 5 OTP requests per 10 min per phone
+  - `src/app/api/invitations/route.ts` - 50 invites per hour per host
+- **Note:** Uses Supabase as backing store for serverless compatibility
 
 ---
 

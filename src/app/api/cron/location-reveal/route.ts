@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
 import { sendSms } from '@/lib/twilio/client'
 import { locationRevealMessage, hostLocationReminderMessage } from '@/lib/twilio/messages'
+import { sendLocationReveal, sendEventReminder } from '@/lib/email'
 
 // POST /api/cron/location-reveal
 // Vercel Cron: runs every 15 minutes (*/15 * * * *)
@@ -101,6 +102,24 @@ export async function POST(request: NextRequest) {
             context: 'location_reveal',
             space_id: space.id,
           })
+
+          // Send location reveal email as backup
+          const guestEmail = (guest as { email?: string }).email
+          if (guestEmail) {
+            try {
+              await sendLocationReveal(guestEmail, guest.name || 'Guest', {
+                title: space.name,
+                date: spaceDateTime.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }),
+                time: space.time,
+                address: space.location_address,
+                hostName: space.host?.name || 'Your host',
+                hostPhone: space.host?.phone,
+                instructions: space.location_instructions,
+              })
+            } catch (emailErr) {
+              console.error('Failed to send location email:', emailErr)
+            }
+          }
 
           // Create in-app notification for guest
           await supabase.from('notifications').insert({

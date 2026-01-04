@@ -3,6 +3,7 @@ import Stripe from 'stripe'
 import { createAdminClient } from '@/lib/supabase/server'
 import { sendSms } from '@/lib/twilio/client'
 import { confirmationAfterPaymentMessage } from '@/lib/twilio/messages'
+import { sendRsvpConfirmation } from '@/lib/email'
 
 // Lazy-load stripe to avoid initialization during build
 let _stripe: Stripe | null = null
@@ -250,5 +251,20 @@ async function handleCheckoutComplete(
     })
 
     await sendSms(user.phone, msg)
+  }
+
+  // Send confirmation email as backup
+  if (user?.email) {
+    try {
+      const spaceDate = new Date(space.date)
+      await sendRsvpConfirmation(user.email, user.name || 'Guest', {
+        title: space.name,
+        date: spaceDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }),
+        time: space.time,
+        price: space.price_cents / 100,
+      })
+    } catch (emailErr) {
+      console.error('Failed to send confirmation email:', emailErr)
+    }
   }
 }

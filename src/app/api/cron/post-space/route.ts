@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
 import { sendSms } from '@/lib/twilio/client'
 import { guestFeedbackRequest, hostFeedbackRequest } from '@/lib/twilio/messages'
+import { sendPostEventFollowUp } from '@/lib/email'
 
 // POST /api/cron/post-space
 // Vercel Cron: runs daily
@@ -168,6 +169,20 @@ export async function POST(request: NextRequest) {
             context: 'feedback_request',
             space_id: space.id,
           })
+
+          // Send feedback email as backup
+          const guestEmail = (guest as { email?: string }).email
+          if (guestEmail) {
+            try {
+              const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://strangersmeetingstrangers.com'
+              await sendPostEventFollowUp(guestEmail, guest.name || 'Guest', {
+                title: space.name,
+                feedbackUrl: `${baseUrl}/feedback/${space.id}`,
+              })
+            } catch (emailErr) {
+              console.error('Failed to send feedback email:', emailErr)
+            }
+          }
         }
 
         // Mark feedback as requested

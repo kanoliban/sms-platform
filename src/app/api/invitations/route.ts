@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase/server'
 import { sendSms, normalizePhoneNumber } from '@/lib/twilio/client'
 import { contractInviteMessage } from '@/lib/twilio/messages'
+import { checkInviteRateLimit } from '@/lib/rate-limit'
 import type { Space, User } from '@/lib/supabase/types'
 
 // GET /api/invitations - List invitations for a space
@@ -74,6 +75,26 @@ export async function POST(request: NextRequest) {
 
     if (spaceError || !space) {
       return NextResponse.json({ error: 'Space not found' }, { status: 404 })
+    }
+
+    // Check rate limit (50 invites per hour per host)
+    const rateLimit = await checkInviteRateLimit(space.host_id)
+    if (!rateLimit.success) {
+      const retryAfter = Math.ceil((rateLimit.resetAt.getTime() - Date.now()) / 1000)
+      return NextResponse.json(
+        {
+          error: 'Too many invitations sent. Please try again later.',
+          retryAfter,
+        },
+        {
+          status: 429,
+          headers: {
+            'Retry-After': retryAfter.toString(),
+            'X-RateLimit-Remaining': '0',
+            'X-RateLimit-Reset': rateLimit.resetAt.toISOString(),
+          },
+        }
+      )
     }
 
     // Check space status

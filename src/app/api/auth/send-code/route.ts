@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase/server'
 import { sendVerificationCode, normalizePhoneNumber } from '@/lib/twilio/client'
+import { checkOtpRateLimit } from '@/lib/rate-limit'
 
 // POST /api/auth/send-code - Send verification code via Twilio Verify
 export async function POST(request: NextRequest) {
@@ -16,6 +17,26 @@ export async function POST(request: NextRequest) {
     }
 
     const normalizedPhone = normalizePhoneNumber(phone)
+
+    // Check rate limit (5 requests per 10 minutes per phone)
+    const rateLimit = await checkOtpRateLimit(normalizedPhone)
+    if (!rateLimit.success) {
+      const retryAfter = Math.ceil((rateLimit.resetAt.getTime() - Date.now()) / 1000)
+      return NextResponse.json(
+        {
+          error: 'Too many verification requests. Please try again later.',
+          retryAfter,
+        },
+        {
+          status: 429,
+          headers: {
+            'Retry-After': retryAfter.toString(),
+            'X-RateLimit-Remaining': '0',
+            'X-RateLimit-Reset': rateLimit.resetAt.toISOString(),
+          },
+        }
+      )
+    }
     const supabase = createServerClient()
 
     // Find or create user

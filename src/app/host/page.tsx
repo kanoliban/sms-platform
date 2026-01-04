@@ -89,6 +89,7 @@ const MOCK_SPACES: SpaceWithCounts[] = [
 const MOCK_HOST: User = {
   id: 'demo-host',
   phone: '+1234567890',
+  email: 'demo@example.com',
   name: 'Demo Host',
   role: 'host',
   intent: 'human_connection',

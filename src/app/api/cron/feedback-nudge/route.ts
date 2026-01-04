@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
 import { sendSms } from '@/lib/twilio/client'
+import { sendPostEventFollowUp } from '@/lib/email'
 
 // POST /api/cron/feedback-nudge
 // Vercel Cron: runs daily at 10 AM (0 10 * * *)
@@ -37,7 +38,8 @@ export async function POST(request: NextRequest) {
           user:users (
             id,
             name,
-            phone
+            phone,
+            email
           )
         )
       `)
@@ -62,16 +64,31 @@ export async function POST(request: NextRequest) {
       ) || []
 
       for (const invitation of eligibleGuests) {
-        const guest = invitation.user as { id: string; name: string | null; phone: string }[] | null
+        const guest = invitation.user as { id: string; name: string | null; phone: string; email: string | null }[] | null
         const guestData = guest?.[0]
-        if (!guestData?.phone) continue
+        if (!guestData?.phone && !guestData?.email) continue
 
         const feedbackUrl = `${baseUrl}/spaces/${space.id}/feedback?invitation=${invitation.id}`
 
         const message = `Hey${guestData.name ? ` ${guestData.name}` : ''}! Thanks for joining ${space.name} yesterday. Your feedback helps make future spaces better.\n\nShare your thoughts: ${feedbackUrl}`
 
         try {
-          await sendSms(guestData.phone, message)
+          // Send SMS if phone available
+          if (guestData.phone) {
+            await sendSms(guestData.phone, message)
+          }
+
+          // Send email as backup/alternative
+          if (guestData.email) {
+            try {
+              await sendPostEventFollowUp(guestData.email, guestData.name || 'Guest', {
+                title: space.name,
+                feedbackUrl,
+              })
+            } catch (emailErr) {
+              console.error(`Failed to send feedback email to ${guestData.id}:`, emailErr)
+            }
+          }
 
           // Mark as feedback requested
           await supabase

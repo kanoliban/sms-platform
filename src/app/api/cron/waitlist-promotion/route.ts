@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
 import { sendSms } from '@/lib/twilio/client'
 import { contractInviteMessage } from '@/lib/twilio/messages'
+import { sendWaitlistNotification } from '@/lib/email'
 
 // POST /api/cron/waitlist-promotion
 // Vercel Cron: runs every 15 minutes (*/15 * * * *)
@@ -118,6 +119,22 @@ export async function POST(request: NextRequest) {
             context: 'waitlist_promotion',
             space_id: space.id,
           })
+
+          // Send waitlist email as backup
+          const guestEmail = (guest as { email?: string }).email
+          if (guestEmail) {
+            try {
+              const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://strangersmeetingstrangers.com'
+              await sendWaitlistNotification(guestEmail, guest.name || 'Guest', {
+                title: space.name,
+                date: spaceDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }),
+                time: space.time,
+                rsvpUrl: `${baseUrl}/spaces/${space.id}`,
+              })
+            } catch (emailErr) {
+              console.error('Failed to send waitlist email:', emailErr)
+            }
+          }
 
           // Create notification
           await supabase.from('notifications').insert({

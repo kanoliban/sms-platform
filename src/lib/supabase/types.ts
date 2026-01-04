@@ -11,6 +11,7 @@ export type PromptType = 'pre_space' | 'opening' | 'check_in' | 'energy_check' |
 export interface User {
   id: string
   phone: string
+  email: string | null
   name: string | null
   role: UserRole
   intent: UserIntent | null
