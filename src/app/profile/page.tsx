@@ -685,12 +685,12 @@ export default function ProfilePage() {
                     ?
                   </button>
                   {showTrustTooltip && (
-                    <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-64 p-3 bg-[var(--bg-elevated)] border border-[var(--border-default)] rounded-[var(--radius-lg)] shadow-[var(--shadow-xl)] z-50">
+                    <div className="absolute right-0 top-full mt-2 w-64 p-3 bg-[var(--bg-elevated)] border border-[var(--border-default)] rounded-[var(--radius-lg)] shadow-[var(--shadow-xl)] z-50">
+                      <div className="absolute right-2 bottom-full w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-b-[6px] border-b-[var(--border-default)]" />
                       <p className="text-[var(--text-xs)] text-[var(--text-secondary)] leading-relaxed">
                         <strong className="text-[var(--text-primary)] block mb-1">Why Trust Score?</strong>
                         Meeting strangers requires genuine trust. This score reflects your track record in our community—showing up when you say you will, contributing positively, and helping create safe spaces for everyone. It's not about points; it's about building real connections.
                       </p>
-                      <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[6px] border-t-[var(--border-default)]" />
                     </div>
                   )}
                 </div>
