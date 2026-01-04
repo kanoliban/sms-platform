@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
-import { randomUUID } from 'crypto'
 
 // Deterministic UUIDs for test data (so we can upsert/delete them)
 const TEST_IDS = {
@@ -79,8 +78,8 @@ export async function POST(request: NextRequest) {
     // 3. Create 5 test spaces
     const spaces = [
       {
-        id: 'test-space-gap-alert',
-        name: '🔔 Gap Alert Test',
+        id: TEST_IDS.spaces.gapAlert,
+        name: 'Gap Alert Test',
         description: 'Low attendance - triggers gap-alerts',
         date: formatDate(tomorrow),
         time: '19:00',
@@ -89,18 +88,18 @@ export async function POST(request: NextRequest) {
         price_cents: 2500,
       },
       {
-        id: 'test-space-waitlist',
-        name: '⏳ Waitlist Test',
+        id: TEST_IDS.spaces.waitlist,
+        name: 'Waitlist Test',
         description: 'Full with waitlist - triggers waitlist-promotion',
         date: formatDate(threeDays),
         time: '18:00',
         capacity: 2,
-        status: 'open', // Changed to open so waitlist can be promoted
+        status: 'open',
         price_cents: 3000,
       },
       {
-        id: 'test-space-payment',
-        name: '💳 Payment Retry Test',
+        id: TEST_IDS.spaces.payment,
+        name: 'Payment Retry Test',
         description: 'Failed capture - triggers payment-retry',
         date: formatDate(twoDays),
         time: '20:00',
@@ -109,8 +108,8 @@ export async function POST(request: NextRequest) {
         price_cents: 3500,
       },
       {
-        id: 'test-space-digest',
-        name: '📋 Host Digest Test',
+        id: TEST_IDS.spaces.digest,
+        name: 'Host Digest Test',
         description: 'Tomorrow space - triggers host-digest',
         date: formatDate(tomorrow),
         time: '17:00',
@@ -119,8 +118,8 @@ export async function POST(request: NextRequest) {
         price_cents: 4000,
       },
       {
-        id: 'test-space-feedback',
-        name: '💬 Feedback Test',
+        id: TEST_IDS.spaces.feedback,
+        name: 'Feedback Test',
         description: 'Yesterday completed - triggers feedback-nudge',
         date: formatDate(yesterday),
         time: '19:00',
@@ -133,7 +132,7 @@ export async function POST(request: NextRequest) {
     for (const space of spaces) {
       await supabase.from('spaces').upsert({
         ...space,
-        host_id: 'test-host-001',
+        host_id: TEST_IDS.host,
         tone: 'chill',
         duration_minutes: 120,
         location_address: '123 Test St, San Francisco, CA',
@@ -142,27 +141,28 @@ export async function POST(request: NextRequest) {
     }
 
     // 4. Create invitations for each scenario
+    // Using deterministic UUIDs based on space + guest index
 
     // Gap Alert: Only 2 accepted out of 10 (20%)
     await supabase.from('invitations').upsert([
-      { id: 'inv-gap-001', space_id: 'test-space-gap-alert', user_id: 'test-guest-001', status: 'accepted', amount_cents: 2500 },
-      { id: 'inv-gap-002', space_id: 'test-space-gap-alert', user_id: 'test-guest-002', status: 'accepted', amount_cents: 2500 },
+      { id: '00000000-0000-0000-0001-000000000001', space_id: TEST_IDS.spaces.gapAlert, user_id: TEST_IDS.guests[0], status: 'accepted', amount_cents: 2500 },
+      { id: '00000000-0000-0000-0001-000000000002', space_id: TEST_IDS.spaces.gapAlert, user_id: TEST_IDS.guests[1], status: 'accepted', amount_cents: 2500 },
     ])
 
     // Waitlist: 2 accepted + 2 waitlisted (capacity = 2, so waitlist ready)
     await supabase.from('invitations').upsert([
-      { id: 'inv-wait-001', space_id: 'test-space-waitlist', user_id: 'test-guest-001', status: 'accepted', amount_cents: 3000 },
-      { id: 'inv-wait-002', space_id: 'test-space-waitlist', user_id: 'test-guest-002', status: 'accepted', amount_cents: 3000 },
-      { id: 'inv-wait-003', space_id: 'test-space-waitlist', user_id: 'test-guest-003', status: 'waitlisted', amount_cents: 3000, waitlist_position: 1 },
-      { id: 'inv-wait-004', space_id: 'test-space-waitlist', user_id: 'test-guest-004', status: 'waitlisted', amount_cents: 3000, waitlist_position: 2 },
+      { id: '00000000-0000-0000-0002-000000000001', space_id: TEST_IDS.spaces.waitlist, user_id: TEST_IDS.guests[0], status: 'accepted', amount_cents: 3000 },
+      { id: '00000000-0000-0000-0002-000000000002', space_id: TEST_IDS.spaces.waitlist, user_id: TEST_IDS.guests[1], status: 'accepted', amount_cents: 3000 },
+      { id: '00000000-0000-0000-0002-000000000003', space_id: TEST_IDS.spaces.waitlist, user_id: TEST_IDS.guests[2], status: 'waitlisted', amount_cents: 3000, waitlist_position: 1 },
+      { id: '00000000-0000-0000-0002-000000000004', space_id: TEST_IDS.spaces.waitlist, user_id: TEST_IDS.guests[3], status: 'waitlisted', amount_cents: 3000, waitlist_position: 2 },
     ])
 
     // Payment Retry: Failed capture with payment intent
     await supabase.from('invitations').upsert([
       {
-        id: 'inv-pay-001',
-        space_id: 'test-space-payment',
-        user_id: 'test-guest-005',
+        id: '00000000-0000-0000-0003-000000000001',
+        space_id: TEST_IDS.spaces.payment,
+        user_id: TEST_IDS.guests[4],
         status: 'accepted',
         amount_cents: 3500,
         stripe_payment_intent_id: 'pi_test_failed_capture_001',
@@ -173,16 +173,16 @@ export async function POST(request: NextRequest) {
 
     // Host Digest: 3 accepted guests for tomorrow's space
     await supabase.from('invitations').upsert([
-      { id: 'inv-dig-001', space_id: 'test-space-digest', user_id: 'test-guest-001', status: 'accepted', amount_cents: 4000, captured: true },
-      { id: 'inv-dig-002', space_id: 'test-space-digest', user_id: 'test-guest-002', status: 'accepted', amount_cents: 4000, captured: true },
-      { id: 'inv-dig-003', space_id: 'test-space-digest', user_id: 'test-guest-003', status: 'accepted', amount_cents: 4000, captured: true },
+      { id: '00000000-0000-0000-0004-000000000001', space_id: TEST_IDS.spaces.digest, user_id: TEST_IDS.guests[0], status: 'accepted', amount_cents: 4000, captured: true },
+      { id: '00000000-0000-0000-0004-000000000002', space_id: TEST_IDS.spaces.digest, user_id: TEST_IDS.guests[1], status: 'accepted', amount_cents: 4000, captured: true },
+      { id: '00000000-0000-0000-0004-000000000003', space_id: TEST_IDS.spaces.digest, user_id: TEST_IDS.guests[2], status: 'accepted', amount_cents: 4000, captured: true },
     ])
 
     // Feedback Nudge: Attended guests from yesterday, not yet asked for feedback
     await supabase.from('invitations').upsert([
-      { id: 'inv-fb-001', space_id: 'test-space-feedback', user_id: 'test-guest-001', status: 'accepted', amount_cents: 2000, captured: true, attended: true, feedback_requested: false },
-      { id: 'inv-fb-002', space_id: 'test-space-feedback', user_id: 'test-guest-002', status: 'accepted', amount_cents: 2000, captured: true, attended: true, feedback_requested: false },
-      { id: 'inv-fb-003', space_id: 'test-space-feedback', user_id: 'test-guest-003', status: 'accepted', amount_cents: 2000, captured: true, attended: true, feedback_requested: false },
+      { id: '00000000-0000-0000-0005-000000000001', space_id: TEST_IDS.spaces.feedback, user_id: TEST_IDS.guests[0], status: 'accepted', amount_cents: 2000, captured: true, attended: true, feedback_requested: false },
+      { id: '00000000-0000-0000-0005-000000000002', space_id: TEST_IDS.spaces.feedback, user_id: TEST_IDS.guests[1], status: 'accepted', amount_cents: 2000, captured: true, attended: true, feedback_requested: false },
+      { id: '00000000-0000-0000-0005-000000000003', space_id: TEST_IDS.spaces.feedback, user_id: TEST_IDS.guests[2], status: 'accepted', amount_cents: 2000, captured: true, attended: true, feedback_requested: false },
     ])
 
     // Count created data
@@ -229,10 +229,22 @@ export async function DELETE(request: NextRequest) {
   try {
     const supabase = createAdminClient()
 
-    // Delete in correct order (foreign key constraints)
-    await supabase.from('invitations').delete().like('id', 'inv-%')
-    await supabase.from('spaces').delete().like('id', 'test-space-%')
-    await supabase.from('users').delete().like('id', 'test-%')
+    // Delete invitations first (foreign key constraint)
+    const invIds = [
+      '00000000-0000-0000-0001-000000000001', '00000000-0000-0000-0001-000000000002',
+      '00000000-0000-0000-0002-000000000001', '00000000-0000-0000-0002-000000000002',
+      '00000000-0000-0000-0002-000000000003', '00000000-0000-0000-0002-000000000004',
+      '00000000-0000-0000-0003-000000000001',
+      '00000000-0000-0000-0004-000000000001', '00000000-0000-0000-0004-000000000002', '00000000-0000-0000-0004-000000000003',
+      '00000000-0000-0000-0005-000000000001', '00000000-0000-0000-0005-000000000002', '00000000-0000-0000-0005-000000000003',
+    ]
+    await supabase.from('invitations').delete().in('id', invIds)
+
+    // Delete spaces
+    await supabase.from('spaces').delete().in('id', Object.values(TEST_IDS.spaces))
+
+    // Delete users
+    await supabase.from('users').delete().in('id', [TEST_IDS.host, ...TEST_IDS.guests])
 
     return NextResponse.json({ message: 'Test data deleted' })
   } catch (err) {
