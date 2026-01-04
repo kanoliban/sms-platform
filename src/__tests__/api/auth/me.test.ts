@@ -109,6 +109,7 @@ describe('GET /api/auth/me', () => {
       spaces_hosted: 0,
       no_shows: 0,
       created_at: '2024-01-01T00:00:00Z',
+      onboarding_completed: true,
     }
 
     const mockSupabase = {
@@ -139,6 +140,7 @@ describe('GET /api/auth/me', () => {
       spaces_hosted: 0,
       no_shows: 0,
       created_at: '2024-01-01T00:00:00Z',
+      onboarding_completed: true,
     })
   })
 

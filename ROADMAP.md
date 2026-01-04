@@ -219,7 +219,7 @@ After Supabase is configured in production, remove demo mode code from:
 - [x] Add error boundaries to all pages (COMPLETED 2026-01-03) - Created `src/app/error.tsx` + `ErrorBoundary` component
 - [x] Add loading skeletons (COMPLETED 2026-01-03) - Created `Skeleton`, `SkeletonSpaceCard`, `PageSkeleton` components
 - [x] Add proper TypeScript strict mode (COMPLETED 2026-01-03) - Enabled noUncheckedIndexedAccess, noImplicitReturns, noFallthroughCasesInSwitch
-- [x] Add unit tests for critical paths (auth, payments) (COMPLETED 2026-01-03) - Vitest setup with 28 tests (18 auth + 10 Stripe webhook)
+- [x] Add unit tests for critical paths (auth, payments, RSVP) (COMPLETED 2026-01-03) - Vitest setup with 41 tests (18 auth + 10 Stripe + 13 RSVP)
 
 ---
 
