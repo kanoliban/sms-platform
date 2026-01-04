@@ -61,19 +61,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        {/* Preconnect to external services for faster loading */}
-        <link rel="preconnect" href="https://vxflxosenuzaakbmxbqb.supabase.co" />
-        <link rel="dns-prefetch" href="https://vxflxosenuzaakbmxbqb.supabase.co" />
-      </head>
-      <body className={`${inter.variable} font-sans antialiased bg-black text-white min-h-screen`}>
-        <AuthProvider>
-          <ToastProvider>
-            {children}
-            {process.env.NODE_ENV === 'development' && <DevToolbar />}
-          </ToastProvider>
-        </AuthProvider>
-        <Analytics />
-        {/* Google Analytics */}
+        {/* Google Analytics - must be first in head per Google's instructions */}
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-4Q8R9PDFKZ"
           strategy="afterInteractive"
@@ -86,6 +74,18 @@ export default function RootLayout({
             gtag('config', 'G-4Q8R9PDFKZ');
           `}
         </Script>
+        {/* Preconnect to external services for faster loading */}
+        <link rel="preconnect" href="https://vxflxosenuzaakbmxbqb.supabase.co" />
+        <link rel="dns-prefetch" href="https://vxflxosenuzaakbmxbqb.supabase.co" />
+      </head>
+      <body className={`${inter.variable} font-sans antialiased bg-black text-white min-h-screen`}>
+        <AuthProvider>
+          <ToastProvider>
+            {children}
+            {process.env.NODE_ENV === 'development' && <DevToolbar />}
+          </ToastProvider>
+        </AuthProvider>
+        <Analytics />
         <StructuredData />
       </body>
     </html>

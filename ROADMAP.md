@@ -1,8 +1,8 @@
 # SMS Platform - Launch Roadmap
 
 > **Last Updated:** 2026-01-03
-> **Status:** Launch-ready
-> **Next Session:** Optional - TypeScript strict mode, unit tests
+> **Status:** Launch-ready + SEO Complete
+> **Next Session:** Optional - Image optimization, content/blog strategy
 
 ---
 
@@ -205,6 +205,56 @@ To continue work, tell Claude:
 
 ---
 
+## Phase 5: SEO & Marketing
+
+### 5.1 Technical SEO Foundation
+- [x] **Status:** COMPLETED (2026-01-03)
+- **Implemented:**
+  - Favicon and metadata (`src/app/layout.tsx`)
+  - robots.txt (`public/robots.txt`)
+  - Dynamic sitemap.xml (`src/app/sitemap.xml/route.ts`)
+  - Structured data - Organization schema (`src/components/seo/structured-data.tsx`)
+  - Structured data - Event schema for spaces
+  - llms.txt for AI crawlers (`public/llms.txt`)
+  - Google Search Console verification
+  - BreadcrumbList schema for discover, help, spaces pages
+
+### 5.2 Performance & Core Web Vitals
+- [x] **Status:** COMPLETED (2026-01-03)
+- **Implemented:**
+  - Preconnect/dns-prefetch for Supabase (`src/app/layout.tsx`)
+  - Async script loading for analytics
+  - Font optimization (Inter with next/font)
+
+### 5.3 Analytics & Tracking
+- [x] **Status:** COMPLETED (2026-01-03)
+- **Implemented:**
+  - Google Analytics 4 (Measurement ID: G-4Q8R9PDFKZ)
+  - Vercel Analytics (`@vercel/analytics`)
+  - GA4 ↔ Search Console linked
+
+### 5.4 Local SEO
+- [x] **Status:** COMPLETED (2026-01-03)
+- **Implemented:**
+  - Google Business Profile (Minneapolis)
+  - FAQ schema on help page (`src/app/help/layout.tsx`)
+
+### 5.5 Future SEO Improvements (Optional)
+- [ ] Image optimization (WebP format, lazy loading, next/image optimization)
+- [ ] Page-specific OG images (design + implementation)
+- [ ] Local directory listings (Yelp, Eventbrite, Meetup)
+- [ ] Blog/content strategy for long-tail keywords
+- [ ] Backlink building and outreach
+
+### 5.6 SEO Monitoring (Ongoing)
+- [ ] Check GSC for crawl errors (weekly for first month)
+- [ ] Monitor Core Web Vitals in GSC
+- [ ] Track keyword rankings for "strangers meeting strangers" + Minneapolis events
+- [ ] Review GA4 traffic patterns and bounce rates
+- [ ] Request reviews on Google Business Profile
+
+---
+
 ## Technical Debt
 
 ### Remove Demo Fallbacks (Post-Launch)
@@ -219,7 +269,7 @@ After Supabase is configured in production, remove demo mode code from:
 - [x] Add error boundaries to all pages (COMPLETED 2026-01-03) - Created `src/app/error.tsx` + `ErrorBoundary` component
 - [x] Add loading skeletons (COMPLETED 2026-01-03) - Created `Skeleton`, `SkeletonSpaceCard`, `PageSkeleton` components
 - [x] Add proper TypeScript strict mode (COMPLETED 2026-01-03) - Enabled noUncheckedIndexedAccess, noImplicitReturns, noFallthroughCasesInSwitch
-- [x] Add unit tests for critical paths (auth, payments, RSVP) (COMPLETED 2026-01-03) - Vitest setup with 41 tests (18 auth + 10 Stripe + 13 RSVP)
+- [x] Add unit tests for critical paths (auth, payments, RSVP, invitations) (COMPLETED 2026-01-03) - Vitest setup with 64 tests
 
 ---
 
@@ -304,6 +354,14 @@ After Supabase is configured in production, remove demo mode code from:
 | Phase 2 | COMPLETE | Core host features |
 | Phase 3 | COMPLETE | Notifications system |
 | Phase 4 | COMPLETE | Polish & edge cases |
+| Phase 5 | COMPLETE | SEO & marketing foundation |
 | Tech Debt | COMPLETE | Demo fallbacks removed, error boundaries added |
 
-**Platform is launch-ready.** Optional remaining items: TypeScript strict mode, unit tests.
+**Platform is launch-ready with SEO infrastructure in place.**
+
+Optional remaining items:
+- Image optimization (WebP, lazy loading)
+- Page-specific OG images
+- Local directory listings
+- Blog/content strategy
+- Backlink building
