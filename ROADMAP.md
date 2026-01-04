@@ -174,16 +174,21 @@ To continue work, tell Claude:
 ## Phase 4: Polish & Edge Cases
 
 ### 4.1 Waitlist System
-- [ ] **Status:** Not started
-- **When:** Room reaches capacity
-- **Requires:** New table `waitlist` (room_id, user_id, position, created_at)
-- **Logic:** If spot opens (cancellation), auto-invite next on waitlist
+- [x] **Status:** COMPLETED (2026-01-03)
+- **Migration:** `006_waitlist_and_preferences.sql`
+- **API:** `src/app/api/waitlist/route.ts` (GET/POST/DELETE)
+- **Auto-promotion:** Logic in `src/app/api/invitations/[id]/route.ts`
+- **Cron:** `src/app/api/cron/waitlist-promotion/route.ts`
+- **Features:**
+  - Join waitlist when room is full
+  - Auto-promote next in line when spot opens
+  - SMS + notification on promotion
 
 ### 4.2 Settings Persistence
-- [ ] **Status:** Not started
+- [x] **Status:** COMPLETED (2026-01-03)
+- **Migration:** `006_waitlist_and_preferences.sql` (adds `preferences` JSONB column to users)
 - **File:** `src/app/settings/page.tsx`
-- **Currently:** Saves to localStorage only
-- **Fix:** Add `user_preferences` table or JSON column on users
+- **Fix:** Added `preferences` JSONB column on users table
 
 ### 4.3 Email Notifications
 - [ ] **Status:** Not started

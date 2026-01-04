@@ -1,7 +1,75 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerClient } from '@/lib/supabase/server'
-import { capturePayment } from '@/lib/stripe/client'
+import { createServerClient, createAdminClient } from '@/lib/supabase/server'
+import { capturePayment, cancelPaymentIntent } from '@/lib/stripe/client'
 import { recordTrustEvent } from '@/lib/trust/scoring'
+import { sendSms } from '@/lib/twilio/client'
+
+// Helper: Promote next person from waitlist when a spot opens
+async function promoteFromWaitlist(spaceId: string): Promise<void> {
+  const supabase = createAdminClient()
+
+  // Get room details
+  const { data: space } = await supabase
+    .from('spaces')
+    .select('id, name, capacity, status')
+    .eq('id', spaceId)
+    .single()
+
+  if (!space || space.status !== 'open') return
+
+  // Count current accepted invitations
+  const { count: acceptedCount } = await supabase
+    .from('invitations')
+    .select('*', { count: 'exact', head: true })
+    .eq('space_id', spaceId)
+    .eq('status', 'accepted')
+
+  // Only promote if there's room
+  if ((acceptedCount || 0) >= space.capacity) return
+
+  // Get next person on waitlist
+  const { data: nextWaitlist } = await supabase
+    .from('waitlist')
+    .select(`
+      *,
+      user:users (id, name, phone)
+    `)
+    .eq('room_id', spaceId)
+    .eq('status', 'waiting')
+    .order('position', { ascending: true })
+    .limit(1)
+    .single()
+
+  if (!nextWaitlist || !nextWaitlist.user) return
+
+  // Mark waitlist entry as invited
+  await supabase
+    .from('waitlist')
+    .update({
+      status: 'invited',
+      invited_at: new Date().toISOString()
+    })
+    .eq('id', nextWaitlist.id)
+
+  // Create a notification for the user
+  await supabase.from('notifications').insert({
+    user_id: nextWaitlist.user_id,
+    type: 'waitlist_promoted',
+    title: 'A spot opened up!',
+    message: `A spot has opened in "${space.name}". You're next on the waitlist!`,
+    space_id: spaceId,
+  })
+
+  // Send SMS notification
+  if (nextWaitlist.user.phone) {
+    try {
+      const message = `Great news! A spot opened up in "${space.name}" and you're next on the waitlist. RSVP now before it's gone!`
+      await sendSms(nextWaitlist.user.phone, message)
+    } catch (smsError) {
+      console.error('Failed to send waitlist promotion SMS:', smsError)
+    }
+  }
+}
 
 // GET /api/invitations/[id] - Get a single invitation
 export async function GET(
@@ -73,7 +141,7 @@ export async function PATCH(
 
     // Handle status update
     if (status !== undefined) {
-      const validStatuses = ['pending', 'sent', 'accepted', 'declined', 'expired']
+      const validStatuses = ['pending', 'sent', 'accepted', 'declined', 'expired', 'canceled']
       if (!validStatuses.includes(status)) {
         return NextResponse.json({ error: 'Invalid status' }, { status: 400 })
       }
@@ -81,6 +149,20 @@ export async function PATCH(
 
       if (status === 'accepted' || status === 'declined') {
         updates.responded_at = new Date().toISOString()
+      }
+
+      // If declining or canceling an accepted invitation, release payment hold
+      if ((status === 'declined' || status === 'canceled') && invitation.status === 'accepted') {
+        if (invitation.stripe_payment_intent_id && !invitation.captured) {
+          try {
+            await cancelPaymentIntent(invitation.stripe_payment_intent_id)
+          } catch (paymentError) {
+            console.error('Failed to cancel payment:', paymentError)
+          }
+        }
+
+        // Promote next person from waitlist
+        await promoteFromWaitlist(invitation.space_id)
       }
     }
 

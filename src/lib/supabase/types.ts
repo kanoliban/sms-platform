@@ -138,5 +138,29 @@ export interface Notification {
   created_at: string
 }
 
+export type WaitlistStatus = 'waiting' | 'invited' | 'expired' | 'canceled'
+
+export interface WaitlistEntry {
+  id: string
+  space_id: string
+  user_id: string
+  position: number
+  status: WaitlistStatus
+  invited_at: string | null
+  created_at: string
+}
+
+export interface UserPreferences {
+  notifications?: {
+    email?: boolean
+    sms?: boolean
+    push?: boolean
+  }
+  privacy?: {
+    showProfile?: boolean
+  }
+  theme?: 'light' | 'dark' | 'system'
+}
+
 // Backwards compatibility alias for Room -> Space migration
 export type Room = Space

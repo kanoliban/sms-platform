@@ -5,12 +5,32 @@
       "schedule": "*/15 * * * *"
     },
     {
+      "path": "/api/cron/gap-alerts",
+      "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/cron/waitlist-promotion",
+      "schedule": "*/15 * * * *"
+    },
+    {
+      "path": "/api/cron/payment-retry",
+      "schedule": "*/30 * * * *"
+    },
+    {
+      "path": "/api/cron/host-digest",
+      "schedule": "0 9 * * *"
+    },
+    {
+      "path": "/api/cron/feedback-nudge",
+      "schedule": "0 10 * * *"
+    },
+    {
       "path": "/api/cron/post-space",
       "schedule": "0 8 * * *"
     },
     {
       "path": "/api/cron/capture-payments",
-      "schedule": "0 9 * * *"
+      "schedule": "0 11 * * *"
     }
   ]
 }
