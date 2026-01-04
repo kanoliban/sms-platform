@@ -26,7 +26,7 @@ import {
   LoginModal,
   UserMenu,
 } from '@/components/composed';
-import { EventSchema } from '@/components/seo/structured-data';
+import { EventSchema, BreadcrumbSchema } from '@/components/seo/structured-data';
 import { useAuth } from '@/lib/auth/auth-context';
 
 type SpaceTone = 'chill' | 'playful' | 'deep' | 'intense';
@@ -802,7 +802,7 @@ export default function PublicRoomPage() {
 
   return (
     <div className="min-h-screen bg-[var(--bg-base)]">
-      {/* Event Schema for SEO */}
+      {/* SEO Schemas */}
       <EventSchema
         name={space.name}
         description={space.description || `A ${tone} social gathering hosted by ${space.host?.name || 'SMS'}`}
@@ -812,6 +812,13 @@ export default function PublicRoomPage() {
         url={`https://strangersmeetingstrangers.com/spaces/${space.id}`}
         price={space.price_cents}
         capacity={space.capacity}
+      />
+      <BreadcrumbSchema
+        items={[
+          { name: 'Home', url: 'https://strangersmeetingstrangers.com' },
+          { name: 'Discover', url: 'https://strangersmeetingstrangers.com/discover' },
+          { name: space.name, url: `https://strangersmeetingstrangers.com/spaces/${space.id}` },
+        ]}
       />
 
       {/* Demo Banner */}

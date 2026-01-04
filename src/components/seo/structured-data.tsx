@@ -114,6 +114,38 @@ interface EventSchemaProps {
   capacity?: number
 }
 
+interface BreadcrumbItem {
+  name: string
+  url: string
+}
+
+interface BreadcrumbSchemaProps {
+  items: BreadcrumbItem[]
+}
+
+export function BreadcrumbSchema({ items }: BreadcrumbSchemaProps) {
+  const schema = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: items.map((item, index) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      name: item.name,
+      item: item.url,
+    })),
+  }
+
+  return (
+    <Script
+      id="breadcrumb-schema"
+      type="application/ld+json"
+      strategy="afterInteractive"
+    >
+      {JSON.stringify(schema)}
+    </Script>
+  )
+}
+
 export function EventSchema({ name, description, startDate, endDate, location, url, price, capacity }: EventSchemaProps) {
   const schema = {
     '@context': 'https://schema.org',

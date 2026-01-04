@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Script from 'next/script'
+import { BreadcrumbSchema } from '@/components/seo/structured-data'
 
 export const metadata: Metadata = {
   title: 'Help Center',
@@ -107,6 +108,12 @@ export default function HelpLayout({
 }) {
   return (
     <>
+      <BreadcrumbSchema
+        items={[
+          { name: 'Home', url: 'https://strangersmeetingstrangers.com' },
+          { name: 'Help', url: 'https://strangersmeetingstrangers.com/help' },
+        ]}
+      />
       {children}
       <Script
         id="faq-schema"
