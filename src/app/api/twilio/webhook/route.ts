@@ -178,12 +178,24 @@ async function handleAccept(
       space_id: space.id,
     })
 
-    // Notify host
+    // Notify host via SMS
     if (space.host?.phone) {
       await sendSms(
         space.host.phone,
         `SMS: ${user.name || phone} just accepted their invitation to ${space.name}!`
       )
+    }
+
+    // Create in-app notification for host
+    if (space.host?.id) {
+      await supabase.from('notifications').insert({
+        user_id: space.host.id,
+        type: 'invite_accepted',
+        title: 'Invite Accepted',
+        message: `${user.name || 'A guest'} accepted your invite to ${space.name}`,
+        space_id: space.id,
+        actor_id: user.id,
+      })
     }
   } catch (err) {
     console.error('Payment intent creation failed:', err)

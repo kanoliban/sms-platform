@@ -200,6 +200,29 @@ async function handleCheckoutComplete(
 
   const user = invitation.user
   const space = invitation.space
+  const amountPaid = session.amount_total ? (session.amount_total / 100).toFixed(2) : '0.00'
+
+  // Create notification for the host about new registration
+  if (space?.host_id && user) {
+    await supabase.from('notifications').insert({
+      user_id: space.host_id,
+      type: 'registration',
+      title: 'New Registration',
+      message: `${user.name || 'Someone'} registered for ${space.name}`,
+      space_id: space.id,
+      actor_id: user.id,
+    })
+
+    // Also create a payment notification
+    await supabase.from('notifications').insert({
+      user_id: space.host_id,
+      type: 'payment',
+      title: 'Payment Received',
+      message: `You received $${amountPaid} from ${user.name || 'a guest'} for ${space.name}`,
+      space_id: space.id,
+      actor_id: user.id,
+    })
+  }
 
   // Check if space is now at capacity → auto-update to 'full'
   if (space.status === 'open') {
