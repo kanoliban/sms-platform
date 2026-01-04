@@ -78,7 +78,9 @@ export async function POST(request: NextRequest) {
         ) || []
 
         for (const invitation of acceptedGuests) {
-          const guest = invitation.user
+          // Supabase returns joined relations as arrays
+          const guestArr = invitation.user as { id: string; name: string | null; phone: string }[] | null
+          const guest = guestArr?.[0]
           if (!guest?.phone) continue
 
           const msg = locationRevealMessage({
