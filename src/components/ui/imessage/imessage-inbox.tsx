@@ -20,6 +20,7 @@ interface IMessageInboxProps {
   events: EventPreview[]
   onSelectEvent: (event: EventPreview) => void
   onSelectHome: () => void
+  onComposeClick?: () => void
   animate?: boolean
   loading?: boolean
 }
@@ -35,7 +36,7 @@ function getEventEmoji(title: string): string {
   return '🎉'
 }
 
-export function IMessageInbox({ events, onSelectEvent, onSelectHome, animate = false, loading = false }: IMessageInboxProps) {
+export function IMessageInbox({ events, onSelectEvent, onSelectHome, onComposeClick, animate = false, loading = false }: IMessageInboxProps) {
   const pinnedEvent: EventPreview = {
     id: 'home',
     title: 'SMS',
@@ -79,7 +80,10 @@ export function IMessageInbox({ events, onSelectEvent, onSelectHome, animate = f
           style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", sans-serif' }}>
           Messages
         </h1>
-        <button className="text-[#007aff]">
+        <button
+          onClick={onComposeClick}
+          className="text-[#007aff] active:opacity-50 transition-opacity"
+        >
           <svg className="w-[24px] h-[24px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125" />
           </svg>

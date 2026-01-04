@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, ReactNode } from 'react'
 import { IPhoneFrame } from './ui/iphone-frame'
 import {
   MessageBubble,
@@ -13,6 +13,17 @@ import {
   SignupView,
   type EventPreview
 } from './ui/imessage'
+
+// Helper to style SMS brand in messages (bold + italic)
+function styleSMSText(text: string): ReactNode {
+  const parts = text.split(/(SMS)/g)
+  return parts.map((part, i) => {
+    if (part === 'SMS') {
+      return <strong key={i} className="italic">SMS</strong>
+    }
+    return part
+  })
+}
 
 type MessageType = {
   id: string
@@ -124,6 +135,7 @@ export function SMSConversation() {
   const [selectedPath, setSelectedPath] = useState<string | null>(null)
   const [currentMessageIndex, setCurrentMessageIndex] = useState(0)
   const [showFinalOptions, setShowFinalOptions] = useState(false)
+  const [hasInitialized, setHasInitialized] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const messagesContainerRef = useRef<HTMLDivElement>(null)
 
@@ -140,9 +152,9 @@ export function SMSConversation() {
     scrollToBottom()
   }, [messages, showTyping, showOptions])
 
-  // Initial sequence
+  // Initial sequence - only runs once
   useEffect(() => {
-    if (view !== 'home') return
+    if (view !== 'home' || hasInitialized) return
 
     const timer1 = setTimeout(() => {
       setShowTyping(true)
@@ -171,6 +183,7 @@ export function SMSConversation() {
     const timer6 = setTimeout(() => {
       setShowOptions(true)
       setPhase('show_options')
+      setHasInitialized(true)
     }, 4300)
 
     return () => {
@@ -181,7 +194,7 @@ export function SMSConversation() {
       clearTimeout(timer5)
       clearTimeout(timer6)
     }
-  }, [view])
+  }, [view, hasInitialized])
 
   // Handle path-specific message sequences
   useEffect(() => {
@@ -254,6 +267,16 @@ export function SMSConversation() {
     setAnimateView(true)
     setView('home')
 
+    // Hide the CTA buttons since they already submitted
+    setPhase('initial')
+    setShowFinalOptions(false)
+    setShowOptions(false)
+
+    // Add "sent" message showing application was submitted (like a link preview)
+    const submittedMsg: MessageType = type === 'host'
+      ? { id: `submitted-${timestamp}`, text: '📋 Host Application Submitted', variant: 'sent', showTail: true }
+      : { id: `submitted-${timestamp}`, text: '🎫 Joined the Pool', variant: 'sent', showTail: true }
+
     // Confirmation messages from SMS
     const msg1: MessageType = type === 'host'
       ? { id: `confirm-${timestamp}`, text: `Got it, ${firstName}! 🙌`, variant: 'received', showTail: false }
@@ -265,7 +288,10 @@ export function SMSConversation() {
 
     const msg3: MessageType = { id: `confirm3-${timestamp}`, text: "Keep an eye on your texts.", variant: 'received', showTail: true }
 
-    // Add confirmation messages after a brief delay
+    // First add the "submitted" message immediately
+    setMessages(prev => [...prev, submittedMsg])
+
+    // Then add confirmation messages after a brief delay
     setTimeout(() => {
       setShowTyping(true)
 
@@ -281,7 +307,7 @@ export function SMSConversation() {
           }, 600)
         }, 500)
       }, 1200)
-    }, 300)
+    }, 500)
   }
 
   const handleEventRSVP = () => {
@@ -317,6 +343,21 @@ export function SMSConversation() {
     setView('inbox')
   }
 
+  const handleRestartConversation = () => {
+    // Reset conversation state
+    setMessages([])
+    setPhase('initial')
+    setShowTyping(false)
+    setShowOptions(false)
+    setSelectedPath(null)
+    setCurrentMessageIndex(0)
+    setShowFinalOptions(false)
+    setHasInitialized(false)
+    // Navigate to home and trigger the initial sequence
+    setAnimateView(true)
+    setView('home')
+  }
+
   const currentOptions = showFinalOptions
     ? [
         { id: 'host', label: 'I want to host' },
@@ -333,6 +374,7 @@ export function SMSConversation() {
             events={events}
             onSelectEvent={handleSelectEvent}
             onSelectHome={handleSelectHome}
+            onComposeClick={handleRestartConversation}
             animate={animateView}
             loading={eventsLoading}
           />
@@ -366,7 +408,7 @@ export function SMSConversation() {
                   showTail={msg.showTail}
                   animate
                 >
-                  {msg.text}
+                  {styleSMSText(msg.text)}
                 </MessageBubble>
               ))}
 
@@ -415,7 +457,18 @@ export function SMSConversation() {
               <div ref={messagesEndRef} />
             </div>
 
-            <IMessageInput />
+            <IMessageInput
+              onPlusAction={(action) => {
+                if (action === 'events') {
+                  setAnimateView(true)
+                  setView('inbox')
+                } else if (action === 'host') {
+                  handleCTAClick('host')
+                } else if (action === 'join') {
+                  handleCTAClick('attend')
+                }
+              }}
+            />
           </div>
         )}
 

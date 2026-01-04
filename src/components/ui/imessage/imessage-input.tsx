@@ -1,16 +1,68 @@
 'use client'
 
-export function IMessageInput() {
+import { useState } from 'react'
+
+interface IMessageInputProps {
+  onPlusAction?: (action: 'events' | 'host' | 'join') => void
+}
+
+export function IMessageInput({ onPlusAction }: IMessageInputProps) {
+  const [showMenu, setShowMenu] = useState(false)
+
+  const menuItems = [
+    { id: 'events' as const, icon: '📅', label: 'Browse Events' },
+    { id: 'host' as const, icon: '🏠', label: 'Host a Space' },
+    { id: 'join' as const, icon: '🎱', label: 'Join the Pool' },
+  ]
+
+  const handleMenuClick = (action: 'events' | 'host' | 'join') => {
+    setShowMenu(false)
+    onPlusAction?.(action)
+  }
+
   return (
     <div
-      className="bg-[#f6f6f6]/95 backdrop-blur-xl border-t border-[#c6c6c8] px-[8px] py-[8px] pb-[34px]"
+      className="bg-[#f6f6f6]/95 backdrop-blur-xl border-t border-[#c6c6c8] px-[8px] py-[8px] pb-[34px] relative"
       style={{
         fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif',
       }}
     >
+      {/* Plus menu popover */}
+      {showMenu && (
+        <>
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 z-10"
+            onClick={() => setShowMenu(false)}
+          />
+          {/* Menu */}
+          <div className="absolute bottom-full left-[8px] mb-[8px] bg-white rounded-[14px] shadow-lg border border-[#e5e5ea] overflow-hidden z-20 animate-slide-up">
+            {menuItems.map((item, index) => (
+              <button
+                key={item.id}
+                onClick={() => handleMenuClick(item.id)}
+                className={`w-full flex items-center gap-[12px] px-[16px] py-[12px] text-left hover:bg-[#f2f2f7] active:bg-[#e5e5ea] transition-colors ${
+                  index !== menuItems.length - 1 ? 'border-b border-[#e5e5ea]' : ''
+                }`}
+              >
+                <span className="text-[20px]">{item.icon}</span>
+                <span className="text-[17px] text-black">{item.label}</span>
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+
       <div className="flex items-end gap-[8px]">
         {/* Plus button */}
-        <button className="flex-shrink-0 w-[33px] h-[33px] rounded-full bg-[#007aff] flex items-center justify-center">
+        <button
+          onClick={() => setShowMenu(!showMenu)}
+          className={`flex-shrink-0 w-[33px] h-[33px] rounded-full flex items-center justify-center transition-all duration-200 ${
+            showMenu
+              ? 'bg-[#8e8e93] rotate-45'
+              : 'bg-[#007aff]'
+          }`}
+        >
           <svg width="20" height="20" viewBox="0 0 20 20" fill="white">
             <path d="M10 4V16M4 10H16" stroke="white" strokeWidth="2.5" strokeLinecap="round" />
           </svg>

@@ -623,7 +623,7 @@ export default function PublicRoomPage() {
                     onClick={() => setShowGetReady(!showGetReady)}
                     className="w-full flex items-center justify-between p-4 text-left hover:bg-[var(--bg-subtle)] transition-colors"
                   >
-                    <span className="font-medium text-[var(--text-primary)]">Get Ready for the Space</span>
+                    <span className="font-medium text-[var(--text-primary)]">Reminders</span>
                     <svg
                       className={`w-5 h-5 text-[var(--text-muted)] transition-transform ${showGetReady ? 'rotate-180' : ''}`}
                       fill="none"
@@ -637,62 +637,47 @@ export default function PublicRoomPage() {
 
                   {showGetReady && (
                     <div className="px-4 pb-4 border-t border-[var(--border-subtle)]">
-                      <div className="grid grid-cols-2 gap-4 pt-4">
-                        {/* Your Profile */}
+                      <div className="pt-4 space-y-3">
+                        <p className="text-[var(--text-sm)] text-[var(--text-secondary)]">
+                          We'll remind you about this space before it starts.
+                        </p>
                         <div className="space-y-2">
-                          <div className="flex items-center gap-2 text-[var(--text-sm)] text-[var(--text-secondary)]">
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                            </svg>
-                            Your Profile
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Avatar name={user?.name || 'Guest'} size="sm" />
-                            <span className="text-[var(--text-sm)] text-[var(--text-primary)]">{user?.name}</span>
-                          </div>
-                          <Link href="/profile">
-                            <Button variant="ghost" size="sm" className="w-full mt-1">
-                              Update Profile
-                            </Button>
-                          </Link>
-                        </div>
-
-                        {/* Configure Reminders */}
-                        <div className="space-y-2">
-                          <div className="flex items-center gap-2 text-[var(--text-sm)] text-[var(--text-secondary)]">
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                            </svg>
-                            Reminders
-                          </div>
-                          <div className="space-y-2">
-                            <label className="flex items-center justify-between">
+                          <label className="flex items-center justify-between py-1">
+                            <div className="flex items-center gap-2">
+                              <svg className="w-4 h-4 text-[var(--text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                              </svg>
                               <span className="text-[var(--text-sm)] text-[var(--text-primary)]">Text message</span>
-                              <button
-                                onClick={() => setReminderPrefs(p => ({ ...p, text: !p.text }))}
-                                className={`relative w-10 h-6 rounded-full transition-colors ${
-                                  reminderPrefs.text ? 'bg-[var(--primary)]' : 'bg-[var(--bg-subtle)]'
-                                }`}
-                              >
-                                <span className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${
-                                  reminderPrefs.text ? 'left-5' : 'left-1'
-                                }`} />
-                              </button>
-                            </label>
-                            <label className="flex items-center justify-between">
+                            </div>
+                            <button
+                              onClick={() => setReminderPrefs(p => ({ ...p, text: !p.text }))}
+                              className={`relative w-10 h-6 rounded-full transition-colors ${
+                                reminderPrefs.text ? 'bg-[var(--primary)]' : 'bg-[var(--bg-subtle)]'
+                              }`}
+                            >
+                              <span className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${
+                                reminderPrefs.text ? 'left-5' : 'left-1'
+                              }`} />
+                            </button>
+                          </label>
+                          <label className="flex items-center justify-between py-1">
+                            <div className="flex items-center gap-2">
+                              <svg className="w-4 h-4 text-[var(--text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                              </svg>
                               <span className="text-[var(--text-sm)] text-[var(--text-primary)]">Email</span>
-                              <button
-                                onClick={() => setReminderPrefs(p => ({ ...p, email: !p.email }))}
-                                className={`relative w-10 h-6 rounded-full transition-colors ${
-                                  reminderPrefs.email ? 'bg-[var(--primary)]' : 'bg-[var(--bg-subtle)]'
-                                }`}
-                              >
-                                <span className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${
-                                  reminderPrefs.email ? 'left-5' : 'left-1'
-                                }`} />
-                              </button>
-                            </label>
-                          </div>
+                            </div>
+                            <button
+                              onClick={() => setReminderPrefs(p => ({ ...p, email: !p.email }))}
+                              className={`relative w-10 h-6 rounded-full transition-colors ${
+                                reminderPrefs.email ? 'bg-[var(--primary)]' : 'bg-[var(--bg-subtle)]'
+                              }`}
+                            >
+                              <span className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${
+                                reminderPrefs.email ? 'left-5' : 'left-1'
+                              }`} />
+                            </button>
+                          </label>
                         </div>
                       </div>
                     </div>

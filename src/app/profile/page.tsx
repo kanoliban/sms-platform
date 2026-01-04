@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import type { User, UserIntent, TonePreference } from '@/lib/supabase/types';
@@ -109,6 +109,25 @@ export default function ProfilePage() {
 
   // Trust Score tooltip
   const [showTrustTooltip, setShowTrustTooltip] = useState(false);
+  const [tooltipPosition, setTooltipPosition] = useState<'below' | 'above'>('below');
+  const tooltipButtonRef = useRef<HTMLButtonElement>(null);
+
+  // Calculate tooltip position based on available viewport space
+  const updateTooltipPosition = useCallback(() => {
+    if (!tooltipButtonRef.current) return;
+
+    const rect = tooltipButtonRef.current.getBoundingClientRect();
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const spaceAbove = rect.top;
+    const tooltipHeight = 120; // Approximate tooltip height
+
+    // Prefer below, but use above if not enough space below
+    if (spaceBelow < tooltipHeight && spaceAbove > tooltipHeight) {
+      setTooltipPosition('above');
+    } else {
+      setTooltipPosition('below');
+    }
+  }, []);
 
   useEffect(() => {
     if (!authLoading) {
@@ -675,9 +694,16 @@ export default function ProfilePage() {
                 </h3>
                 <div className="relative">
                   <button
+                    ref={tooltipButtonRef}
                     type="button"
-                    onClick={() => setShowTrustTooltip(!showTrustTooltip)}
-                    onMouseEnter={() => setShowTrustTooltip(true)}
+                    onClick={() => {
+                      updateTooltipPosition();
+                      setShowTrustTooltip(!showTrustTooltip);
+                    }}
+                    onMouseEnter={() => {
+                      updateTooltipPosition();
+                      setShowTrustTooltip(true);
+                    }}
                     onMouseLeave={() => setShowTrustTooltip(false)}
                     className="w-4 h-4 rounded-full border border-[var(--text-muted)] text-[var(--text-muted)] flex items-center justify-center text-[10px] font-medium hover:border-[var(--text-secondary)] hover:text-[var(--text-secondary)] transition-colors"
                     aria-label="What is Trust Score?"
@@ -685,8 +711,28 @@ export default function ProfilePage() {
                     ?
                   </button>
                   {showTrustTooltip && (
-                    <div className="absolute right-0 top-full mt-2 w-64 p-3 bg-[var(--bg-elevated)] border border-[var(--border-default)] rounded-[var(--radius-lg)] shadow-[var(--shadow-xl)] z-50">
-                      <div className="absolute right-2 bottom-full w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-b-[6px] border-b-[var(--border-default)]" />
+                    <div
+                      className={`
+                        absolute z-50 w-64 sm:w-72 p-3
+                        bg-[var(--bg-elevated)] border border-[var(--border-default)]
+                        rounded-[var(--radius-lg)] shadow-[var(--shadow-xl)]
+                        ${tooltipPosition === 'below'
+                          ? 'top-full mt-2 right-0 sm:left-1/2 sm:-translate-x-1/2 sm:right-auto'
+                          : 'bottom-full mb-2 right-0 sm:left-1/2 sm:-translate-x-1/2 sm:right-auto'
+                        }
+                      `}
+                    >
+                      {/* Arrow - position changes based on tooltip position */}
+                      <div
+                        className={`
+                          absolute w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent
+                          right-2 sm:left-1/2 sm:-translate-x-1/2 sm:right-auto
+                          ${tooltipPosition === 'below'
+                            ? 'bottom-full border-b-[6px] border-b-[var(--border-default)]'
+                            : 'top-full border-t-[6px] border-t-[var(--border-default)]'
+                          }
+                        `}
+                      />
                       <p className="text-[var(--text-xs)] text-[var(--text-secondary)] leading-relaxed">
                         <strong className="text-[var(--text-primary)] block mb-1">Why Trust Score?</strong>
                         Meeting strangers requires genuine trust. This score reflects your track record in our community—showing up when you say you will, contributing positively, and helping create safe spaces for everyone. It's not about points; it's about building real connections.

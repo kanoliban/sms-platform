@@ -217,3 +217,19 @@
 .animate-slide-out-left {
   animation: slide-out-left 0.35s cubic-bezier(0.32, 0.72, 0, 1) forwards;
 }
+
+/* Slide up animation for menus and sheets */
+@keyframes slide-up {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.25s cubic-bezier(0.32, 0.72, 0, 1) forwards;
+}
