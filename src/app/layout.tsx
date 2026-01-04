@@ -58,6 +58,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        {/* Preconnect to external services for faster loading */}
+        <link rel="preconnect" href="https://vxflxosenuzaakbmxbqb.supabase.co" />
+        <link rel="dns-prefetch" href="https://vxflxosenuzaakbmxbqb.supabase.co" />
+      </head>
       <body className={`${inter.variable} font-sans antialiased bg-black text-white min-h-screen`}>
         <AuthProvider>
           <ToastProvider>
