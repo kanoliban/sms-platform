@@ -4,8 +4,9 @@ import { sendSms } from '@/lib/twilio/client'
 import { guestFeedbackRequest, hostFeedbackRequest } from '@/lib/twilio/messages'
 
 // POST /api/cron/post-space
-// Vercel Cron: runs hourly
-// Sends feedback requests after spaces complete
+// Vercel Cron: runs daily
+// 1. Updates space statuses (open/full → in_progress → completed)
+// 2. Sends feedback requests after spaces complete
 export async function POST(request: NextRequest) {
   try {
     // Verify cron secret
@@ -17,10 +18,62 @@ export async function POST(request: NextRequest) {
     const supabase = createAdminClient()
     const now = new Date()
 
-    // Find completed spaces that haven't sent feedback requests
-    // Look for spaces that ended 1-2 hours ago
-    const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000)
-    const twoHoursAgo = new Date(now.getTime() - 2 * 60 * 60 * 1000)
+    // ========================================
+    // STEP 1: Update space statuses
+    // ========================================
+
+    // Get all active spaces (open, full, confirmed, in_progress)
+    const { data: activeSpaces, error: activeError } = await supabase
+      .from('spaces')
+      .select('id, date, time, duration_minutes, status')
+      .in('status', ['open', 'full', 'confirmed', 'in_progress'])
+
+    if (activeError) {
+      console.error('Error fetching active spaces:', activeError)
+    }
+
+    let statusUpdates = { toInProgress: 0, toCompleted: 0 }
+
+    if (activeSpaces) {
+      for (const space of activeSpaces) {
+        const spaceStart = new Date(`${space.date}T${space.time}`)
+        const spaceEnd = new Date(spaceStart.getTime() + (space.duration_minutes || 120) * 60 * 1000)
+
+        if (space.status !== 'in_progress' && space.status !== 'completed') {
+          // Check if space should be in_progress
+          if (spaceStart <= now && spaceEnd > now) {
+            await supabase
+              .from('spaces')
+              .update({ status: 'in_progress' })
+              .eq('id', space.id)
+            statusUpdates.toInProgress++
+            console.log(`Space ${space.id} → in_progress`)
+          }
+          // Check if space should be completed
+          else if (spaceEnd <= now) {
+            await supabase
+              .from('spaces')
+              .update({ status: 'completed' })
+              .eq('id', space.id)
+            statusUpdates.toCompleted++
+            console.log(`Space ${space.id} → completed`)
+          }
+        }
+        // Already in_progress - check if should be completed
+        else if (space.status === 'in_progress' && spaceEnd <= now) {
+          await supabase
+            .from('spaces')
+            .update({ status: 'completed' })
+            .eq('id', space.id)
+          statusUpdates.toCompleted++
+          console.log(`Space ${space.id} → completed`)
+        }
+      }
+    }
+
+    // ========================================
+    // STEP 2: Send feedback requests
+    // ========================================
 
     // Get spaces that should have ended by now
     const { data: spaces, error } = await supabase
@@ -132,9 +185,9 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({
-      message: 'Post-space feedback requests processed',
-      processed,
-      errors,
+      message: 'Post-space processing completed',
+      statusUpdates,
+      feedbackRequests: { processed, errors },
     })
   } catch (err) {
     console.error('Post-space cron error:', err)

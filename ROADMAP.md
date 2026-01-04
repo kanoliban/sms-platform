@@ -66,7 +66,7 @@ To continue work, tell Claude:
 - **Solution:** Create middleware or wrapper component that checks `user.role === 'host'`
 
 ### 1.3 Payment Capture After Room
-- [ ] **Status:** Not started
+- [x] **Status:** COMPLETED (2026-01-03)
 - **Priority:** CRITICAL (money)
 - **Issue:** Cards are authorized via Stripe but never captured after room completion
 - **Current flow:** Guest pays → PaymentIntent created (authorize only) → Room happens → ??? (never captured)
@@ -81,7 +81,7 @@ To continue work, tell Claude:
   5. Handle no-shows (release authorization or still charge based on policy)
 
 ### 1.4 Pocket Liban Cron Job
-- [ ] **Status:** Not started
+- [x] **Status:** COMPLETED (2026-01-03)
 - **Priority:** HIGH
 - **Issue:** Host prompts are scheduled in `host_prompts` table but never sent
 - **Files:**
@@ -95,7 +95,7 @@ To continue work, tell Claude:
 - **Reference:** Message templates in `src/lib/twilio/messages.ts` lines 176-277
 
 ### 1.5 Room Status Auto-Update
-- [ ] **Status:** Not started
+- [x] **Status:** COMPLETED (2026-01-03)
 - **Priority:** HIGH
 - **Issue:** Room status never transitions automatically
 - **Add to post-room cron (`src/app/api/cron/post-room/route.ts`):**
@@ -258,7 +258,7 @@ After Supabase is configured in production, remove demo mode code from:
 | Route | File | Status |
 |-------|------|--------|
 | Auth - Send Code | `src/app/api/auth/send-code/route.ts` | Ready |
-| Auth - Verify | `src/app/api/auth/verify-code/route.ts` | Needs JWT fix |
+| Auth - Verify | `src/app/api/auth/verify-code/route.ts` | Ready |
 | Auth - Me | `src/app/api/auth/me/route.ts` | Ready |
 | Auth - Logout | `src/app/api/auth/logout/route.ts` | Ready |
 | Rooms | `src/app/api/rooms/route.ts` | Ready |
@@ -268,10 +268,10 @@ After Supabase is configured in production, remove demo mode code from:
 | Twilio Webhook | `src/app/api/twilio/webhook/route.ts` | Ready |
 | Cron - Location | `src/app/api/cron/location-reveal/route.ts` | Ready |
 | Cron - Post Room | `src/app/api/cron/post-room/route.ts` | Ready |
-| Cron - Pocket Liban | `src/app/api/cron/pocket-liban/route.ts` | **MISSING** |
-| Cron - Capture | `src/app/api/cron/capture-payments/route.ts` | **MISSING** |
-| Blasts | `src/app/api/blasts/route.ts` | **MISSING** |
-| Notifications | `src/app/api/notifications/route.ts` | **MISSING** |
+| Cron - Pocket Liban | `src/app/api/cron/pocket-liban/route.ts` | Ready |
+| Cron - Capture | `src/app/api/cron/capture-payments/route.ts` | Ready |
+| Blasts | `src/app/api/blasts/route.ts` | Ready |
+| Notifications | `src/app/api/notifications/route.ts` | Ready |
 
 ### Key Lib Files
 | Purpose | File |
