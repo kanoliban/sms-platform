@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
+import Script from 'next/script'
 import { Analytics } from '@vercel/analytics/next'
-import { GoogleAnalytics } from '@next/third-parties/google'
 import './globals.css'
 import { ToastProvider } from '@/components/ui/toast'
 import { AuthProvider } from '@/lib/auth/auth-context'
@@ -73,7 +73,19 @@ export default function RootLayout({
           </ToastProvider>
         </AuthProvider>
         <Analytics />
-        <GoogleAnalytics gaId="G-4Q8R9PDFKZ" />
+        {/* Google Analytics */}
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-4Q8R9PDFKZ"
+          strategy="afterInteractive"
+        />
+        <Script id="gtag-init" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-4Q8R9PDFKZ');
+          `}
+        </Script>
         <StructuredData />
       </body>
     </html>
