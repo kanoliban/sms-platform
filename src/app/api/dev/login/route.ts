@@ -7,8 +7,25 @@ const JWT_SECRET = new TextEncoder().encode(
   process.env.JWT_SECRET || 'dev-secret-change-in-production'
 )
 
+// Dev accounts configuration
+const DEV_ACCOUNTS = {
+  guest: [
+    { phone: '+15550000001', name: 'Alex Guest' },
+    { phone: '+15550000011', name: 'Jordan Guest' },
+    { phone: '+15550000021', name: 'Riley Guest' },
+  ],
+  host: [
+    { phone: '+15550000002', name: 'Sam Host' },
+    { phone: '+15550000012', name: 'Morgan Host' },
+    { phone: '+15550000022', name: 'Casey Host' },
+  ],
+  founder: [
+    { phone: '+15550000003', name: 'Dev Founder' },
+  ],
+} as const satisfies Record<string, Array<{ phone: string; name: string }>>
+
 // Dev-only endpoint for quick role-based login
-// POST /api/dev/login { role: 'guest' | 'host' | 'founder', name?: string }
+// POST /api/dev/login { role: 'guest' | 'guest:2' | 'host:3' | 'founder', name?: string }
 export async function POST(request: NextRequest) {
   // CRITICAL: Only allow in development
   if (process.env.NODE_ENV === 'production') {
@@ -19,32 +36,40 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const { role = 'guest', name } = await request.json()
+    const { role: roleInput = 'guest', name } = await request.json()
 
-    if (!['guest', 'host', 'founder'].includes(role)) {
+    // Parse role and variant (e.g., "guest", "guest:2", "host:3")
+    const [baseRole, variantStr] = roleInput.includes(':')
+      ? roleInput.split(':')
+      : [roleInput, '1']
+
+    if (!['guest', 'host', 'founder'].includes(baseRole)) {
       return NextResponse.json(
         { error: 'Invalid role. Must be guest, host, or founder' },
         { status: 400 }
       )
     }
 
+    const accounts = DEV_ACCOUNTS[baseRole as keyof typeof DEV_ACCOUNTS]
+    if (!accounts) {
+      return NextResponse.json(
+        { error: 'Invalid role configuration' },
+        { status: 500 }
+      )
+    }
+    const variant = Math.max(1, Math.min(parseInt(variantStr) || 1, accounts.length))
+    const account = accounts[variant - 1]
+    if (!account) {
+      return NextResponse.json(
+        { error: 'Invalid account variant' },
+        { status: 400 }
+      )
+    }
+
     const supabase = createAdminClient()
 
-    // Dev phone numbers by role
-    const devPhones: Record<string, string> = {
-      guest: '+15550000001',
-      host: '+15550000002',
-      founder: '+15550000003',
-    }
-
-    const devNames: Record<string, string> = {
-      guest: 'Dev Guest',
-      host: 'Dev Host',
-      founder: 'Dev Founder',
-    }
-
-    const phone = devPhones[role]
-    const userName = name || devNames[role]
+    const phone = account.phone
+    const userName = name || account.name
 
     // Upsert dev user
     const { data: user, error: upsertError } = await supabase
@@ -53,7 +78,7 @@ export async function POST(request: NextRequest) {
         {
           phone,
           name: userName,
-          role,
+          role: baseRole,
           trust_score_overall: 100,
           trust_status: 'active',
           onboarding_completed: true,
@@ -97,7 +122,7 @@ export async function POST(request: NextRequest) {
         role: user.role,
       },
       token, // Include token for API testing
-      message: `Logged in as ${role}: ${userName}`,
+      message: `Logged in as ${baseRole}: ${userName}`,
     })
   } catch (error) {
     console.error('Dev login error:', error)
@@ -119,12 +144,27 @@ export async function GET() {
 
   return NextResponse.json({
     message: 'Dev Login API',
-    usage: 'POST with { role: "guest" | "host" | "founder" }',
-    accounts: [
-      { role: 'guest', phone: '+15550000001', description: 'Regular user who attends spaces' },
-      { role: 'host', phone: '+15550000002', description: 'Can create and manage spaces' },
-      { role: 'founder', phone: '+15550000003', description: 'Full admin access' },
-    ],
+    usage: 'POST with { role: "guest" | "guest:2" | "host:3" | "founder" }',
+    accounts: {
+      guest: DEV_ACCOUNTS.guest.map((acc, i) => ({
+        variant: i + 1,
+        role: `guest${i > 0 ? `:${i + 1}` : ''}`,
+        ...acc,
+        description: 'Regular user who attends rooms',
+      })),
+      host: DEV_ACCOUNTS.host.map((acc, i) => ({
+        variant: i + 1,
+        role: `host${i > 0 ? `:${i + 1}` : ''}`,
+        ...acc,
+        description: 'Can create and manage rooms',
+      })),
+      founder: DEV_ACCOUNTS.founder.map((acc, i) => ({
+        variant: i + 1,
+        role: `founder${i > 0 ? `:${i + 1}` : ''}`,
+        ...acc,
+        description: 'Full admin access',
+      })),
+    },
   })
 }
 

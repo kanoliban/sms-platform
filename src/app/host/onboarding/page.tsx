@@ -21,12 +21,12 @@ function renderContent(content: string) {
   });
 }
 
-// Helper to render title with ***SMS*** as bold+italic
+// Helper to render title with SMS as bold+italic+white
 function renderTitle(title: string) {
   const parts = title.split(/(SMS)/g);
   return parts.map((part, i) => {
     if (part === 'SMS') {
-      return <strong key={i}><em>SMS</em></strong>;
+      return <strong key={i} className="text-white"><em>SMS</em></strong>;
     }
     return part;
   });
@@ -219,7 +219,7 @@ export default function HostOnboardingPage() {
   if (showPendingScreen || applicationStatus === 'pending') {
     return (
       <div className="min-h-screen bg-[var(--bg-base)]">
-        {showConfetti && <Confetti duration={3000} />}
+        {showConfetti && <Confetti duration={5000} count={300} />}
         <AppHeader />
 
         <PageContainer size="sm" className="py-24">
@@ -251,7 +251,7 @@ export default function HostOnboardingPage() {
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-[var(--primary)] mt-0.5">•</span>
-                  You&apos;ll receive an SMS and notification when approved
+                  You&apos;ll receive a text message when approved
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-[var(--primary)] mt-0.5">•</span>
@@ -326,7 +326,7 @@ export default function HostOnboardingPage() {
                     <span className={`text-[var(--text-sm)] ${
                       currentSection === index ? 'text-[var(--text-primary)] font-medium' : 'text-[var(--text-secondary)]'
                     }`}>
-                      {s.title}
+                      {renderTitle(s.title)}
                     </span>
                   </button>
                 ))}

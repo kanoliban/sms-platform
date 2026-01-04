@@ -3,6 +3,17 @@
 import { Modal } from '@/components/ui/modal'
 import { Button } from '@/components/ui'
 
+// Helper to style SMS brand in text
+function styleSMS(text: string) {
+  const parts = text.split(/(SMS)/g)
+  return parts.map((part, i) => {
+    if (part === 'SMS') {
+      return <strong key={i} className="text-white"><em>SMS</em></strong>
+    }
+    return part
+  })
+}
+
 interface HostTermsModalProps {
   open: boolean
   onClose: () => void
@@ -26,21 +37,21 @@ export function HostTermsModal({
       if (line.startsWith('# ')) {
         return (
           <h1 key={index} className="text-[var(--text-xl)] font-bold text-[var(--text-primary)] mt-6 mb-3">
-            {line.slice(2)}
+            {styleSMS(line.slice(2))}
           </h1>
         )
       }
       if (line.startsWith('## ')) {
         return (
           <h2 key={index} className="text-[var(--text-lg)] font-semibold text-[var(--text-primary)] mt-5 mb-2">
-            {line.slice(3)}
+            {styleSMS(line.slice(3))}
           </h2>
         )
       }
       if (line.startsWith('### ')) {
         return (
           <h3 key={index} className="text-[var(--text-base)] font-medium text-[var(--text-primary)] mt-4 mb-2">
-            {line.slice(4)}
+            {styleSMS(line.slice(4))}
           </h3>
         )
       }
@@ -48,7 +59,7 @@ export function HostTermsModal({
       if (line.startsWith('**') && line.endsWith('**')) {
         return (
           <p key={index} className="text-[var(--text-sm)] font-semibold text-[var(--text-secondary)] mb-2">
-            {line.slice(2, -2)}
+            {styleSMS(line.slice(2, -2))}
           </p>
         )
       }
@@ -56,7 +67,7 @@ export function HostTermsModal({
       if (line.startsWith('- ')) {
         return (
           <li key={index} className="text-[var(--text-sm)] text-[var(--text-secondary)] ml-4 mb-1">
-            {line.slice(2)}
+            {styleSMS(line.slice(2))}
           </li>
         )
       }
@@ -67,7 +78,7 @@ export function HostTermsModal({
       // Regular paragraphs
       return (
         <p key={index} className="text-[var(--text-sm)] text-[var(--text-secondary)] mb-2">
-          {line}
+          {styleSMS(line)}
         </p>
       )
     })
@@ -85,7 +96,7 @@ export function HostTermsModal({
               <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
             </svg>
           </div>
-          <span>{termsTitle}</span>
+          <span>{styleSMS(termsTitle)}</span>
         </div>
       }
       footer={

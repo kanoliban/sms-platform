@@ -6,6 +6,17 @@ import { Button } from '@/components/ui'
 import { HostTermsModal } from './host-terms-modal'
 import { SignatureModal } from './signature-modal'
 
+// Helper to style SMS brand in text
+function styleSMS(text: string) {
+  const parts = text.split(/(SMS)/g)
+  return parts.map((part, i) => {
+    if (part === 'SMS') {
+      return <strong key={i} className="text-white"><em>SMS</em></strong>
+    }
+    return part
+  })
+}
+
 export interface HostTerms {
   id: string
   version: string
@@ -167,7 +178,7 @@ export function HostApplicationFlow({
           {terms.summary && (
             <div className="p-3 bg-[var(--bg-elevated)] border border-[var(--border-subtle)] rounded-[var(--radius-md)]">
               <p className="text-[var(--text-xs)] text-[var(--text-muted)]">
-                {terms.summary}
+                {styleSMS(terms.summary)}
               </p>
             </div>
           )}
