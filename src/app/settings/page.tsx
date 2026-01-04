@@ -121,11 +121,18 @@ export default function SettingsPage() {
       .eq('id', user.id);
 
     if (error) {
-      console.error('Error saving settings:', error);
+      // Log with meaningful message
+      console.error('Error saving settings:', error.message || error.code || 'Unknown error');
+
+      // Provide helpful error message if preferences column doesn't exist
+      const description = error.code === '42703'
+        ? 'Settings storage is not configured. Please contact support.'
+        : 'There was an error saving your settings. Please try again.';
+
       addToast({
         variant: 'error',
         title: 'Failed to save',
-        description: 'There was an error saving your settings. Please try again.',
+        description,
       });
     } else {
       addToast({
