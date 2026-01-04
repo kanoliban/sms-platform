@@ -9,6 +9,7 @@ import { PageContainer, Header } from '@/components/layout';
 import { SpaceCard, EmptyState, UserMenu, LoginModal, NotificationsDropdown } from '@/components/composed';
 import { useAuth } from '@/lib/auth/auth-context';
 import { useNotifications } from '@/hooks/use-notifications';
+import { createClient } from '@/lib/supabase/client';
 
 type SpaceTone = 'chill' | 'playful' | 'deep' | 'intense';
 
@@ -18,109 +19,11 @@ type SpaceWithDetails = Space & {
   user_status: 'going' | 'invited' | 'attended' | 'missed';
 };
 
-// Check if Supabase is configured
-const isSupabaseConfigured = () => {
-  return !!(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
-};
-
-// Mock spaces for demo mode
-const MOCK_SPACES: SpaceWithDetails[] = [
-  {
-    id: 'room-1',
-    host_id: 'host-1',
-    name: 'Dinner & Deep Talks',
-    description: 'An intimate dinner for strangers who want real conversation.',
-    tone: 'deep',
-    date: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    time: '19:00',
-    duration_minutes: 180,
-    location_address: '123 Example St, Minneapolis, MN',
-    location_hint: 'Northeast Minneapolis',
-    capacity: 8,
-    price_cents: 4500,
-    status: 'open',
-    location_revealed: false,
-    feedback_requested: false,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    host: { name: 'Sarah K.' },
-    guest_count: 5,
-    user_status: 'going',
-  },
-  {
-    id: 'room-2',
-    host_id: 'host-2',
-    name: 'Strangers & Vinyl',
-    description: 'Listen to records, share stories, meet new people.',
-    tone: 'chill',
-    date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    time: '20:00',
-    duration_minutes: 120,
-    location_address: '456 Demo Ave, Minneapolis, MN',
-    location_hint: 'Uptown',
-    capacity: 12,
-    price_cents: 2500,
-    status: 'open',
-    location_revealed: false,
-    feedback_requested: false,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    host: { name: 'Marcus T.' },
-    guest_count: 8,
-    user_status: 'invited',
-  },
-  {
-    id: 'room-3',
-    host_id: 'host-3',
-    name: 'Game Night Strangers',
-    description: 'Board games and new friendships.',
-    tone: 'playful',
-    date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    time: '18:00',
-    duration_minutes: 150,
-    location_address: '789 Fun Blvd, Minneapolis, MN',
-    location_hint: 'Downtown',
-    capacity: 10,
-    price_cents: 2000,
-    status: 'completed',
-    location_revealed: true,
-    feedback_requested: true,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    host: { name: 'Alex R.' },
-    guest_count: 10,
-    user_status: 'attended',
-  },
-  {
-    id: 'room-4',
-    host_id: 'host-4',
-    name: 'Morning Coffee Club',
-    description: 'Start your day meeting new people over coffee.',
-    tone: 'chill',
-    date: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    time: '08:00',
-    duration_minutes: 90,
-    location_address: '321 Coffee St, Minneapolis, MN',
-    location_hint: 'North Loop',
-    capacity: 8,
-    price_cents: 1500,
-    status: 'completed',
-    location_revealed: true,
-    feedback_requested: true,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    host: { name: 'Jordan P.' },
-    guest_count: 7,
-    user_status: 'attended',
-  },
-];
-
 export default function MyRoomsPage() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
   const [spaces, setSpaces] = useState<SpaceWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
-  const [demoMode, setDemoMode] = useState(false);
   const [activeTab, setActiveTab] = useState('upcoming');
   const [showLoginModal, setShowLoginModal] = useState(false);
 
@@ -141,20 +44,12 @@ export default function MyRoomsPage() {
   }, [user, authLoading]);
 
   async function loadSpaces() {
-    if (!isSupabaseConfigured()) {
-      setDemoMode(true);
-      setSpaces(MOCK_SPACES);
-      setLoading(false);
-      return;
-    }
-
     // If no user, show empty state (will prompt to sign in)
     if (!user) {
       setLoading(false);
       return;
     }
 
-    const { createClient } = await import('@/lib/supabase/client');
     const supabase = createClient();
 
     // Get user's invitations with room details
@@ -248,7 +143,7 @@ export default function MyRoomsPage() {
   }
 
   // Show sign-in prompt if not authenticated
-  if (!user && !demoMode) {
+  if (!user) {
     return (
       <div className="min-h-screen bg-[var(--bg-base)]">
         <Header />
@@ -312,13 +207,6 @@ export default function MyRoomsPage() {
           </div>
         </PageContainer>
       </header>
-
-      {/* Demo Mode Banner */}
-      {demoMode && (
-        <div className="bg-[var(--warning-muted)] border-b border-[var(--warning-border)] px-6 py-3 text-center text-[var(--warning-text)] text-[var(--text-sm)]">
-          Demo Mode - Supabase not configured
-        </div>
-      )}
 
       <PageContainer size="lg" className="py-8">
         {/* Header */}

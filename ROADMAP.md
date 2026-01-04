@@ -215,15 +215,15 @@ To continue work, tell Claude:
 
 ### Remove Demo Fallbacks (Post-Launch)
 After Supabase is configured in production, remove demo mode code from:
-- [ ] `src/app/discover/page.tsx` - isSupabaseConfigured checks
-- [ ] `src/app/host/page.tsx` - MOCK_ROOMS, MOCK_HOST
-- [ ] `src/app/profile/page.tsx` - MOCK_USER
-- [ ] `src/app/my-rooms/page.tsx` - demo data
-- [ ] `src/app/settings/page.tsx` - localStorage fallback
+- [x] `src/app/discover/page.tsx` - isSupabaseConfigured checks (COMPLETED 2026-01-03)
+- [x] `src/app/host/page.tsx` - MOCK_ROOMS, MOCK_HOST (COMPLETED 2026-01-03)
+- [x] `src/app/profile/page.tsx` - MOCK_USER (COMPLETED 2026-01-03)
+- [x] `src/app/my-spaces/page.tsx` - demo data (COMPLETED 2026-01-03)
+- [x] `src/app/settings/page.tsx` - localStorage fallback → now uses database (COMPLETED 2026-01-03)
 
 ### Code Quality
-- [ ] Add error boundaries to all pages
-- [ ] Add loading skeletons (currently just "Loading..." text)
+- [x] Add error boundaries to all pages (COMPLETED 2026-01-03) - Created `src/app/error.tsx` + `ErrorBoundary` component
+- [x] Add loading skeletons (COMPLETED 2026-01-03) - Created `Skeleton`, `SkeletonSpaceCard`, `PageSkeleton` components
 - [ ] Add proper TypeScript strict mode
 - [ ] Add unit tests for critical paths (auth, payments)
 

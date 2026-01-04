@@ -130,3 +130,9 @@ export {
   LoginModal,
   type LoginModalProps,
 } from './login-modal';
+
+// Error Boundary
+export {
+  ErrorBoundary,
+  PageErrorBoundary,
+} from './error-boundary';

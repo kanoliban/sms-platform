@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { Space } from '@/lib/supabase/types';
-import { Input, Card, Button } from '@/components/ui';
+import { Input, Card, Button, Skeleton, SkeletonSpaceCard } from '@/components/ui';
 import { PageContainer } from '@/components/layout';
 import { SpaceCard, EmptyState, UserMenu, LoginModal, NotificationsDropdown } from '@/components/composed';
 import { useAuth } from '@/lib/auth/auth-context';
@@ -111,8 +111,42 @@ export default function DiscoverPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[var(--bg-base)] flex items-center justify-center">
-        <div className="text-[var(--text-secondary)]">Loading...</div>
+      <div className="min-h-screen bg-[var(--bg-base)]">
+        {/* Header skeleton */}
+        <header className="sticky top-0 z-[var(--z-header)] bg-[var(--bg-base)]/80 backdrop-blur-md border-b border-[var(--border-subtle)]">
+          <PageContainer>
+            <div className="flex justify-between items-center h-16">
+              <Skeleton className="h-8 w-16" />
+              <div className="flex gap-4">
+                <Skeleton className="h-8 w-20" />
+                <Skeleton className="h-8 w-8 rounded-full" />
+              </div>
+            </div>
+          </PageContainer>
+        </header>
+
+        <PageContainer size="lg" className="py-8">
+          <div className="space-y-6">
+            <div className="space-y-2">
+              <Skeleton className="h-10 w-1/3" />
+              <Skeleton className="h-5 w-1/2" />
+            </div>
+            <Skeleton className="h-12 w-full" />
+            <div className="flex gap-2">
+              <Skeleton className="h-10 w-24 rounded-full" />
+              <Skeleton className="h-10 w-20 rounded-full" />
+              <Skeleton className="h-10 w-24 rounded-full" />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <SkeletonSpaceCard />
+              <SkeletonSpaceCard />
+              <SkeletonSpaceCard />
+              <SkeletonSpaceCard />
+              <SkeletonSpaceCard />
+              <SkeletonSpaceCard />
+            </div>
+          </div>
+        </PageContainer>
       </div>
     );
   }

@@ -2,10 +2,11 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import type { Space, User } from '@/lib/supabase/types';
-import { Button, Card } from '@/components/ui';
+import type { Space } from '@/lib/supabase/types';
+import { Button } from '@/components/ui';
 import { PageContainer } from '@/components/layout';
 import { SpaceCard, StatsGrid, EmptyState, AppHeader } from '@/components/composed';
+import { HostGuard, useHostUser } from '@/components/auth';
 import { createClient } from '@/lib/supabase/client';
 
 type SpaceTone = 'chill' | 'playful' | 'deep' | 'intense';
@@ -15,10 +16,10 @@ type SpaceWithCounts = Space & {
   total_invited: number;
 };
 
-export default function HostDashboard() {
+function HostDashboardContent() {
+  const host = useHostUser();
   const [spaces, setSpaces] = useState<SpaceWithCounts[]>([]);
   const [loading, setLoading] = useState(true);
-  const [host, setHost] = useState<User | null>(null);
 
   useEffect(() => {
     loadData();
@@ -27,42 +28,26 @@ export default function HostDashboard() {
   async function loadData() {
     const supabase = createClient();
 
-    // For MVP, we'll use a simple phone-based lookup
-    // In production, this would use proper auth
-    const storedPhone = localStorage.getItem('sms_host_phone');
+    // Get spaces with invitation counts for the authenticated host
+    const { data: spacesData } = await supabase
+      .from('spaces')
+      .select(`
+        *,
+        invitations (
+          id,
+          status
+        )
+      `)
+      .eq('host_id', host.id)
+      .order('date', { ascending: true });
 
-    if (storedPhone) {
-      const { data: user } = await supabase
-        .from('users')
-        .select('*')
-        .eq('phone', storedPhone)
-        .single();
-
-      if (user) {
-        setHost(user);
-
-        // Get spaces with invitation counts
-        const { data: spacesData } = await supabase
-          .from('spaces')
-          .select(`
-            *,
-            invitations (
-              id,
-              status
-            )
-          `)
-          .eq('host_id', user.id)
-          .order('date', { ascending: true });
-
-        if (spacesData) {
-          const spacesWithCounts = spacesData.map((space: Space & { invitations: { id: string; status: string }[] }) => ({
-            ...space,
-            accepted_count: space.invitations?.filter((i: { status: string }) => i.status === 'accepted').length || 0,
-            total_invited: space.invitations?.length || 0,
-          }));
-          setSpaces(spacesWithCounts);
-        }
-      }
+    if (spacesData) {
+      const spacesWithCounts = spacesData.map((space: Space & { invitations: { id: string; status: string }[] }) => ({
+        ...space,
+        accepted_count: space.invitations?.filter((i: { status: string }) => i.status === 'accepted').length || 0,
+        total_invited: space.invitations?.length || 0,
+      }));
+      setSpaces(spacesWithCounts);
     }
 
     setLoading(false);
@@ -76,7 +61,7 @@ export default function HostDashboard() {
   if (loading) {
     return (
       <div className="min-h-screen bg-[var(--bg-base)] flex items-center justify-center">
-        <div className="text-[var(--text-secondary)]">Loading...</div>
+        <div className="text-[var(--text-secondary)]">Loading spaces...</div>
       </div>
     );
   }
@@ -90,7 +75,7 @@ export default function HostDashboard() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
           <div>
             <h1 className="text-[var(--text-2xl)] font-bold text-[var(--text-primary)]">
-              {host ? `Welcome back, ${host.name || 'Host'}` : 'Host Hub'}
+              Welcome back, {host.name || 'Host'}
             </h1>
             <p className="text-[var(--text-sm)] text-[var(--text-secondary)] mt-1">
               Manage your spaces and guests
@@ -186,33 +171,22 @@ export default function HostDashboard() {
                 location={space.location_hint || undefined}
                 capacity={space.capacity}
                 guestCount={space.accepted_count}
-                hostName={host?.name || 'You'}
+                hostName={host.name || 'You'}
                 href={`/host/spaces/${space.id}`}
                 isLive={space.status === 'confirmed'}
               />
             ))}
           </div>
         )}
-
-        {/* Host Onboarding (if new) */}
-        {!host && (
-          <Card className="mt-12 p-8 border-l-4 border-l-[var(--warning)]">
-            <h2 className="text-[var(--text-xl)] font-semibold mb-4 text-[var(--warning-text)]">
-              Become a Host
-            </h2>
-            <p className="text-[var(--text-secondary)] mb-6">
-              To create spaces, you'll need to complete host onboarding.
-              This includes reading the philosophy doc and understanding
-              what it means to carry the SMS brand.
-            </p>
-            <Link href="/host/onboarding">
-              <Button variant="secondary">
-                Start Onboarding
-              </Button>
-            </Link>
-          </Card>
-        )}
       </PageContainer>
     </div>
+  );
+}
+
+export default function HostDashboard() {
+  return (
+    <HostGuard>
+      <HostDashboardContent />
+    </HostGuard>
   );
 }
