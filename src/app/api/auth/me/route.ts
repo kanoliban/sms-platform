@@ -68,6 +68,8 @@ export async function GET() {
         intent: user.intent,
         user_intent: user.user_intent,
         onboarding_completed: user.onboarding_completed ?? true,
+        onboarding_skipped: user.onboarding_skipped ?? false,
+        onboarding_completed_at: user.onboarding_completed_at,
         tone_preference: user.tone_preference,
         trust_score_overall: user.trust_score_overall,
         trust_status: user.trust_status,

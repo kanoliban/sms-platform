@@ -54,6 +54,8 @@ export async function POST(request: NextRequest) {
       .update({
         user_intent: intent,
         onboarding_completed: true,
+        onboarding_skipped: skipped || false,
+        onboarding_completed_at: new Date().toISOString(),
       })
       .eq('id', userId)
 

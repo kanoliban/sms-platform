@@ -26,6 +26,7 @@ import {
   LoginModal,
   UserMenu,
 } from '@/components/composed';
+import { OnboardingReminderModal } from '@/components/modals/OnboardingReminderModal';
 import { EventSchema, BreadcrumbSchema } from '@/components/seo/structured-data';
 import { useAuth } from '@/lib/auth/auth-context';
 
@@ -123,6 +124,7 @@ export default function PublicRoomPage() {
   const [showContactModal, setShowContactModal] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [showOnboardingReminder, setShowOnboardingReminder] = useState(false);
   const [userInvitation, setUserInvitation] = useState<UserInvitation | null>(null);
   const [rsvpLoading, setRsvpLoading] = useState(false);
 
@@ -205,10 +207,16 @@ export default function PublicRoomPage() {
     }
   }
 
-  async function handleRSVP() {
+  async function handleRSVP(skipOnboardingCheck = false) {
     // If not logged in, show login modal
     if (!user) {
       setShowLoginModal(true);
+      return;
+    }
+
+    // Check if user skipped onboarding (only on first RSVP attempt)
+    if (!skipOnboardingCheck && user.onboarding_skipped && !user.onboarding_completed) {
+      setShowOnboardingReminder(true);
       return;
     }
 
@@ -258,6 +266,13 @@ export default function PublicRoomPage() {
     setTimeout(() => {
       handleRSVP();
     }, 500);
+  }
+
+  // Handle "Continue Anyway" from onboarding reminder modal
+  function handleContinueWithoutOnboarding() {
+    setShowOnboardingReminder(false);
+    // Continue with RSVP, skipping the onboarding check
+    handleRSVP(true);
   }
 
   // Generate calendar URLs
@@ -569,7 +584,7 @@ export default function PublicRoomPage() {
                 variant="primary"
                 size="lg"
                 fullWidth
-                onClick={handleRSVP}
+                onClick={() => handleRSVP()}
                 loading={rsvpLoading}
                 disabled={rsvpLoading || isPast || spotsLeft <= 0}
               >
@@ -925,6 +940,13 @@ export default function PublicRoomPage() {
         open={showLoginModal}
         onClose={() => setShowLoginModal(false)}
         onSuccess={handleLoginSuccess}
+      />
+
+      {/* Onboarding Reminder Modal */}
+      <OnboardingReminderModal
+        isOpen={showOnboardingReminder}
+        onClose={() => setShowOnboardingReminder(false)}
+        onContinueAnyway={handleContinueWithoutOnboarding}
       />
     </div>
   );

@@ -46,7 +46,6 @@ export default function Home() {
 
       {/* Ambient background elements */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        {/* Gradient orbs */}
         <div
           className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] rounded-full opacity-20 animate-float-slow"
           style={{
@@ -65,8 +64,6 @@ export default function Home() {
             background: 'radial-gradient(circle, rgba(52, 199, 89, 0.4) 0%, transparent 70%)',
           }}
         />
-
-        {/* Subtle grid pattern */}
         <div
           className="absolute inset-0 opacity-[0.02]"
           style={{
@@ -80,57 +77,38 @@ export default function Home() {
       </div>
 
       {/* Main content */}
-      <main className="relative z-10 min-h-screen flex flex-col lg:flex-row items-center justify-center gap-8 lg:gap-16 px-6 py-12 lg:py-0">
+      <main className="relative z-10 min-h-screen flex flex-col lg:flex-row items-center justify-center gap-8 lg:gap-16 px-6 py-24 lg:py-0">
         {/* Left side - Text content */}
-        <div className="max-w-md text-center lg:text-left stagger-children">
-          {/* Logo */}
-          <div className="mb-8">
-            <h1 className="font-bold italic text-5xl md:text-6xl tracking-tight">
-              SMS
-            </h1>
-            <div className="w-20 h-1 bg-white mt-3 mx-auto lg:mx-0" />
-          </div>
-
+        <div className="max-w-md text-center lg:text-left">
           {/* Tagline */}
-          <h2 className="text-2xl md:text-3xl italic opacity-90 mb-6">
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold italic tracking-tight mb-4">
             Strangers Meeting Strangers.
-          </h2>
-          <p className="text-xl md:text-2xl font-semibold mb-8">
+          </h1>
+          <p className="text-2xl md:text-3xl font-semibold mb-8">
             Hosted by You.
           </p>
 
-          {/* Description */}
-          <div className="space-y-4 text-base md:text-lg opacity-70 mb-8">
-            <p>
-              Infrastructure for human connection.
-            </p>
-            <p>
-              Text an idea. We find the strangers. They show up.
-            </p>
-          </div>
+          {/* Stats - single line */}
+          <p className="text-sm uppercase tracking-wider opacity-50 mb-8">
+            2,800+ strangers · 3.5 years · Minneapolis
+          </p>
 
-          {/* Stats */}
-          <div className="flex justify-center lg:justify-start gap-8 mb-8">
-            <div>
-              <p className="text-3xl md:text-4xl font-bold">2,800+</p>
-              <p className="text-sm uppercase tracking-wider opacity-50">strangers</p>
-            </div>
-            <div>
-              <p className="text-3xl md:text-4xl font-bold">3.5</p>
-              <p className="text-sm uppercase tracking-wider opacity-50">years</p>
-            </div>
-          </div>
-
-          {/* Philosophy pills */}
-          <div className="flex flex-wrap justify-center lg:justify-start gap-2">
-            {['Genuine', 'Not networking', 'Trust-first'].map((pill) => (
-              <span
-                key={pill}
-                className="px-4 py-2 rounded-full border border-white/20 text-sm opacity-60"
-              >
-                {pill}
-              </span>
-            ))}
+          {/* CTAs */}
+          <div className="flex flex-col sm:flex-row items-center gap-4 justify-center lg:justify-start">
+            <Button
+              size="lg"
+              onClick={() => setShowLogin(true)}
+              className="!bg-white !text-black hover:!bg-white/90 font-semibold px-8"
+            >
+              I want in
+            </Button>
+            <a
+              href="/host/onboarding"
+              className="text-white/70 hover:text-white transition-colors group"
+            >
+              Become a host
+              <span className="inline-block ml-1 group-hover:translate-x-1 transition-transform">→</span>
+            </a>
           </div>
         </div>
 
@@ -140,50 +118,57 @@ export default function Home() {
         </div>
       </main>
 
-      {/* Bottom section - Additional info */}
+      {/* Two paths section */}
       <section className="relative z-10 py-20 px-6 border-t border-white/10">
         <div className="max-w-4xl mx-auto">
           <div className="grid md:grid-cols-2 gap-12">
-            {/* For Hosts */}
-            <div className="space-y-4">
-              <h3 className="text-xl font-semibold flex items-center gap-3">
-                <span className="w-8 h-8 rounded-full bg-[#34c759] flex items-center justify-center text-sm">
-                  ✦
-                </span>
-                For Hosts
-              </h3>
-              <p className="opacity-70 leading-relaxed">
-                You have an impulse. You text it. "Dinner for 8 Saturday. $40. Creatives, no networking energy."
-                We create the gathering, find the right people, handle RSVPs and payment.
-                Strangers show up. You host. You get paid.
-              </p>
-            </div>
-
             {/* For Attendees */}
-            <div className="space-y-4">
+            <div className="space-y-6">
               <h3 className="text-xl font-semibold flex items-center gap-3">
                 <span className="w-8 h-8 rounded-full bg-amber-500/80 flex items-center justify-center text-sm">
                   ✦
                 </span>
                 For Attendees
               </h3>
-              <p className="opacity-70 leading-relaxed">
-                Tell us what you're into. Once. Then wait—not for a feed, for a text.
-                "Friday 7pm. Strangers & Vinyl. 12 people. $25. Want in?"
-                You reply yes. That's it. You show up.
-              </p>
+              <div className="space-y-4 opacity-80 leading-relaxed">
+                <p>Tell us what you're into. Once.</p>
+                <p>We'll text you when something fits.</p>
+                <p className="text-white/60 italic border-l-2 border-white/20 pl-4">
+                  "Friday 7pm. Strangers & Vinyl. 12 people. $25. Want in?"
+                </p>
+                <p>You reply yes. You show up.</p>
+              </div>
+              <Button
+                variant="outline"
+                onClick={() => setShowLogin(true)}
+                className="border-white/30 hover:bg-white/10"
+              >
+                Get invited
+              </Button>
             </div>
-          </div>
 
-          {/* Philosophy section */}
-          <div className="mt-16 text-center">
-            <p className="text-sm uppercase tracking-widest opacity-40 mb-6">What we believe</p>
-            <div className="flex flex-wrap justify-center gap-x-8 gap-y-2 text-xl md:text-2xl italic opacity-80">
-              <span>Genuine, not transactional.</span>
-              <span>•</span>
-              <span>Strangers, not networking.</span>
-              <span>•</span>
-              <span>Container, not curriculum.</span>
+            {/* For Hosts */}
+            <div className="space-y-6">
+              <h3 className="text-xl font-semibold flex items-center gap-3">
+                <span className="w-8 h-8 rounded-full bg-[#34c759] flex items-center justify-center text-sm">
+                  ✦
+                </span>
+                For Hosts
+              </h3>
+              <div className="space-y-4 opacity-80 leading-relaxed">
+                <p>You have an idea. You text it.</p>
+                <p className="text-white/60 italic border-l-2 border-white/20 pl-4">
+                  "Dinner for 8 Saturday. $40. Creatives, no networking energy."
+                </p>
+                <p>We find the strangers. They show up.</p>
+                <p>You host. You get paid.</p>
+              </div>
+              <a
+                href="/host/onboarding"
+                className="inline-flex items-center justify-center rounded-md border border-white/30 bg-transparent px-4 py-2 text-sm font-medium hover:bg-white/10 transition-colors"
+              >
+                Start hosting
+              </a>
             </div>
           </div>
         </div>

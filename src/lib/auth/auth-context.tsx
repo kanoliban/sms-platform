@@ -12,6 +12,8 @@ export interface SMSUser {
   intent: string | null
   user_intent: 'attend' | 'host' | 'both' | null
   onboarding_completed: boolean
+  onboarding_skipped: boolean
+  onboarding_completed_at: string | null
   tone_preference: string | null
   trust_score_overall: number
   trust_status: string

@@ -173,7 +173,7 @@ export function LoginModal({ open, onClose, onSuccess }: LoginModalProps) {
       open={open}
       onClose={onClose}
       size="sm"
-      title={step === 'phone' ? 'Sign in to SMS' : 'Enter verification code'}
+      title={step === 'phone' ? <>Sign in to <span className="font-bold italic">SMS</span></> : 'Enter verification code'}
       description={
         step === 'phone'
           ? "We'll send you a code to verify your phone number."

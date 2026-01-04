@@ -46,13 +46,13 @@ export function HostAuthGuard({ children }: HostAuthGuardProps) {
               </svg>
             </div>
             <h1 className="text-[var(--text-xl)] font-semibold text-[var(--text-primary)] mb-3">
-              Sign in required
+              Join <span className="font-bold italic">SMS</span>
             </h1>
             <p className="text-[var(--text-secondary)] mb-6">
-              Please sign in to access the host dashboard.
+              Enter your phone number to get started.
             </p>
             <Button variant="primary" size="lg" onClick={() => router.push('/auth/login?redirect=/host')}>
-              Sign In
+              Continue
             </Button>
           </Card>
         </PageContainer>

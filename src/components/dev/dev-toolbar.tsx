@@ -32,21 +32,25 @@ const devAccounts: Record<Role, Array<{ name: string; phone: string; variant: st
 const quickLinks = {
   guest: [
     { label: 'Discover', href: '/discover' },
-    { label: 'My Rooms', href: '/my-rooms' },
+    { label: 'My Spaces', href: '/my-spaces' },
+    { label: 'Onboarding', href: '/onboarding' },
     { label: 'Profile', href: '/profile' },
     { label: 'Become Host', href: '/host/onboarding' },
   ],
   host: [
     { label: 'Host Hub', href: '/host' },
-    { label: 'Create Room', href: '/host/rooms/new' },
+    { label: 'Create Space', href: '/host/spaces/new' },
+    { label: 'Host Onboarding', href: '/host/onboarding' },
     { label: 'Discover', href: '/discover' },
+    { label: 'Onboarding', href: '/onboarding' },
     { label: 'Profile', href: '/profile' },
   ],
   founder: [
     { label: 'Founder', href: '/founder' },
     { label: 'Host Hub', href: '/host' },
-    { label: 'Create Room', href: '/host/rooms/new' },
+    { label: 'Create Space', href: '/host/spaces/new' },
     { label: 'Discover', href: '/discover' },
+    { label: 'Onboarding', href: '/onboarding' },
   ],
 }
 
@@ -57,6 +61,7 @@ export function DevToolbar() {
   const [isMinimized, setIsMinimized] = useState(false)
   const [switching, setSwitching] = useState<string | null>(null)
   const [expandedRole, setExpandedRole] = useState<Role | null>(null)
+  const [skipOnboarding, setSkipOnboarding] = useState(false)
 
   // Don't render in production
   if (process.env.NODE_ENV === 'production') {
@@ -69,7 +74,7 @@ export function DevToolbar() {
       const res = await fetch('/api/dev/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ role: variant }),
+        body: JSON.stringify({ role: variant, onboarding_skipped: skipOnboarding }),
       })
 
       if (res.ok) {
@@ -154,7 +159,18 @@ export function DevToolbar() {
 
         {/* Account Switcher */}
         <div className="px-3 py-3 border-b border-zinc-800">
-          <div className="text-xs text-zinc-500 mb-2">Switch Account:</div>
+          <div className="flex items-center justify-between mb-2">
+            <div className="text-xs text-zinc-500">Switch Account:</div>
+            <label className="flex items-center gap-1.5 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={skipOnboarding}
+                onChange={(e) => setSkipOnboarding(e.target.checked)}
+                className="w-3 h-3 rounded border-zinc-600 bg-zinc-800 text-amber-500 focus:ring-amber-500 focus:ring-offset-0"
+              />
+              <span className="text-[10px] text-amber-400">Skip Onboarding</span>
+            </label>
+          </div>
           <div className="space-y-2">
             {(['guest', 'host', 'founder'] as Role[]).map((role) => (
               <div key={role}>

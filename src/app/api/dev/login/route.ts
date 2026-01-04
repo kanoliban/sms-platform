@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const { role: roleInput = 'guest', name } = await request.json()
+    const { role: roleInput = 'guest', name, onboarding_skipped = false } = await request.json()
 
     // Parse role and variant (e.g., "guest", "guest:2", "host:3")
     const [baseRole, variantStr] = roleInput.includes(':')
@@ -81,7 +81,8 @@ export async function POST(request: NextRequest) {
           role: baseRole,
           trust_score_overall: 100,
           trust_status: 'active',
-          onboarding_completed: true,
+          onboarding_completed: !onboarding_skipped,
+          onboarding_skipped: onboarding_skipped,
         },
         { onConflict: 'phone' }
       )
