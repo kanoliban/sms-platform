@@ -189,6 +189,23 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Story teaser section */}
+      <section className="relative z-10 py-16 px-6">
+        <div className="max-w-2xl mx-auto text-center">
+          <p className="text-sm uppercase tracking-widest opacity-40 mb-6">The Story</p>
+          <p className="text-xl md:text-2xl leading-relaxed opacity-80 mb-8">
+            I lost 90% of my life savings. I call it a purchase. This is how <span className="font-bold italic text-white">SMS</span> was born.
+          </p>
+          <a
+            href="/about"
+            className="inline-flex items-center gap-2 text-lg opacity-60 hover:opacity-100 transition-opacity group"
+          >
+            Read the full story
+            <span className="group-hover:translate-x-1 transition-transform">→</span>
+          </a>
+        </div>
+      </section>
+
       {/* Footer */}
       <footer className="relative z-10 py-12 text-center border-t border-white/10">
         <p className="text-lg italic opacity-80 mb-2">
