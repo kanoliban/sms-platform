@@ -1,5 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
+import { randomUUID } from 'crypto'
+
+// Deterministic UUIDs for test data (so we can upsert/delete them)
+const TEST_IDS = {
+  host: '00000000-0000-0000-0000-000000000001',
+  guests: [
+    '00000000-0000-0000-0000-000000000011',
+    '00000000-0000-0000-0000-000000000012',
+    '00000000-0000-0000-0000-000000000013',
+    '00000000-0000-0000-0000-000000000014',
+    '00000000-0000-0000-0000-000000000015',
+  ],
+  spaces: {
+    gapAlert: '00000000-0000-0000-0000-000000000101',
+    waitlist: '00000000-0000-0000-0000-000000000102',
+    payment: '00000000-0000-0000-0000-000000000103',
+    digest: '00000000-0000-0000-0000-000000000104',
+    feedback: '00000000-0000-0000-0000-000000000105',
+  },
+}
 
 // POST /api/dev/seed - Create test data for cron testing
 // Only works in development or with CRON_SECRET
@@ -31,7 +51,7 @@ export async function POST(request: NextRequest) {
     const { error: hostError } = await supabase
       .from('users')
       .upsert({
-        id: 'test-host-001',
+        id: TEST_IDS.host,
         phone: '+15551234567',
         email: 'testhost@example.com',
         name: 'Test Host',
@@ -43,20 +63,15 @@ export async function POST(request: NextRequest) {
     if (hostError) throw new Error(`Host creation failed: ${hostError.message}`)
 
     // 2. Create test guests
-    const guests = [
-      { id: 'test-guest-001', phone: '+15559990001', name: 'Alice Guest' },
-      { id: 'test-guest-002', phone: '+15559990002', name: 'Bob Guest' },
-      { id: 'test-guest-003', phone: '+15559990003', name: 'Carol Guest' },
-      { id: 'test-guest-004', phone: '+15559990004', name: 'Dave Guest' },
-      { id: 'test-guest-005', phone: '+15559990005', name: 'Eve Guest' },
-    ]
-
-    for (const guest of guests) {
+    const guestNames = ['Alice Guest', 'Bob Guest', 'Carol Guest', 'Dave Guest', 'Eve Guest']
+    for (let i = 0; i < guestNames.length; i++) {
       await supabase.from('users').upsert({
-        ...guest,
-        email: `${guest.name.toLowerCase().replace(' ', '')}@example.com`,
+        id: TEST_IDS.guests[i],
+        phone: `+1555999000${i + 1}`,
+        email: `${guestNames[i].toLowerCase().replace(' ', '')}@example.com`,
+        name: guestNames[i],
         role: 'guest',
-        trust_score_overall: 70 + Math.floor(Math.random() * 15),
+        trust_score_overall: 70 + (i * 3),
         trust_status: 'active',
       })
     }

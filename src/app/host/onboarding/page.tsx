@@ -55,7 +55,7 @@ const COMMITMENTS = [
 
 export default function HostOnboardingPage() {
   const router = useRouter()
-  const { user, refreshUser } = useAuth()
+  const { user, loading: authLoading, refreshUser } = useAuth()
   const { addToast } = useToast()
 
   const [currentSection, setCurrentSection] = useState(0)
@@ -119,6 +119,15 @@ export default function HostOnboardingPage() {
     } finally {
       setSubmitting(false)
     }
+  }
+
+  // Show loading while auth is initializing
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-[var(--bg-base)] flex items-center justify-center">
+        <div className="text-[var(--text-secondary)]">Loading...</div>
+      </div>
+    )
   }
 
   // Redirect if not logged in
