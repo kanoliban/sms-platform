@@ -26,6 +26,7 @@ import {
   LoginModal,
   UserMenu,
 } from '@/components/composed';
+import { EventSchema } from '@/components/seo/structured-data';
 import { useAuth } from '@/lib/auth/auth-context';
 
 type SpaceTone = 'chill' | 'playful' | 'deep' | 'intense';
@@ -796,8 +797,23 @@ export default function PublicRoomPage() {
     </div>
   );
 
+  // Calculate end date for schema
+  const endDate = new Date(spaceDate.getTime() + space.duration_minutes * 60 * 1000);
+
   return (
     <div className="min-h-screen bg-[var(--bg-base)]">
+      {/* Event Schema for SEO */}
+      <EventSchema
+        name={space.name}
+        description={space.description || `A ${tone} social gathering hosted by ${space.host?.name || 'SMS'}`}
+        startDate={spaceDate.toISOString()}
+        endDate={endDate.toISOString()}
+        location={space.location_hint || 'Minneapolis, MN'}
+        url={`https://strangersmeetingstrangers.com/spaces/${space.id}`}
+        price={space.price_cents}
+        capacity={space.capacity}
+      />
+
       {/* Demo Banner */}
       {demoMode && (
         <div className="bg-[var(--warning-muted)] border-b border-[var(--warning-border)] px-6 py-3 text-center text-[var(--warning-text)] text-[var(--text-sm)]">

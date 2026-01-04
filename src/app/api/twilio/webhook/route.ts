@@ -253,7 +253,17 @@ async function handleCancel(
   // Find accepted invitation
   const { data: invitation } = await supabase
     .from('invitations')
-    .select('*, space:spaces(*)')
+    .select(`
+      *,
+      space:spaces (
+        *,
+        host:users!spaces_host_id_fkey (
+          id,
+          name,
+          phone
+        )
+      )
+    `)
     .eq('user_id', user.id)
     .eq('status', 'accepted')
     .order('created_at', { ascending: false })
@@ -265,7 +275,7 @@ async function handleCancel(
     return twimlResponse()
   }
 
-  const space = invitation.space as Space
+  const space = invitation.space as Space & { host: Pick<User, 'id' | 'name' | 'phone'> }
   const spaceDate = new Date(`${space.date}T${space.time}`)
   const now = new Date()
   const hoursUntilSpace = (spaceDate.getTime() - now.getTime()) / (1000 * 60 * 60)
@@ -301,6 +311,18 @@ async function handleCancel(
     phone,
     `Your spot at ${space.name} has been released. No charge. Hope to see you at a future space.`
   )
+
+  // Notify host about the cancellation
+  if (space.host?.id) {
+    await supabase.from('notifications').insert({
+      user_id: space.host.id,
+      type: 'update',
+      title: 'Guest Canceled',
+      message: `${user.name || 'A guest'} canceled their spot at ${space.name}. A spot is now open.`,
+      space_id: space.id,
+      actor_id: user.id,
+    })
+  }
 
   return twimlResponse()
 }
