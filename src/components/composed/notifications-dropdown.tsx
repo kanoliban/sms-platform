@@ -3,7 +3,18 @@
 import { useState, useCallback } from 'react';
 import { Dropdown, DropdownTrigger, DropdownContent, Avatar } from '@/components/ui';
 
-export type NotificationType = 'registration' | 'invite_accepted' | 'approval_request' | 'payment' | 'reminder' | 'update';
+export type NotificationType =
+  | 'registration'
+  | 'invite_accepted'
+  | 'approval_request'
+  | 'payment'
+  | 'reminder'
+  | 'update'
+  | 'location_reveal'
+  | 'feedback'
+  | 'waitlist'
+  | 'waitlist_promoted'
+  | 'gap_alert';
 
 export interface Notification {
   id: string;
@@ -63,6 +74,32 @@ const notificationIcons: Record<NotificationType, React.ReactNode> = {
       <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
     </svg>
   ),
+  location_reveal: (
+    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
+    </svg>
+  ),
+  feedback: (
+    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" />
+    </svg>
+  ),
+  waitlist: (
+    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 010 3.75H5.625a1.875 1.875 0 010-3.75z" />
+    </svg>
+  ),
+  waitlist_promoted: (
+    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l7.5-7.5 7.5 7.5m-15 6l7.5-7.5 7.5 7.5" />
+    </svg>
+  ),
+  gap_alert: (
+    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+    </svg>
+  ),
 };
 
 const notificationColors: Record<NotificationType, { icon: string; bg: string }> = {
@@ -72,6 +109,11 @@ const notificationColors: Record<NotificationType, { icon: string; bg: string }>
   payment: { icon: 'var(--primary)', bg: 'var(--primary-muted)' },
   reminder: { icon: 'var(--secondary)', bg: 'var(--secondary-muted)' },
   update: { icon: 'var(--text-secondary)', bg: 'var(--bg-subtle)' },
+  location_reveal: { icon: 'var(--info-text)', bg: 'var(--info-muted)' },
+  feedback: { icon: 'var(--primary)', bg: 'var(--primary-muted)' },
+  waitlist: { icon: 'var(--warning-text)', bg: 'var(--warning-muted)' },
+  waitlist_promoted: { icon: 'var(--success-text)', bg: 'var(--success-muted)' },
+  gap_alert: { icon: 'var(--error-text)', bg: 'var(--error-muted)' },
 };
 
 export function NotificationsDropdown({

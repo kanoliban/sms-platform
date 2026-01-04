@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, type ReactNode } from 'react';
+import { useRouter } from 'next/navigation';
 import { Header, type HeaderProps, type NavItem } from '@/components/layout/header';
 import { NotificationsDropdown, type Notification } from './notifications-dropdown';
 import { useAuth } from '@/lib/auth/auth-context';
@@ -17,6 +18,7 @@ export function AppHeader({
   navItems,
   ...props
 }: AppHeaderProps) {
+  const router = useRouter();
   const { user } = useAuth();
   const {
     notifications,
@@ -29,14 +31,13 @@ export function AppHeader({
     markAsRead(notification.id);
     // Navigate to the relevant space if available
     if (notification.space?.id) {
-      window.location.href = `/host/spaces/${notification.space.id}`;
+      router.push(`/host/spaces/${notification.space.id}`);
     }
-  }, [markAsRead]);
+  }, [markAsRead, router]);
 
   const handleViewAll = useCallback(() => {
-    // TODO: Navigate to /notifications page when built
-    alert('View All Notifications clicked! (Notifications page coming soon)');
-  }, []);
+    router.push('/notifications');
+  }, [router]);
 
   // Default nav items for host pages
   const defaultNavItems: NavItem[] = [
