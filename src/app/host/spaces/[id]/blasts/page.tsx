@@ -600,3 +600,11 @@ function BlastsContent() {
     </div>
   );
 }
+
+export default function BlastsPage() {
+  return (
+    <HostGuard>
+      <BlastsContent />
+    </HostGuard>
+  );
+}

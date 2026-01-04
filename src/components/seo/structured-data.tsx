@@ -19,6 +19,7 @@ const organizationSchema = {
   contactPoint: {
     '@type': 'ContactPoint',
     contactType: 'customer service',
+    email: 'hello@strangersmeetingstrangers.com',
     availableLanguage: 'English',
   },
 }
@@ -47,6 +48,15 @@ const localBusinessSchema = {
     name: 'Minneapolis',
   },
   priceRange: '$$',
+  email: 'hello@strangersmeetingstrangers.com',
+  openingHoursSpecification: [
+    {
+      '@type': 'OpeningHoursSpecification',
+      dayOfWeek: ['Friday', 'Saturday', 'Sunday'],
+      opens: '18:00',
+      closes: '23:00',
+    },
+  ],
 }
 
 const webSiteSchema = {

@@ -28,73 +28,6 @@ type InvitationWithGuest = Invitation & {
   guest?: Pick<User, 'id' | 'name' | 'phone'> | null;
 };
 
-// Mock data for demo mode
-const MOCK_SPACE: SpaceWithHost = {
-  id: 'demo-1',
-  host_id: 'demo-host',
-  name: 'Dinner & Deep Talks',
-  description: 'Join us for an evening of meaningful conversations over delicious food.',
-  tone: 'deep' as SpaceTone,
-  date: new Date().toISOString().split('T')[0],
-  time: '19:00',
-  duration_minutes: 180,
-  location_address: '123 Example St, Minneapolis, MN',
-  location_hint: 'Northeast Minneapolis',
-  capacity: 8,
-  price_cents: 4500,
-  status: 'confirmed',
-  location_revealed: false,
-  feedback_requested: false,
-  created_at: new Date().toISOString(),
-  updated_at: new Date().toISOString(),
-  host: { id: 'demo-host', name: 'Liban' },
-};
-
-const MOCK_PENDING_INVITATIONS: InvitationWithGuest[] = [
-  {
-    id: 'inv-1',
-    space_id: 'demo-1',
-    user_id: 'guest-1',
-    status: 'pending',
-    created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-    sent_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-    responded_at: null,
-    stripe_payment_intent_id: null,
-    amount_cents: 4500,
-    captured: false,
-    attended: null,
-    guest: { id: 'guest-1', name: 'Sarah Chen', phone: '+16125551001' },
-  },
-  {
-    id: 'inv-2',
-    space_id: 'demo-1',
-    user_id: 'guest-2',
-    status: 'pending',
-    created_at: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
-    sent_at: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
-    responded_at: null,
-    stripe_payment_intent_id: null,
-    amount_cents: 4500,
-    captured: false,
-    attended: null,
-    guest: { id: 'guest-2', name: 'Marcus Johnson', phone: '+16125551002' },
-  },
-  {
-    id: 'inv-3',
-    space_id: 'demo-1',
-    user_id: 'guest-3',
-    status: 'pending',
-    created_at: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString(),
-    sent_at: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString(),
-    responded_at: null,
-    stripe_payment_intent_id: null,
-    amount_cents: 4500,
-    captured: false,
-    attended: null,
-    guest: { id: 'guest-3', name: 'Emily Rodriguez', phone: '+16125551003' },
-  },
-];
-
 // Format relative time
 function formatRelativeTime(dateStr: string): string {
   const date = new Date(dateStr);
@@ -199,18 +132,6 @@ function ApprovalsContent() {
   async function handleApprove(invitationId: string) {
     setProcessingIds(prev => new Set(prev).add(invitationId));
 
-    if (demoMode) {
-      await new Promise(r => setTimeout(r, 500));
-      setInvitations(prev => prev.filter(i => i.id !== invitationId));
-      setToast({ message: 'Guest approved', type: 'success' });
-      setProcessingIds(prev => {
-        const next = new Set(prev);
-        next.delete(invitationId);
-        return next;
-      });
-      return;
-    }
-
     try {
       const response = await fetch(`/api/invitations/${invitationId}`, {
         method: 'PATCH',
@@ -237,18 +158,6 @@ function ApprovalsContent() {
 
   async function handleDecline(invitationId: string) {
     setProcessingIds(prev => new Set(prev).add(invitationId));
-
-    if (demoMode) {
-      await new Promise(r => setTimeout(r, 500));
-      setInvitations(prev => prev.filter(i => i.id !== invitationId));
-      setToast({ message: 'Guest declined', type: 'success' });
-      setProcessingIds(prev => {
-        const next = new Set(prev);
-        next.delete(invitationId);
-        return next;
-      });
-      return;
-    }
 
     try {
       const response = await fetch(`/api/invitations/${invitationId}`, {
@@ -536,5 +445,13 @@ function ApprovalsContent() {
         }
       `}</style>
     </div>
+  );
+}
+
+export default function ApprovalsPage() {
+  return (
+    <HostGuard>
+      <ApprovalsContent />
+    </HostGuard>
   );
 }

@@ -544,3 +544,11 @@ function GuestListContent() {
     </div>
   );
 }
+
+export default function GuestListPage() {
+  return (
+    <HostGuard>
+      <GuestListContent />
+    </HostGuard>
+  );
+}

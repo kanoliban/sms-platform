@@ -25,28 +25,6 @@ type SpaceWithHost = Space & {
   host: Pick<User, 'id' | 'name'>;
 };
 
-// Mock data for demo mode
-const MOCK_SPACE: SpaceWithHost = {
-  id: 'demo-1',
-  host_id: 'demo-host',
-  name: 'Dinner & Deep Talks',
-  description: 'An intimate dinner for strangers who want real conversation. We gather around good food and explore topics that matter.',
-  tone: 'deep' as SpaceTone,
-  date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-  time: '19:00',
-  duration_minutes: 180,
-  location_address: '123 Example St, Minneapolis, MN',
-  location_hint: 'Northeast Minneapolis',
-  capacity: 8,
-  price_cents: 4500,
-  status: 'open',
-  location_revealed: false,
-  feedback_requested: false,
-  created_at: new Date().toISOString(),
-  updated_at: new Date().toISOString(),
-  host: { id: 'demo-host', name: 'Liban' },
-};
-
 const toneOptions: { value: SpaceTone; label: string; description: string }[] = [
   { value: 'chill', label: 'Chill', description: 'Relaxed, low-pressure vibes' },
   { value: 'playful', label: 'Playful', description: 'Fun, games, and laughter' },
@@ -141,13 +119,6 @@ function RoomSettingsContent() {
   async function handleSave() {
     setSaving(true);
 
-    if (demoMode) {
-      await new Promise(r => setTimeout(r, 500));
-      setToast({ message: 'Settings saved (demo)', type: 'success' });
-      setSaving(false);
-      return;
-    }
-
     try {
       const response = await fetch(`/api/spaces/${spaceId}`, {
         method: 'PATCH',
@@ -186,13 +157,6 @@ function RoomSettingsContent() {
 
     setSaving(true);
 
-    if (demoMode) {
-      await new Promise(r => setTimeout(r, 500));
-      setToast({ message: 'Room cancelled (demo)', type: 'success' });
-      router.push('/host');
-      return;
-    }
-
     try {
       const response = await fetch(`/api/spaces/${spaceId}`, {
         method: 'PATCH',
@@ -221,6 +185,28 @@ function RoomSettingsContent() {
     );
   }
 
+  if (unauthorized) {
+    return (
+      <div className="min-h-screen bg-[var(--bg-base)] flex items-center justify-center">
+        <div className="text-center max-w-md">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[var(--error-muted)] flex items-center justify-center">
+            <svg className="w-8 h-8 text-[var(--error)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+          <h1 className="text-[var(--text-2xl)] font-bold text-[var(--text-primary)] mb-2">Access Denied</h1>
+          <p className="text-[var(--text-secondary)] mb-6">You don&apos;t have permission to manage settings for this space.</p>
+          <button
+            onClick={() => router.push('/host')}
+            className="px-4 py-2 bg-[var(--primary)] text-white rounded-[var(--radius-md)] hover:opacity-90 transition-opacity"
+          >
+            Go to Host Hub
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   if (!space) {
     return (
       <div className="min-h-screen bg-[var(--bg-base)] flex items-center justify-center">
@@ -237,13 +223,6 @@ function RoomSettingsContent() {
   return (
     <div className="min-h-screen bg-[var(--bg-base)]">
       <AppHeader />
-
-      {/* Demo Banner */}
-      {demoMode && (
-        <div className="bg-[var(--warning-muted)] border-b border-[var(--warning-border)] px-6 py-3 text-center text-[var(--warning-text)] text-[var(--text-sm)]">
-          Demo Mode - Changes will not persist
-        </div>
-      )}
 
       <PageContainer size="md" className="py-8">
         {/* Back Link & Title */}
@@ -522,5 +501,13 @@ function RoomSettingsContent() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function RoomSettingsPage() {
+  return (
+    <HostGuard>
+      <RoomSettingsContent />
+    </HostGuard>
   );
 }

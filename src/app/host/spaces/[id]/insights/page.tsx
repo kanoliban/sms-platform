@@ -168,6 +168,28 @@ function InsightsContent() {
     );
   }
 
+  if (unauthorized) {
+    return (
+      <div className="min-h-screen bg-[var(--bg-base)] flex items-center justify-center">
+        <div className="text-center max-w-md">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[var(--error-muted)] flex items-center justify-center">
+            <svg className="w-8 h-8 text-[var(--error)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+          <h1 className="text-[var(--text-2xl)] font-bold text-[var(--text-primary)] mb-2">Access Denied</h1>
+          <p className="text-[var(--text-secondary)] mb-6">You don&apos;t have permission to view insights for this space.</p>
+          <button
+            onClick={() => router.push('/host')}
+            className="px-4 py-2 bg-[var(--primary)] text-white rounded-[var(--radius-md)] hover:opacity-90 transition-opacity"
+          >
+            Go to Host Hub
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   if (!space || !insights) {
     return (
       <div className="min-h-screen bg-[var(--bg-base)] flex items-center justify-center">
@@ -183,12 +205,6 @@ function InsightsContent() {
 
   return (
     <div className="min-h-screen bg-[var(--bg-base)]">
-      {/* Demo Banner */}
-      {demoMode && (
-        <div className="bg-[var(--warning-muted)] border-b border-[var(--warning-border)] px-6 py-3 text-center text-[var(--warning-text)] text-[var(--text-sm)]">
-          Demo Mode — Analytics data is simulated
-        </div>
-      )}
 
       {/* Header */}
       <header className="border-b border-[var(--border-subtle)] sticky top-0 bg-[var(--bg-base)]/95 backdrop-blur z-10">
@@ -464,5 +480,13 @@ function InsightsContent() {
         </div>
       </PageContainer>
     </div>
+  );
+}
+
+export default function InsightsPage() {
+  return (
+    <HostGuard>
+      <InsightsContent />
+    </HostGuard>
   );
 }
