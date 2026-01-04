@@ -119,18 +119,6 @@ export function UserMenu() {
             >
               Profile
             </Link>
-            <Link
-              href="/settings"
-              onClick={() => setOpen(false)}
-              className="
-                block px-4 py-2
-                text-[var(--text-sm)] text-[var(--text-secondary)]
-                hover:bg-[var(--bg-surface-hover)] hover:text-[var(--text-primary)]
-                transition-colors duration-[var(--duration-normal)]
-              "
-            >
-              Settings
-            </Link>
           </div>
 
           <div className="border-t border-[var(--border-subtle)] py-1">
