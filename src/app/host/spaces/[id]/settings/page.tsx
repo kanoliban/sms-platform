@@ -73,10 +73,7 @@ function RoomSettingsContent() {
 
       const { data: spaceData } = await supabase
         .from('spaces')
-        .select(`
-          *,
-          host:users!spaces_host_id_fkey (id, name)
-        `)
+        .select('*')
         .eq('id', spaceId)
         .single();
 
@@ -92,8 +89,14 @@ function RoomSettingsContent() {
         return;
       }
 
-      setSpace(spaceData as SpaceWithHost);
-      populateForm(spaceData as SpaceWithHost);
+      // Add host info from current user
+      const spaceWithHost = {
+        ...spaceData,
+        host: { id: host.id, name: host.name || '' },
+      } as SpaceWithHost;
+
+      setSpace(spaceWithHost);
+      populateForm(spaceWithHost);
     } catch (err) {
       console.error('Failed to load room:', err);
     }
