@@ -104,10 +104,12 @@ export function SpaceCard({
           <span className="w-1 h-1 rounded-full bg-[var(--text-muted)]" />
           <span>{(() => {
             // Format time like "7:00 PM" from "19:00:00" or "19:00"
-            const [hours, minutes] = time.split(':').map(Number);
-            const date = new Date();
-            date.setHours(hours, minutes);
-            return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+            const parts = time.split(':').map(Number);
+            const hours = parts[0] ?? 0;
+            const minutes = parts[1] ?? 0;
+            const d = new Date();
+            d.setHours(hours, minutes);
+            return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
           })()}</span>
         </div>
 
