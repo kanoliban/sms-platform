@@ -254,7 +254,7 @@ function HostSpaceContent() {
     { id: 'guests', label: `Guests (${invitations.length})` },
     { id: 'insights', label: 'Insights', href: `/host/spaces/${spaceId}/insights` },
     { id: 'checkin', label: 'Check-In' },
-    { id: 'settings', label: 'Settings' },
+    { id: 'settings', label: 'Settings', href: `/host/spaces/${spaceId}/settings` },
   ];
 
   return (
@@ -335,18 +335,27 @@ function HostSpaceContent() {
               {['overview', 'guests', 'insights'].map((tabId) => {
                 const tab = tabs.find(t => t.id === tabId);
                 if (!tab) return null;
-                return (
-                  <button
-                    key={tab.id}
-                    onClick={() => tab.href ? undefined : setActiveTab(tab.id)}
+
+                const buttonContent = (
+                  <span
                     className={`
-                      px-2 py-2 text-[var(--text-xs)] font-medium rounded-[var(--radius-md)] transition-colors
+                      block px-2 py-2 text-[var(--text-xs)] font-medium rounded-[var(--radius-md)] transition-colors text-center
                       ${activeTab === tab.id
                         ? 'bg-[var(--primary-muted)] text-[var(--primary-light)]'
                         : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-subtle)]'}
                     `}
                   >
                     {tab.label}
+                  </span>
+                );
+
+                return tab.href ? (
+                  <Link key={tab.id} href={tab.href}>
+                    {buttonContent}
+                  </Link>
+                ) : (
+                  <button key={tab.id} onClick={() => setActiveTab(tab.id)}>
+                    {buttonContent}
                   </button>
                 );
               })}
@@ -355,18 +364,27 @@ function HostSpaceContent() {
               {['checkin', 'settings'].map((tabId) => {
                 const tab = tabs.find(t => t.id === tabId);
                 if (!tab) return null;
-                return (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
+
+                const buttonContent = (
+                  <span
                     className={`
-                      px-2 py-2 text-[var(--text-xs)] font-medium rounded-[var(--radius-md)] transition-colors
+                      block px-2 py-2 text-[var(--text-xs)] font-medium rounded-[var(--radius-md)] transition-colors text-center
                       ${activeTab === tab.id
                         ? 'bg-[var(--primary-muted)] text-[var(--primary-light)]'
                         : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-subtle)]'}
                     `}
                   >
                     {tab.label}
+                  </span>
+                );
+
+                return tab.href ? (
+                  <Link key={tab.id} href={tab.href}>
+                    {buttonContent}
+                  </Link>
+                ) : (
+                  <button key={tab.id} onClick={() => setActiveTab(tab.id)}>
+                    {buttonContent}
                   </button>
                 );
               })}
@@ -405,28 +423,29 @@ function HostSpaceContent() {
               <Button
                 variant="secondary"
                 size="sm"
-                className="flex-1"
+                className="flex-1 !inline-flex !items-center !justify-center whitespace-nowrap"
                 onClick={() => setActiveTab('guests')}
               >
-                <svg className="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <svg className="w-4 h-4 mr-1.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                 </svg>
-                Invite
+                <span>Invite</span>
               </Button>
               <Button
                 variant="secondary"
                 size="sm"
-                className="flex-1"
+                className="flex-1 !inline-flex !items-center !justify-center whitespace-nowrap"
                 onClick={() => setActiveTab('checkin')}
               >
-                <svg className="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <svg className="w-4 h-4 mr-1.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 013.75 9.375v-4.5z" />
                 </svg>
-                Check-In
+                <span>Check-In</span>
               </Button>
               <Button
                 variant="ghost"
                 size="sm"
+                className="!px-3"
                 onClick={() => setShowShareModal(true)}
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -766,55 +785,7 @@ function HostSpaceContent() {
           </div>
         )}
 
-        {/* Settings Tab */}
-        {activeTab === 'settings' && (
-          <div className="max-w-2xl space-y-6">
-            {/* Contract Preview */}
-            <Card className="p-6">
-              <h2 className="text-[var(--text-lg)] font-semibold text-[var(--text-primary)] mb-4">Invite Message Preview</h2>
-              <div className="p-4 bg-[var(--bg-subtle)] rounded-[var(--radius-lg)] font-mono text-[var(--text-sm)] text-[var(--text-secondary)] whitespace-pre-wrap">
-{`SMS ROOM INVITATION
-
-You're invited to: ${space.name}
-Hosted by: ${host.name || 'SMS Host'}
-${new Date(space.date).toLocaleDateString('en-US', {
-  weekday: 'short',
-  month: 'short',
-  day: 'numeric',
-})} at ${spaceDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })} · ${space.location_hint || 'Location TBA'}
-
-This is a space where strangers meet with intention.
-
-BY ACCEPTING, YOU COMMIT TO:
-• Confidentiality - what's shared stays here
-• Presence - phone away, attention here
-• Non-transactional - no networking
-
-Your card will be charged $${(space.price_cents / 100).toFixed(0)} only after you attend.
-
-Reply ACCEPT to join or DECLINE to pass.
-
-Cancel 48+ hours before: no charge.`}
-              </div>
-            </Card>
-
-            {/* Danger Zone */}
-            {space.status !== 'completed' && space.status !== 'canceled' && (
-              <Card className="p-6 border-[var(--error-border)]">
-                <h2 className="text-[var(--text-lg)] font-semibold text-[var(--error-text)] mb-4">Danger Zone</h2>
-                <p className="text-[var(--text-sm)] text-[var(--text-secondary)] mb-4">
-                  Canceling this space will notify all invited guests and cannot be undone.
-                </p>
-                <Button
-                  variant="destructive"
-                  onClick={() => updateSpaceStatus('canceled')}
-                >
-                  Cancel Room
-                </Button>
-              </Card>
-            )}
-          </div>
-        )}
+        {/* Settings Tab - redirects to dedicated settings page */}
       </PageContainer>
 
       {/* Share Room Modal */}
