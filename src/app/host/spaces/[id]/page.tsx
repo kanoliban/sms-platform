@@ -18,7 +18,6 @@ import {
 } from '@/components/ui';
 import { PageContainer } from '@/components/layout';
 import {
-  StatsGrid,
   GuestRow,
   NoGuestsEmptyState,
   ShareSpaceModal,
@@ -301,37 +300,37 @@ function HostSpaceContent() {
 
       {/* Room Header */}
       <div className={`bg-gradient-to-r ${toneInfo.gradient} border-b border-[var(--border-subtle)]`}>
-        <PageContainer className="py-6">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div>
-              <div className="flex items-center gap-3 mb-2">
-                <h1 className="text-[var(--text-2xl)] font-bold text-[var(--text-primary)]">{space.name}</h1>
-                <Badge variant={statusBadgeVariant} size="md">{space.status}</Badge>
+        <PageContainer className="py-4 md:py-6">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between md:gap-4">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 mb-1">
+                <h1 className="text-[var(--text-xl)] md:text-[var(--text-2xl)] font-bold text-[var(--text-primary)] truncate">{space.name}</h1>
+                <Badge variant={statusBadgeVariant} size="sm">{space.status}</Badge>
               </div>
-              <p className="text-[var(--text-secondary)] text-[var(--text-sm)]">
-                {spaceDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })} at {spaceDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
+              <p className="text-[var(--text-secondary)] text-[var(--text-xs)] md:text-[var(--text-sm)]">
+                {spaceDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })} at {spaceDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
                 {' · '}{space.location_hint || 'Location set'}
-                {' · '}<span className="capitalize">{tone}</span> vibe
+                {' · '}<span className="capitalize">{tone}</span>
               </p>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 md:gap-3">
               {space.status === 'draft' && (
-                <Button variant="primary" onClick={() => updateSpaceStatus('open')}>
+                <Button variant="primary" size="sm" className="md:!text-base md:!px-4 md:!py-2" onClick={() => updateSpaceStatus('open')}>
                   Open for Invites
                 </Button>
               )}
               {space.status === 'open' && isRoomFull && (
-                <Button variant="secondary" onClick={() => updateSpaceStatus('full')}>
+                <Button variant="secondary" size="sm" onClick={() => updateSpaceStatus('full')}>
                   Mark as Full
                 </Button>
               )}
               {(space.status === 'open' || space.status === 'full') && (
-                <Button variant="primary" onClick={() => updateSpaceStatus('confirmed')}>
+                <Button variant="primary" size="sm" onClick={() => updateSpaceStatus('confirmed')}>
                   Confirm Room
                 </Button>
               )}
               {space.status === 'confirmed' && (
-                <Button variant="primary" onClick={() => updateSpaceStatus('completed')}>
+                <Button variant="primary" size="sm" onClick={() => updateSpaceStatus('completed')}>
                   Mark Completed
                 </Button>
               )}
@@ -340,9 +339,9 @@ function HostSpaceContent() {
         </PageContainer>
       </div>
 
-      {/* Tabs */}
-      <div className="border-b border-[var(--border-subtle)]">
-        <PageContainer>
+      {/* Tabs - Horizontally scrollable on mobile */}
+      <div className="border-b border-[var(--border-subtle)] overflow-x-auto">
+        <PageContainer className="min-w-max">
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList variant="underline">
               {tabs.map((tab) => (
@@ -364,146 +363,230 @@ function HostSpaceContent() {
       </div>
 
       {/* Main Content */}
-      <PageContainer className="py-8">
+      <PageContainer className="py-4 md:py-8">
         {/* Overview Tab */}
         {activeTab === 'overview' && (
-          <div className="grid gap-6 lg:grid-cols-3">
-            {/* Left Column - Stats */}
-            <div className="lg:col-span-2 space-y-6">
-              {/* Guest Summary Card */}
-              <Card className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-[var(--text-lg)] font-semibold text-[var(--text-primary)]">Guests</h2>
-                  <span className="text-[var(--text-sm)] text-[var(--text-muted)]">cap {space.capacity}</span>
-                </div>
+          <div className="space-y-4 md:space-y-6">
+            {/* Mobile: Quick Actions Row - shown first on mobile */}
+            <div className="flex gap-2 md:hidden">
+              <Button
+                variant="secondary"
+                size="sm"
+                className="flex-1"
+                onClick={() => setActiveTab('guests')}
+              >
+                <svg className="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                </svg>
+                Invite
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                className="flex-1"
+                onClick={() => setActiveTab('checkin')}
+              >
+                <svg className="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 013.75 9.375v-4.5z" />
+                </svg>
+                Check-In
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowShareModal(true)}
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                </svg>
+              </Button>
+            </div>
 
-                <div className="mb-4">
-                  <div className="flex items-center justify-between text-[var(--text-sm)] mb-2">
-                    <span className="text-[var(--text-primary)] font-medium">{acceptedCount} confirmed</span>
-                    <span className="text-[var(--text-muted)]">{space.capacity - acceptedCount} spots left</span>
+            {/* Desktop: 3-column grid / Mobile: stacked */}
+            <div className="grid gap-4 md:gap-6 lg:grid-cols-3">
+              {/* Left Column - Stats */}
+              <div className="lg:col-span-2 space-y-4 md:space-y-6">
+                {/* Guest Summary Card - Compact on mobile */}
+                <Card className="p-4 md:p-6">
+                  <div className="flex items-center justify-between mb-3 md:mb-4">
+                    <h2 className="text-[var(--text-base)] md:text-[var(--text-lg)] font-semibold text-[var(--text-primary)]">Guests</h2>
+                    <span className="text-[var(--text-xs)] md:text-[var(--text-sm)] text-[var(--text-muted)]">cap {space.capacity}</span>
                   </div>
-                  <Progress value={(acceptedCount / space.capacity) * 100} size="sm" />
-                </div>
 
-                <div className="flex gap-4 text-[var(--text-sm)]">
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-[var(--success-text)]" />
-                    <span className="text-[var(--text-secondary)]">{acceptedCount} Going</span>
+                  <div className="mb-3 md:mb-4">
+                    <div className="flex items-center justify-between text-[var(--text-xs)] md:text-[var(--text-sm)] mb-2">
+                      <span className="text-[var(--text-primary)] font-medium">{acceptedCount} confirmed</span>
+                      <span className="text-[var(--text-muted)]">{space.capacity - acceptedCount} spots left</span>
+                    </div>
+                    <Progress value={(acceptedCount / space.capacity) * 100} size="sm" />
                   </div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-[var(--info-text)]" />
-                    <span className="text-[var(--text-secondary)]">{sentCount} Invited</span>
-                  </div>
-                  {pendingCount > 0 && (
+
+                  <div className="flex gap-3 md:gap-4 text-[var(--text-xs)] md:text-[var(--text-sm)]">
                     <div className="flex items-center gap-1.5">
-                      <span className="w-2 h-2 rounded-full bg-[var(--warning-text)]" />
-                      <span className="text-[var(--text-secondary)]">{pendingCount} Pending</span>
+                      <span className="w-2 h-2 rounded-full bg-[var(--success-text)]" />
+                      <span className="text-[var(--text-secondary)]">{acceptedCount} Going</span>
                     </div>
-                  )}
-                </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-[var(--info-text)]" />
+                      <span className="text-[var(--text-secondary)]">{sentCount} Invited</span>
+                    </div>
+                    {pendingCount > 0 && (
+                      <div className="flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-[var(--warning-text)]" />
+                        <span className="text-[var(--text-secondary)]">{pendingCount} Pending</span>
+                      </div>
+                    )}
+                  </div>
 
-                {invitations.length > 0 && (
-                  <div className="mt-6 pt-6 border-t border-[var(--border-subtle)]">
-                    <div className="flex items-center justify-between mb-3">
-                      <h3 className="text-[var(--text-sm)] font-medium text-[var(--text-muted)]">Recent Guests</h3>
-                      <button
-                        onClick={() => setActiveTab('guests')}
-                        className="text-[var(--text-sm)] text-[var(--primary-light)] hover:underline"
-                      >
-                        All Guests →
-                      </button>
-                    </div>
-                    <div className="space-y-2">
-                      {invitations.slice(0, 3).map((inv) => (
-                        <div key={inv.id} className="flex items-center justify-between py-2">
-                          <div className="flex items-center gap-3">
-                            <Avatar name={inv.user?.name || inv.user?.phone || 'Guest'} size="sm" />
-                            <div>
-                              <div className="text-[var(--text-sm)] font-medium text-[var(--text-primary)]">
-                                {inv.user?.name || inv.user?.phone}
-                              </div>
-                              <div className="text-[var(--text-xs)] text-[var(--text-muted)]">
-                                {inv.user?.phone}
+                  {/* Recent Guests - Hidden on mobile to save space, show on md+ */}
+                  {invitations.length > 0 && (
+                    <div className="hidden md:block mt-6 pt-6 border-t border-[var(--border-subtle)]">
+                      <div className="flex items-center justify-between mb-3">
+                        <h3 className="text-[var(--text-sm)] font-medium text-[var(--text-muted)]">Recent Guests</h3>
+                        <button
+                          onClick={() => setActiveTab('guests')}
+                          className="text-[var(--text-sm)] text-[var(--primary-light)] hover:underline"
+                        >
+                          All Guests →
+                        </button>
+                      </div>
+                      <div className="space-y-2">
+                        {invitations.slice(0, 3).map((inv) => (
+                          <div key={inv.id} className="flex items-center justify-between py-2">
+                            <div className="flex items-center gap-3">
+                              <Avatar name={inv.user?.name || inv.user?.phone || 'Guest'} size="sm" />
+                              <div>
+                                <div className="text-[var(--text-sm)] font-medium text-[var(--text-primary)]">
+                                  {inv.user?.name || inv.user?.phone}
+                                </div>
+                                <div className="text-[var(--text-xs)] text-[var(--text-muted)]">
+                                  {inv.user?.phone}
+                                </div>
                               </div>
                             </div>
+                            <Badge variant={statusToBadgeVariant[inv.status] || 'default'} size="sm">
+                              {inv.status === 'accepted' ? 'Going' : inv.status}
+                            </Badge>
                           </div>
-                          <Badge variant={statusToBadgeVariant[inv.status] || 'default'} size="sm">
-                            {inv.status === 'accepted' ? 'Going' : inv.status}
-                          </Badge>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Mobile: Simple link to guests tab */}
+                  {invitations.length > 0 && (
+                    <button
+                      onClick={() => setActiveTab('guests')}
+                      className="md:hidden mt-3 text-[var(--text-xs)] text-[var(--primary-light)] hover:underline"
+                    >
+                      View all {invitations.length} guests →
+                    </button>
+                  )}
+                </Card>
+
+                {/* Stats Grid - 2x2 on mobile, 4 cols on desktop */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+                  <Card className="p-3 md:p-4">
+                    <div className="text-[var(--text-lg)] md:text-[var(--text-xl)] font-bold text-[var(--text-primary)]">
+                      ${(space.price_cents / 100).toFixed(0)}
+                    </div>
+                    <div className="text-[var(--text-xs)] text-[var(--text-muted)]">Price</div>
+                  </Card>
+                  <Card className="p-3 md:p-4">
+                    <div className="text-[var(--text-lg)] md:text-[var(--text-xl)] font-bold text-[var(--text-primary)]">
+                      {space.duration_minutes / 60}h
+                    </div>
+                    <div className="text-[var(--text-xs)] text-[var(--text-muted)]">Duration</div>
+                  </Card>
+                  <Card className="p-3 md:p-4">
+                    <div className="text-[var(--text-lg)] md:text-[var(--text-xl)] font-bold text-[var(--text-primary)]">
+                      {acceptedCount}
+                    </div>
+                    <div className="text-[var(--text-xs)] text-[var(--text-muted)]">Confirmed</div>
+                  </Card>
+                  <Card className="p-3 md:p-4">
+                    <div className="text-[var(--text-lg)] md:text-[var(--text-xl)] font-bold text-[var(--text-primary)]">
+                      ${((acceptedCount * space.price_cents) / 100).toFixed(0)}
+                    </div>
+                    <div className="text-[var(--text-xs)] text-[var(--text-muted)]">Est. Revenue</div>
+                  </Card>
+                </div>
+              </div>
+
+              {/* Right Column - Quick Actions (hidden on mobile, shown as row above) */}
+              <div className="hidden md:block space-y-6">
+                {/* Quick Actions */}
+                <Card className="p-6">
+                  <h2 className="text-[var(--text-lg)] font-semibold text-[var(--text-primary)] mb-4">Quick Actions</h2>
+                  <div className="space-y-3">
+                    <Button
+                      variant="secondary"
+                      fullWidth
+                      onClick={() => setActiveTab('guests')}
+                    >
+                      <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                      </svg>
+                      Invite Guests
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      fullWidth
+                      onClick={() => setActiveTab('checkin')}
+                    >
+                      <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 013.75 9.375v-4.5z" />
+                      </svg>
+                      Check-In Mode
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      fullWidth
+                      onClick={() => setShowShareModal(true)}
+                    >
+                      <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                      </svg>
+                      Share Room
+                    </Button>
+                  </div>
+                </Card>
+
+                {/* Space Details */}
+                <Card className="p-6">
+                  <h2 className="text-[var(--text-lg)] font-semibold text-[var(--text-primary)] mb-4">Details</h2>
+                  <div className="space-y-4 text-[var(--text-sm)]">
+                    <div>
+                      <div className="text-[var(--text-muted)] mb-1">Location</div>
+                      <div className="text-[var(--text-primary)]">{space.location_hint || 'Location set'}</div>
+                      <div className="text-[var(--text-secondary)] text-[var(--text-xs)]">{space.location_address}</div>
+                    </div>
+                    <div>
+                      <div className="text-[var(--text-muted)] mb-1">Description</div>
+                      <div className="text-[var(--text-secondary)]">{space.description || 'No description'}</div>
                     </div>
                   </div>
+                </Card>
+              </div>
+            </div>
+
+            {/* Mobile: Details section at bottom */}
+            <Card className="md:hidden p-4">
+              <h2 className="text-[var(--text-base)] font-semibold text-[var(--text-primary)] mb-3">Details</h2>
+              <div className="space-y-3 text-[var(--text-sm)]">
+                <div>
+                  <div className="text-[var(--text-muted)] text-[var(--text-xs)]">Location</div>
+                  <div className="text-[var(--text-primary)]">{space.location_hint || 'Location set'}</div>
+                  <div className="text-[var(--text-secondary)] text-[var(--text-xs)]">{space.location_address}</div>
+                </div>
+                {space.description && (
+                  <div>
+                    <div className="text-[var(--text-muted)] text-[var(--text-xs)]">Description</div>
+                    <div className="text-[var(--text-secondary)]">{space.description}</div>
+                  </div>
                 )}
-              </Card>
-
-              {/* Stats Grid */}
-              <StatsGrid
-                columns={4}
-                stats={[
-                  { value: `$${(space.price_cents / 100).toFixed(0)}`, label: 'Price', size: 'sm' as const },
-                  { value: `${space.duration_minutes / 60}h`, label: 'Duration', size: 'sm' as const },
-                  { value: acceptedCount, label: 'Confirmed', size: 'sm' as const },
-                  { value: `$${((acceptedCount * space.price_cents) / 100).toFixed(0)}`, label: 'Est. Revenue', size: 'sm' as const },
-                ]}
-              />
-            </div>
-
-            {/* Right Column - Quick Actions */}
-            <div className="space-y-6">
-              {/* Quick Actions */}
-              <Card className="p-6">
-                <h2 className="text-[var(--text-lg)] font-semibold text-[var(--text-primary)] mb-4">Quick Actions</h2>
-                <div className="space-y-3">
-                  <Button
-                    variant="secondary"
-                    fullWidth
-                    onClick={() => setActiveTab('guests')}
-                  >
-                    <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                    </svg>
-                    Invite Guests
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    fullWidth
-                    onClick={() => setActiveTab('checkin')}
-                  >
-                    <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 013.75 9.375v-4.5z" />
-                    </svg>
-                    Check-In Mode
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    fullWidth
-                    onClick={() => setShowShareModal(true)}
-                  >
-                    <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-                    </svg>
-                    Share Room
-                  </Button>
-                </div>
-              </Card>
-
-              {/* Space Details */}
-              <Card className="p-6">
-                <h2 className="text-[var(--text-lg)] font-semibold text-[var(--text-primary)] mb-4">Details</h2>
-                <div className="space-y-4 text-[var(--text-sm)]">
-                  <div>
-                    <div className="text-[var(--text-muted)] mb-1">Location</div>
-                    <div className="text-[var(--text-primary)]">{space.location_hint || 'Location set'}</div>
-                    <div className="text-[var(--text-secondary)] text-[var(--text-xs)]">{space.location_address}</div>
-                  </div>
-                  <div>
-                    <div className="text-[var(--text-muted)] mb-1">Description</div>
-                    <div className="text-[var(--text-secondary)]">{space.description || 'No description'}</div>
-                  </div>
-                </div>
-              </Card>
-            </div>
+              </div>
+            </Card>
           </div>
         )}
 
