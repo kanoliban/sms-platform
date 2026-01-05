@@ -88,6 +88,7 @@ function CreateRoomContent() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...form,
+          host_id: host.id,
           price_cents: form.price * 100,
         }),
       });
