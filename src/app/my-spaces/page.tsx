@@ -135,7 +135,9 @@ export default function MyRoomsPage() {
   };
 
   const formatTime = (timeString: string) => {
-    const [hours, minutes] = timeString.split(':').map(Number);
+    const parts = timeString.split(':').map(Number);
+    const hours = parts[0] ?? 0;
+    const minutes = parts[1] ?? 0;
     const date = new Date();
     date.setHours(hours, minutes);
     return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
