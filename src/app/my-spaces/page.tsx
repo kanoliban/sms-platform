@@ -134,6 +134,13 @@ export default function MyRoomsPage() {
     }
   };
 
+  const formatTime = (timeString: string) => {
+    const [hours, minutes] = timeString.split(':').map(Number);
+    const date = new Date();
+    date.setHours(hours, minutes);
+    return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+  };
+
   if (loading || authLoading) {
     return (
       <div className="min-h-screen bg-[var(--bg-base)] flex items-center justify-center">
@@ -406,7 +413,7 @@ export default function MyRoomsPage() {
                           <div className="flex flex-wrap items-center gap-3 text-[var(--text-sm)] text-[var(--text-secondary)]">
                             <span>{formatDate(space.date)}</span>
                             <span className="text-[var(--text-muted)]">at</span>
-                            <span>{space.time}</span>
+                            <span>{formatTime(space.time)}</span>
                             {space.location_hint && (
                               <>
                                 <span className="text-[var(--text-muted)]">in</span>

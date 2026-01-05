@@ -559,7 +559,7 @@ export default function FounderDashboard() {
                             month: 'short',
                             day: 'numeric',
                           })}{' '}
-                          at {space.time}
+                          at {new Date(`${space.date}T${space.time}`).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
                         </p>
                       </div>
                       <div className="text-right text-sm">
