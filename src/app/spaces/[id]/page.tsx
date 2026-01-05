@@ -482,7 +482,7 @@ export default function PublicRoomPage() {
                 {spaceDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
               </div>
               <div className="text-[var(--text-sm)] text-[var(--text-secondary)]">
-                {space.time} - {new Date(spaceDate.getTime() + space.duration_minutes * 60 * 1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
+                {spaceDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })} - {new Date(spaceDate.getTime() + space.duration_minutes * 60 * 1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
               </div>
             </div>
           </div>

@@ -309,7 +309,7 @@ function HostSpaceContent() {
                 <Badge variant={statusBadgeVariant} size="md">{space.status}</Badge>
               </div>
               <p className="text-[var(--text-secondary)] text-[var(--text-sm)]">
-                {spaceDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })} at {space.time}
+                {spaceDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })} at {spaceDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
                 {' · '}{space.location_hint || 'Location set'}
                 {' · '}<span className="capitalize">{tone}</span> vibe
               </p>
@@ -665,7 +665,7 @@ ${new Date(space.date).toLocaleDateString('en-US', {
   weekday: 'short',
   month: 'short',
   day: 'numeric',
-})} at ${space.time} · ${space.location_hint || 'Location TBA'}
+})} at ${spaceDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })} · ${space.location_hint || 'Location TBA'}
 
 This is a space where strangers meet with intention.
 
