@@ -61,7 +61,6 @@ function HostSpaceContent() {
   const [phoneInput, setPhoneInput] = useState('');
   const [sending, setSending] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-  const [copied, setCopied] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
 
   useEffect(() => {
@@ -183,13 +182,6 @@ function HostSpaceContent() {
     }
   }
 
-  async function copyLink() {
-    const url = `${typeof window !== 'undefined' ? window.location.origin : ''}/spaces/${spaceId}`;
-    await navigator.clipboard.writeText(url);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  }
-
   if (loading) {
     return (
       <div className="min-h-screen bg-[var(--bg-base)] flex items-center justify-center">
@@ -270,30 +262,25 @@ function HostSpaceContent() {
       {/* Header */}
       <header className="border-b border-[var(--border-subtle)] sticky top-0 bg-[var(--bg-base)]/95 backdrop-blur z-10">
         <PageContainer>
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center gap-4">
-              <Link href="/" className="text-xl tracking-tight text-[var(--text-primary)] hover:opacity-80 transition-opacity">
+          <div className="flex justify-between items-center h-14 md:h-16">
+            <div className="flex items-center gap-2 md:gap-4 min-w-0">
+              <Link href="/" className="text-lg md:text-xl tracking-tight text-[var(--text-primary)] hover:opacity-80 transition-opacity flex-shrink-0">
                 <strong><em>SMS</em></strong>
               </Link>
               <span className="text-[var(--text-muted)]">/</span>
-              <Link href="/host" className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] text-[var(--text-sm)]">
+              <Link href="/host" className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] text-[var(--text-xs)] md:text-[var(--text-sm)] flex-shrink-0">
                 Host
               </Link>
               <span className="text-[var(--text-muted)]">/</span>
-              <span className="text-[var(--text-primary)] text-[var(--text-sm)] font-medium truncate max-w-48">
+              <span className="text-[var(--text-primary)] text-[var(--text-xs)] md:text-[var(--text-sm)] font-medium truncate">
                 {space.name}
               </span>
             </div>
-            <div className="flex items-center gap-3">
-              <Button variant="ghost" size="sm" onClick={copyLink}>
-                {copied ? 'Copied!' : 'Copy Link'}
+            <Link href={`/spaces/${spaceId}`} target="_blank" className="flex-shrink-0">
+              <Button variant="secondary" size="sm">
+                View Public
               </Button>
-              <Link href={`/spaces/${spaceId}`} target="_blank">
-                <Button variant="secondary" size="sm">
-                  View Public Page
-                </Button>
-              </Link>
-            </div>
+            </Link>
           </div>
         </PageContainer>
       </header>
@@ -339,26 +326,72 @@ function HostSpaceContent() {
         </PageContainer>
       </div>
 
-      {/* Tabs - Horizontally scrollable on mobile */}
-      <div className="border-b border-[var(--border-subtle)] overflow-x-auto">
-        <PageContainer className="min-w-max">
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList variant="underline">
-              {tabs.map((tab) => (
-                tab.href ? (
-                  <Link key={tab.id} href={tab.href}>
-                    <TabsTrigger value={tab.id}>
+      {/* Tabs - Grid on mobile, inline on desktop */}
+      <div className="border-b border-[var(--border-subtle)]">
+        <PageContainer>
+          {/* Mobile: 2-row grid */}
+          <div className="md:hidden py-2">
+            <div className="grid grid-cols-3 gap-1 mb-1">
+              {['overview', 'guests', 'insights'].map((tabId) => {
+                const tab = tabs.find(t => t.id === tabId);
+                if (!tab) return null;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => tab.href ? undefined : setActiveTab(tab.id)}
+                    className={`
+                      px-2 py-2 text-[var(--text-xs)] font-medium rounded-[var(--radius-md)] transition-colors
+                      ${activeTab === tab.id
+                        ? 'bg-[var(--primary-muted)] text-[var(--primary-light)]'
+                        : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-subtle)]'}
+                    `}
+                  >
+                    {tab.label}
+                  </button>
+                );
+              })}
+            </div>
+            <div className="grid grid-cols-2 gap-1">
+              {['checkin', 'settings'].map((tabId) => {
+                const tab = tabs.find(t => t.id === tabId);
+                if (!tab) return null;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`
+                      px-2 py-2 text-[var(--text-xs)] font-medium rounded-[var(--radius-md)] transition-colors
+                      ${activeTab === tab.id
+                        ? 'bg-[var(--primary-muted)] text-[var(--primary-light)]'
+                        : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-subtle)]'}
+                    `}
+                  >
+                    {tab.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          {/* Desktop: Regular tabs */}
+          <div className="hidden md:block">
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
+              <TabsList variant="underline">
+                {tabs.map((tab) => (
+                  tab.href ? (
+                    <Link key={tab.id} href={tab.href}>
+                      <TabsTrigger value={tab.id}>
+                        {tab.label}
+                      </TabsTrigger>
+                    </Link>
+                  ) : (
+                    <TabsTrigger key={tab.id} value={tab.id}>
                       {tab.label}
                     </TabsTrigger>
-                  </Link>
-                ) : (
-                  <TabsTrigger key={tab.id} value={tab.id}>
-                    {tab.label}
-                  </TabsTrigger>
-                )
-              ))}
-            </TabsList>
-          </Tabs>
+                  )
+                ))}
+              </TabsList>
+            </Tabs>
+          </div>
         </PageContainer>
       </div>
 
