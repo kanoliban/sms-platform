@@ -200,7 +200,7 @@ export default function HostOnboardingPage() {
     if (authLoading) return
 
     if (!user) {
-      router.push('/login?redirect=/host/onboarding')
+      router.push('/auth/login?redirect=/host/onboarding')
     } else if (user.role === 'host' || user.role === 'founder') {
       router.push('/host')
     }

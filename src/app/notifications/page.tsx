@@ -198,7 +198,7 @@ export default function NotificationsPage() {
             <p className="text-[var(--text-secondary)] mb-6">
               Stay updated on your spaces, invitations, and more.
             </p>
-            <Button variant="primary" size="lg" onClick={() => router.push('/auth/login')}>
+            <Button variant="primary" size="lg" onClick={() => router.push('/auth/login?redirect=/notifications')}>
               Sign In
             </Button>
           </Card>

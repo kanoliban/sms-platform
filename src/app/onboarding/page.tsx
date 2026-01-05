@@ -136,7 +136,7 @@ export default function OnboardingPage() {
   // Redirect to login if not authenticated
   useEffect(() => {
     if (!authLoading && !user) {
-      router.push('/auth/login')
+      router.push('/auth/login?redirect=/onboarding')
     }
   }, [authLoading, user, router])
 

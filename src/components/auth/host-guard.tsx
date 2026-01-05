@@ -22,8 +22,9 @@ export function HostGuard({ children, allowFounder = true }: HostGuardProps) {
   useEffect(() => {
     if (!loading && !user) {
       // Not authenticated - redirect to login with return URL
-      const returnUrl = encodeURIComponent(window.location.pathname)
-      router.push(`/auth/login?returnUrl=${returnUrl}`)
+      const currentPath = window.location.pathname + window.location.search
+      const redirect = encodeURIComponent(currentPath)
+      router.push(`/auth/login?redirect=${redirect}`)
     }
   }, [user, loading, router])
 
