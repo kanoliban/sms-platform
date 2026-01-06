@@ -44,6 +44,8 @@ export function AppHeader({
     { label: 'Dashboard', href: '/host', active: false },
     { label: 'Discover', href: '/discover', active: false },
     { label: 'My Spaces', href: '/my-spaces', active: false },
+    // Founder-only link
+    ...(user?.role === 'founder' ? [{ label: 'Founder', href: '/founder', active: false }] : []),
   ];
 
   const actions = (

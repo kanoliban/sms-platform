@@ -60,7 +60,7 @@ export default function MyRoomsPage() {
         attended,
         space:spaces(
           *,
-          host:users!spaces_host_id_fkey(name)
+          host:users(name)
         )
       `)
       .eq('user_id', user.id);

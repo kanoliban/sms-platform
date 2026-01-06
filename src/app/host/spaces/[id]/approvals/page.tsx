@@ -88,7 +88,7 @@ function ApprovalsContent() {
         .from('spaces')
         .select(`
           *,
-          host:users!spaces_host_id_fkey (id, name)
+          host:users (id, name)
         `)
         .eq('id', spaceId)
         .single();

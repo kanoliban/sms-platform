@@ -60,7 +60,7 @@ export default function DiscoverPage() {
       .from('spaces')
       .select(`
         *,
-        host:users!spaces_host_id_fkey(name),
+        host:users(name),
         invitations(status)
       `)
       .eq('status', 'open')
@@ -170,6 +170,11 @@ export default function DiscoverPage() {
               <Link href="/profile" className="text-[var(--text-sm)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]">
                 Profile
               </Link>
+              {user?.role === 'founder' && (
+                <Link href="/founder" className="text-[var(--text-sm)] text-[var(--primary)] hover:text-[var(--primary-hover)] font-medium">
+                  Founder
+                </Link>
+              )}
             </nav>
             <div className="flex items-center gap-3">
               {user && (

@@ -3,6 +3,8 @@
 import { useEffect, useState, useCallback } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
+import { toast } from '@/components/ui/toast'
+import { TrustActionModal, type TrustAction } from '@/components/founder/trust-action-modal'
 import type { Space, User, Invitation, Feedback } from '@/lib/supabase/types'
 
 type SpaceWithDetails = Space & {
@@ -125,6 +127,13 @@ export default function FounderDashboard() {
   const [rejectionModal, setRejectionModal] = useState<{ open: boolean; appId: string | null }>({ open: false, appId: null })
   const [rejectionReason, setRejectionReason] = useState('')
 
+  // Trust action modal state
+  const [trustActionModal, setTrustActionModal] = useState<{
+    open: boolean
+    user: UserWithStats | null
+    action: TrustAction | null
+  }>({ open: false, user: null, action: null })
+
   useEffect(() => {
     loadData()
   }, [])
@@ -137,7 +146,7 @@ export default function FounderDashboard() {
       .from('spaces')
       .select(`
         *,
-        host:users!spaces_host_id_fkey (
+        host:users (
           id,
           name,
           phone
@@ -367,6 +376,42 @@ export default function FounderDashboard() {
       alert('Failed to reject application')
     } finally {
       setProcessingAppId(null)
+    }
+  }
+
+  // Handle trust action (suspend/ban/reinstate)
+  async function handleTrustAction(userId: string, action: TrustAction, reason: string) {
+    try {
+      const response = await fetch(`/api/users/${userId}/trust-action`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ action, reason }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to perform action')
+      }
+
+      // Update the user in local state
+      setUsers((prevUsers) =>
+        prevUsers.map((u) =>
+          u.id === userId
+            ? { ...u, trust_status: data.newStatus as User['trust_status'] }
+            : u
+        )
+      )
+
+      const actionVerb = action === 'reinstate' ? 'reinstated' : action + 'd'
+      toast({ variant: 'success', description: `User ${actionVerb} successfully` })
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to perform action'
+      toast({ variant: 'error', description: message })
+      throw err
     }
   }
 
@@ -625,18 +670,19 @@ export default function FounderDashboard() {
         {/* Users Tab */}
         {activeTab === 'users' && (
           <div className="space-y-2">
-            <div className="grid grid-cols-6 gap-4 text-xs text-white/40 px-4 py-2">
+            <div className="grid grid-cols-7 gap-4 text-xs text-white/40 px-4 py-2">
               <div>Name/Phone</div>
               <div>Role</div>
               <div>Trust Score</div>
               <div>Status</div>
               <div>Rooms</div>
               <div>No-shows</div>
+              <div>Actions</div>
             </div>
             {users.map((user) => (
               <div
                 key={user.id}
-                className="grid grid-cols-6 gap-4 items-center p-4 border border-white/10 rounded-lg hover:border-white/20"
+                className="grid grid-cols-7 gap-4 items-center p-4 border border-white/10 rounded-lg hover:border-white/20"
               >
                 <div>
                   <div className="font-medium">{user.name || 'No name'}</div>
@@ -662,6 +708,40 @@ export default function FounderDashboard() {
                 </div>
                 <div className={user.no_shows > 0 ? 'text-red-400' : 'text-white/60'}>
                   {user.no_shows}
+                </div>
+                <div className="flex gap-1">
+                  {/* Don't show actions for founders */}
+                  {user.role !== 'founder' && (
+                    <>
+                      {(user.trust_status === 'active' || user.trust_status === 'new') && (
+                        <button
+                          onClick={() => setTrustActionModal({ open: true, user, action: 'suspend' })}
+                          className="px-2 py-1 text-xs bg-orange-700 hover:bg-orange-600 rounded"
+                        >
+                          Suspend
+                        </button>
+                      )}
+                      {(user.trust_status === 'active' || user.trust_status === 'new' || user.trust_status === 'suspended') && (
+                        <button
+                          onClick={() => setTrustActionModal({ open: true, user, action: 'ban' })}
+                          className="px-2 py-1 text-xs bg-red-700 hover:bg-red-600 rounded"
+                        >
+                          Ban
+                        </button>
+                      )}
+                      {(user.trust_status === 'suspended' || user.trust_status === 'banned') && (
+                        <button
+                          onClick={() => setTrustActionModal({ open: true, user, action: 'reinstate' })}
+                          className="px-2 py-1 text-xs bg-green-700 hover:bg-green-600 rounded"
+                        >
+                          Reinstate
+                        </button>
+                      )}
+                    </>
+                  )}
+                  {user.role === 'founder' && (
+                    <span className="text-xs text-white/40">—</span>
+                  )}
                 </div>
               </div>
             ))}
@@ -694,10 +774,16 @@ export default function FounderDashboard() {
                           </div>
                         </div>
                         <div className="flex gap-2">
-                          <button className="px-3 py-1 text-xs bg-green-700 hover:bg-green-600 rounded">
+                          <button
+                            onClick={() => setTrustActionModal({ open: true, user, action: 'reinstate' })}
+                            className="px-3 py-1 text-xs bg-green-700 hover:bg-green-600 rounded"
+                          >
                             Reinstate
                           </button>
-                          <button className="px-3 py-1 text-xs bg-red-700 hover:bg-red-600 rounded">
+                          <button
+                            onClick={() => setTrustActionModal({ open: true, user, action: 'ban' })}
+                            className="px-3 py-1 text-xs bg-red-700 hover:bg-red-600 rounded"
+                          >
                             Ban
                           </button>
                         </div>
@@ -727,8 +813,11 @@ export default function FounderDashboard() {
                             Trust: {user.trust_score_overall} · No-shows: {user.no_shows}
                           </div>
                         </div>
-                        <button className="px-3 py-1 text-xs bg-zinc-700 hover:bg-zinc-600 rounded">
-                          Review
+                        <button
+                          onClick={() => setTrustActionModal({ open: true, user, action: 'reinstate' })}
+                          className="px-3 py-1 text-xs bg-green-700 hover:bg-green-600 rounded"
+                        >
+                          Reinstate
                         </button>
                       </div>
                     </div>
@@ -757,7 +846,10 @@ export default function FounderDashboard() {
                             Social: {user.trust_social} · Safety: {user.trust_safety}
                           </div>
                         </div>
-                        <button className="px-3 py-1 text-xs bg-orange-700 hover:bg-orange-600 rounded">
+                        <button
+                          onClick={() => setTrustActionModal({ open: true, user, action: 'suspend' })}
+                          className="px-3 py-1 text-xs bg-orange-700 hover:bg-orange-600 rounded"
+                        >
                           Suspend
                         </button>
                       </div>
@@ -1228,6 +1320,21 @@ export default function FounderDashboard() {
             </div>
           </div>
         )}
+
+        {/* Trust Action Modal */}
+        <TrustActionModal
+          open={trustActionModal.open}
+          onClose={() => setTrustActionModal({ open: false, user: null, action: null })}
+          user={trustActionModal.user ? {
+            id: trustActionModal.user.id,
+            name: trustActionModal.user.name,
+            phone: trustActionModal.user.phone,
+            trust_score_overall: trustActionModal.user.trust_score_overall,
+            trust_status: trustActionModal.user.trust_status || 'active',
+          } : null}
+          action={trustActionModal.action}
+          onConfirm={handleTrustAction}
+        />
       </main>
 
       {/* Import cursive font for signatures */}

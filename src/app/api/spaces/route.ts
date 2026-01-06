@@ -122,7 +122,7 @@ export async function POST(request: NextRequest) {
         location_hint: location_hint || null,
         capacity,
         price_cents,
-        status: 'draft',
+        status: 'open',
       })
       .select()
       .single()

@@ -79,7 +79,7 @@ export default function FeedbackPage() {
 
       const { data: spaceData } = await supabase
         .from('spaces')
-        .select('*, host:users!spaces_host_id_fkey(id, name, avatar_url)')
+        .select('*, host:users(id, name, avatar_url)')
         .eq('id', spaceId)
         .single();
 

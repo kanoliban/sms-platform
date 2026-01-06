@@ -118,6 +118,18 @@ export default function Home() {
         </div>
       </main>
 
+      {/* Meet New People section */}
+      <section className="relative z-10 py-20 px-6 border-t border-white/10">
+        <div className="max-w-2xl mx-auto text-center">
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">
+            Meet New People
+          </h2>
+          <p className="text-xl md:text-2xl opacity-70 leading-relaxed">
+            Find your community. Make new friends. Have fun — all in real life.
+          </p>
+        </div>
+      </section>
+
       {/* Two paths section */}
       <section className="relative z-10 py-20 px-6 border-t border-white/10">
         <div className="max-w-4xl mx-auto">

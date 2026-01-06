@@ -59,6 +59,21 @@ export async function GET() {
       )
     }
 
+    // Force logout check: if user was force logged out after this token was issued
+    if (user.force_logout_at) {
+      const tokenIssuedAt = payload.iat as number // Unix timestamp in seconds
+      const forceLogoutTime = new Date(user.force_logout_at).getTime() / 1000
+      if (forceLogoutTime > tokenIssuedAt) {
+        // Token was issued before force logout - invalidate session
+        cookieStore.delete('sms_auth_token')
+        cookieStore.delete('sms_user')
+        return NextResponse.json(
+          { user: null },
+          { status: 200 }
+        )
+      }
+    }
+
     return NextResponse.json({
       user: {
         id: user.id,

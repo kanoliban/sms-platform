@@ -331,6 +331,11 @@ export default function ProfilePage() {
               <Link href="/profile" className="text-[var(--text-sm)] text-[var(--text-primary)] font-medium">
                 Profile
               </Link>
+              {authUser?.role === 'founder' && (
+                <Link href="/founder" className="text-[var(--text-sm)] text-[var(--primary)] hover:text-[var(--primary-hover)] font-medium">
+                  Founder
+                </Link>
+              )}
             </nav>
             <div className="flex items-center gap-3">
               <NotificationsDropdown
