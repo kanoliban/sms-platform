@@ -125,7 +125,7 @@ export default function Home() {
             Meet New People
           </h2>
           <p className="text-xl md:text-2xl opacity-70 leading-relaxed">
-            Find your community. Make new friends. Have fun — all in real life.
+            Find your community. Make new friends. Create fun — all in real life.
           </p>
         </div>
       </section>
