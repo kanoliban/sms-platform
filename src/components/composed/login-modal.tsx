@@ -59,9 +59,9 @@ export function LoginModal({ open, onClose, onSuccess, redirectTo }: LoginModalP
 
   const handleGoogleSignIn = async () => {
     setGoogleLoading(true)
-    // Store redirect path before OAuth redirect
+    // Store redirect path in cookie before OAuth redirect (readable by server)
     if (redirectTo) {
-      sessionStorage.setItem('auth_redirect', redirectTo)
+      document.cookie = `auth_redirect=${encodeURIComponent(redirectTo)}; path=/; max-age=300; SameSite=Lax`
     }
     const result = await signInWithGoogle()
     if (!result.success) {

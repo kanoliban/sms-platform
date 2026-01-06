@@ -1,10 +1,16 @@
 import { createServerClient, createAdminClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
+import { cookies } from 'next/headers'
 
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url)
   const code = requestUrl.searchParams.get('code')
   const origin = requestUrl.origin
+
+  // Check for custom redirect from cookie (set by LoginModal)
+  const cookieStore = await cookies()
+  const authRedirect = cookieStore.get('auth_redirect')?.value
+  const customRedirect = authRedirect ? decodeURIComponent(authRedirect) : null
 
   let isNewUser = false
 
@@ -41,9 +47,15 @@ export async function GET(request: Request) {
     }
   }
 
-  // Redirect new users to onboarding, otherwise to discover
-  if (isNewUser) {
-    return NextResponse.redirect(`${origin}/onboarding`)
-  }
-  return NextResponse.redirect(`${origin}/discover`)
+  // Clear the auth_redirect cookie
+  const response = customRedirect
+    ? NextResponse.redirect(`${origin}${customRedirect}`)
+    : isNewUser
+      ? NextResponse.redirect(`${origin}/onboarding`)
+      : NextResponse.redirect(`${origin}/discover`)
+
+  // Clear the cookie
+  response.cookies.delete('auth_redirect')
+
+  return response
 }
