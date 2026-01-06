@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button'
 export default function Home() {
   const router = useRouter()
   const [showLogin, setShowLogin] = useState(false)
+  const [showHostLogin, setShowHostLogin] = useState(false)
   const { user, loading } = useAuth()
 
   return (
@@ -42,6 +43,13 @@ export default function Home() {
         open={showLogin}
         onClose={() => setShowLogin(false)}
         onSuccess={() => router.push('/discover')}
+      />
+
+      {/* Host Login Modal */}
+      <LoginModal
+        open={showHostLogin}
+        onClose={() => setShowHostLogin(false)}
+        redirectTo="/host/onboarding"
       />
 
       {/* Ambient background elements */}
@@ -102,13 +110,13 @@ export default function Home() {
             >
               I want in
             </Button>
-            <a
-              href="/host/onboarding"
+            <button
+              onClick={() => setShowHostLogin(true)}
               className="text-white/70 hover:text-white transition-colors group"
             >
               Become a host
               <span className="inline-block ml-1 group-hover:translate-x-1 transition-transform">→</span>
-            </a>
+            </button>
           </div>
         </div>
 
@@ -175,12 +183,12 @@ export default function Home() {
                 <p>We find the strangers. They show up.</p>
                 <p>You host. You get paid.</p>
               </div>
-              <a
-                href="/host/onboarding"
+              <button
+                onClick={() => setShowHostLogin(true)}
                 className="inline-flex items-center justify-center rounded-md border border-white/30 bg-transparent px-4 py-2 text-sm font-medium hover:bg-white/10 transition-colors"
               >
                 Start hosting
-              </a>
+              </button>
             </div>
           </div>
         </div>
