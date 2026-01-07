@@ -1,18 +1,14 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { SMSConversation } from '@/components/sms-conversation'
-import { LoginModal } from '@/components/composed/login-modal'
-import { UserMenu } from '@/components/composed/user-menu'
-import { useAuth } from '@/lib/auth/auth-context'
+import { WaitlistModal } from '@/components/composed/waitlist-modal'
+import { HostApplicationModal } from '@/components/composed/host-application-modal'
 import { Button } from '@/components/ui/button'
 
 export default function Home() {
-  const router = useRouter()
-  const [showLogin, setShowLogin] = useState(false)
-  const [showHostLogin, setShowHostLogin] = useState(false)
-  const { user, loading } = useAuth()
+  const [showWaitlist, setShowWaitlist] = useState(false)
+  const [showHostApplication, setShowHostApplication] = useState(false)
 
   return (
     <div className="min-h-screen bg-black text-white overflow-hidden relative">
@@ -20,36 +16,19 @@ export default function Home() {
       <header className="fixed top-0 left-0 right-0 z-50 px-6 py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="text-xl"><strong><em>SMS</em></strong></div>
-          <div className="flex items-center gap-4">
-            {!loading && (
-              user ? (
-                <UserMenu />
-              ) : (
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => setShowLogin(true)}
-                >
-                  Sign in
-                </Button>
-              )
-            )}
-          </div>
         </div>
       </header>
 
-      {/* Login Modal */}
-      <LoginModal
-        open={showLogin}
-        onClose={() => setShowLogin(false)}
-        onSuccess={() => router.push('/discover')}
+      {/* Waitlist Modal (for guests) */}
+      <WaitlistModal
+        open={showWaitlist}
+        onClose={() => setShowWaitlist(false)}
       />
 
-      {/* Host Login Modal */}
-      <LoginModal
-        open={showHostLogin}
-        onClose={() => setShowHostLogin(false)}
-        redirectTo="/host/onboarding"
+      {/* Host Application Modal */}
+      <HostApplicationModal
+        open={showHostApplication}
+        onClose={() => setShowHostApplication(false)}
       />
 
       {/* Ambient background elements */}
@@ -105,13 +84,13 @@ export default function Home() {
           <div className="flex flex-col sm:flex-row items-center gap-4 justify-center lg:justify-start">
             <Button
               size="lg"
-              onClick={() => setShowLogin(true)}
+              onClick={() => setShowWaitlist(true)}
               className="!bg-white !text-black hover:!bg-white/90 font-semibold px-8"
             >
               I want in
             </Button>
             <button
-              onClick={() => setShowHostLogin(true)}
+              onClick={() => setShowHostApplication(true)}
               className="text-white/70 hover:text-white transition-colors group"
             >
               Become a host
@@ -160,7 +139,7 @@ export default function Home() {
               </div>
               <Button
                 variant="outline"
-                onClick={() => setShowLogin(true)}
+                onClick={() => setShowWaitlist(true)}
                 className="border-white/30 hover:bg-white/10"
               >
                 Get invited
@@ -184,7 +163,7 @@ export default function Home() {
                 <p>You host. You get paid.</p>
               </div>
               <button
-                onClick={() => setShowHostLogin(true)}
+                onClick={() => setShowHostApplication(true)}
                 className="inline-flex items-center justify-center rounded-md border border-white/30 bg-transparent px-4 py-2 text-sm font-medium hover:bg-white/10 transition-colors"
               >
                 Start hosting
