@@ -124,45 +124,45 @@ export function HostApplicationModal({ open, onClose }: HostApplicationModalProp
       description={step === 'form' ? "Tell us about yourself and the experience you want to create." : undefined}
     >
       {step === 'form' ? (
-        <div className="space-y-6">
-          {/* Name */}
-          <div>
-            <label className="block text-sm text-[var(--text-secondary)] mb-2">
-              Name <span className="text-[var(--error-text)]">*</span>
-            </label>
-            <Input
-              type="text"
-              placeholder="Your name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              disabled={loading}
-              autoFocus
-            />
-          </div>
-
-          {/* Phone */}
-          <div>
-            <label className="block text-sm text-[var(--text-secondary)] mb-2">
-              Phone <span className="text-[var(--error-text)]">*</span>
-            </label>
-            <div className="relative">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-muted)]">
-                +1
-              </span>
+        <div className="space-y-4">
+          {/* Name & Phone row */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs text-[var(--text-secondary)] mb-1">
+                Name <span className="text-[var(--error-text)]">*</span>
+              </label>
               <Input
-                type="tel"
-                placeholder="(555) 555-5555"
-                value={formatPhoneDisplay(phone)}
-                onChange={handlePhoneChange}
+                type="text"
+                placeholder="Your name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
                 disabled={loading}
-                className="pl-12"
+                autoFocus
               />
+            </div>
+            <div>
+              <label className="block text-xs text-[var(--text-secondary)] mb-1">
+                Phone <span className="text-[var(--error-text)]">*</span>
+              </label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] text-sm">
+                  +1
+                </span>
+                <Input
+                  type="tel"
+                  placeholder="(555) 555-5555"
+                  value={formatPhoneDisplay(phone)}
+                  onChange={handlePhoneChange}
+                  disabled={loading}
+                  className="pl-10"
+                />
+              </div>
             </div>
           </div>
 
           {/* Email (optional) */}
           <div>
-            <label className="block text-sm text-[var(--text-secondary)] mb-2">
+            <label className="block text-xs text-[var(--text-secondary)] mb-1">
               Email <span className="text-[var(--text-muted)]">(optional)</span>
             </label>
             <Input
@@ -176,7 +176,7 @@ export function HostApplicationModal({ open, onClose }: HostApplicationModalProp
 
           {/* Event Idea */}
           <div>
-            <label className="block text-sm text-[var(--text-secondary)] mb-2">
+            <label className="block text-xs text-[var(--text-secondary)] mb-1">
               What kind of experience do you want to host? <span className="text-[var(--error-text)]">*</span>
             </label>
             <Textarea
@@ -184,10 +184,10 @@ export function HostApplicationModal({ open, onClose }: HostApplicationModalProp
               value={eventIdea}
               onChange={(e) => setEventIdea(e.target.value)}
               disabled={loading}
-              rows={3}
+              rows={2}
               maxLength={500}
             />
-            <div className="text-right mt-1">
+            <div className="text-right">
               <span className="text-xs text-[var(--text-muted)]">
                 {eventIdea.length} / 500
               </span>
@@ -196,18 +196,18 @@ export function HostApplicationModal({ open, onClose }: HostApplicationModalProp
 
           {/* Why Host (optional) */}
           <div>
-            <label className="block text-sm text-[var(--text-secondary)] mb-2">
+            <label className="block text-xs text-[var(--text-secondary)] mb-1">
               Why do you want to host? <span className="text-[var(--text-muted)]">(optional)</span>
             </label>
             <Textarea
-              placeholder="Tell us a bit about yourself and what drives you to bring people together."
+              placeholder="What drives you to bring people together?"
               value={whyHost}
               onChange={(e) => setWhyHost(e.target.value)}
               disabled={loading}
-              rows={3}
+              rows={2}
               maxLength={500}
             />
-            <div className="text-right mt-1">
+            <div className="text-right">
               <span className="text-xs text-[var(--text-muted)]">
                 {whyHost.length} / 500
               </span>

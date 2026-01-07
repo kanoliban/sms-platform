@@ -160,45 +160,45 @@ export function WaitlistModal({ open, onClose }: WaitlistModalProps) {
       description={step === 'form' ? "Tell us a bit about yourself. We'll text you when something fits." : undefined}
     >
       {step === 'form' ? (
-        <div className="space-y-6">
-          {/* Name */}
-          <div>
-            <label className="block text-sm text-[var(--text-secondary)] mb-2">
-              Name <span className="text-[var(--error-text)]">*</span>
-            </label>
-            <Input
-              type="text"
-              placeholder="Your name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              disabled={loading}
-              autoFocus
-            />
-          </div>
-
-          {/* Phone */}
-          <div>
-            <label className="block text-sm text-[var(--text-secondary)] mb-2">
-              Phone <span className="text-[var(--error-text)]">*</span>
-            </label>
-            <div className="relative">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-muted)]">
-                +1
-              </span>
+        <div className="space-y-4">
+          {/* Name & Phone row */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs text-[var(--text-secondary)] mb-1">
+                Name <span className="text-[var(--error-text)]">*</span>
+              </label>
               <Input
-                type="tel"
-                placeholder="(555) 555-5555"
-                value={formatPhoneDisplay(phone)}
-                onChange={handlePhoneChange}
+                type="text"
+                placeholder="Your name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
                 disabled={loading}
-                className="pl-12"
+                autoFocus
               />
+            </div>
+            <div>
+              <label className="block text-xs text-[var(--text-secondary)] mb-1">
+                Phone <span className="text-[var(--error-text)]">*</span>
+              </label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] text-sm">
+                  +1
+                </span>
+                <Input
+                  type="tel"
+                  placeholder="(555) 555-5555"
+                  value={formatPhoneDisplay(phone)}
+                  onChange={handlePhoneChange}
+                  disabled={loading}
+                  className="pl-10"
+                />
+              </div>
             </div>
           </div>
 
           {/* Email (optional) */}
           <div>
-            <label className="block text-sm text-[var(--text-secondary)] mb-2">
+            <label className="block text-xs text-[var(--text-secondary)] mb-1">
               Email <span className="text-[var(--text-muted)]">(optional)</span>
             </label>
             <Input
@@ -212,17 +212,17 @@ export function WaitlistModal({ open, onClose }: WaitlistModalProps) {
 
           {/* Interests */}
           <div>
-            <label className="block text-sm text-[var(--text-secondary)] mb-2">
+            <label className="block text-xs text-[var(--text-secondary)] mb-1.5">
               What are you into? <span className="text-[var(--error-text)]">*</span>
             </label>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-1.5">
               {INTEREST_OPTIONS.map((interest) => (
                 <button
                   key={interest}
                   type="button"
                   onClick={() => toggleInterest(interest)}
                   disabled={loading}
-                  className={`px-3 py-1.5 rounded-full text-sm transition-all ${
+                  className={`px-2.5 py-1 rounded-full text-xs transition-all ${
                     interests.includes(interest)
                       ? 'bg-white text-black'
                       : 'bg-white/10 text-white/70 hover:bg-white/20'
@@ -236,17 +236,17 @@ export function WaitlistModal({ open, onClose }: WaitlistModalProps) {
 
           {/* Neighborhoods (optional) */}
           <div>
-            <label className="block text-sm text-[var(--text-secondary)] mb-2">
+            <label className="block text-xs text-[var(--text-secondary)] mb-1.5">
               Preferred neighborhoods <span className="text-[var(--text-muted)]">(optional)</span>
             </label>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-1.5">
               {NEIGHBORHOOD_OPTIONS.map((neighborhood) => (
                 <button
                   key={neighborhood}
                   type="button"
                   onClick={() => toggleNeighborhood(neighborhood)}
                   disabled={loading}
-                  className={`px-3 py-1.5 rounded-full text-sm transition-all ${
+                  className={`px-2.5 py-1 rounded-full text-xs transition-all ${
                     neighborhoods.includes(neighborhood)
                       ? 'bg-white text-black'
                       : 'bg-white/10 text-white/70 hover:bg-white/20'
