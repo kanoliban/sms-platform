@@ -75,7 +75,12 @@ const LEARN_MORE_MESSAGES: MessageType[] = [
   { id: 'l5', text: "Now we're building infrastructure so anyone can create these spaces.", variant: 'received', showTail: true },
 ]
 
-export function SMSConversation() {
+export interface SMSConversationProps {
+  triggerSignup?: 'host' | 'attendee' | null
+  onSignupTriggered?: () => void
+}
+
+export function SMSConversation({ triggerSignup, onSignupTriggered }: SMSConversationProps = {}) {
   const [events, setEvents] = useState<EventPreview[]>([])
   const [eventsLoading, setEventsLoading] = useState(true)
 
@@ -126,6 +131,16 @@ export function SMSConversation() {
   const [selectedEvent, setSelectedEvent] = useState<EventPreview | null>(null)
   const [animateView, setAnimateView] = useState(false)
   const [signupType, setSignupType] = useState<'host' | 'attendee'>('attendee')
+
+  // Handle external trigger to show signup
+  useEffect(() => {
+    if (triggerSignup) {
+      setSignupType(triggerSignup)
+      setAnimateView(true)
+      setView('signup')
+      onSignupTriggered?.()
+    }
+  }, [triggerSignup, onSignupTriggered])
 
   // Home conversation state
   const [phase, setPhase] = useState<ConversationPhase>('initial')
