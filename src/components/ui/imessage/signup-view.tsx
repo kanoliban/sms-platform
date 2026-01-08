@@ -11,16 +11,30 @@ interface SignupViewProps {
   animate?: boolean
 }
 
+const ATTENDEE_INTERESTS = [
+  'Dinner parties',
+  'Vinyl nights',
+  'Creative workshops',
+  'Outdoor adventures',
+  'Game nights',
+  'Happy hours',
+]
+
+const HOST_EVENT_TYPES = [
+  'Dinner party',
+  'Workshop',
+  'Music/Vinyl',
+  'Outdoor',
+  'Creative',
+  'Social/Mixer',
+]
+
 export function SignupView({ type, onBack, onSuccess, animate = false }: SignupViewProps) {
   const [formData, setFormData] = useState({
     name: '',
-    email: '',
     phone: '',
-    eventIdea: '',
-    whyHost: '',
-    interests: '',
-    neighborhoods: '',
   })
+  const [selectedChips, setSelectedChips] = useState<string[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -34,7 +48,11 @@ export function SignupView({ type, onBack, onSuccess, animate = false }: SignupV
       const response = await fetch('/api/leads', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type, ...formData }),
+        body: JSON.stringify({
+          type,
+          ...formData,
+          interests: selectedChips.join(', '),
+        }),
       })
 
       if (!response.ok) throw new Error('Failed to submit')
@@ -53,18 +71,19 @@ export function SignupView({ type, onBack, onSuccess, animate = false }: SignupV
   }
 
   const handleBack = () => {
-    setFormData({
-      name: '',
-      email: '',
-      phone: '',
-      eventIdea: '',
-      whyHost: '',
-      interests: '',
-      neighborhoods: '',
-    })
+    setFormData({ name: '', phone: '' })
+    setSelectedChips([])
     setSubmitted(false)
     setError(null)
     onBack()
+  }
+
+  const toggleChip = (chip: string) => {
+    setSelectedChips(prev =>
+      prev.includes(chip)
+        ? prev.filter(c => c !== chip)
+        : [...prev, chip]
+    )
   }
 
   return (
@@ -154,11 +173,11 @@ export function SignupView({ type, onBack, onSuccess, animate = false }: SignupV
               }
             </p>
 
-            {/* Simple form - just name and phone */}
-            <div className="bg-[#1c1c1e] rounded-[12px] overflow-hidden mb-[24px]">
+            {/* Name and phone inputs */}
+            <div className="bg-[#1c1c1e] rounded-[12px] overflow-hidden mb-[20px]">
               <div className="border-b border-white/10">
-                <div className="flex items-center px-[16px] py-[14px]">
-                  <label className="text-[17px] text-white w-[80px]"
+                <div className="flex items-center px-[16px] py-[12px]">
+                  <label className="text-[17px] text-white w-[70px]"
                     style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif' }}>
                     Name
                   </label>
@@ -174,8 +193,8 @@ export function SignupView({ type, onBack, onSuccess, animate = false }: SignupV
                 </div>
               </div>
               <div>
-                <div className="flex items-center px-[16px] py-[14px]">
-                  <label className="text-[17px] text-white w-[80px]"
+                <div className="flex items-center px-[16px] py-[12px]">
+                  <label className="text-[17px] text-white w-[70px]"
                     style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif' }}>
                     Phone
                   </label>
@@ -189,6 +208,31 @@ export function SignupView({ type, onBack, onSuccess, animate = false }: SignupV
                     placeholder="(612) 555-1234"
                   />
                 </div>
+              </div>
+            </div>
+
+            {/* Interest/Event type chips */}
+            <div className="mb-[20px]">
+              <p className="text-[13px] text-white/50 mb-[10px] px-[4px]"
+                style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif' }}>
+                {type === 'host' ? "What would you host?" : "What are you into?"} <span className="text-white/30">(optional)</span>
+              </p>
+              <div className="flex flex-wrap gap-[8px]">
+                {(type === 'host' ? HOST_EVENT_TYPES : ATTENDEE_INTERESTS).map((chip) => (
+                  <button
+                    key={chip}
+                    type="button"
+                    onClick={() => toggleChip(chip)}
+                    className={`px-[14px] py-[8px] rounded-full text-[14px] transition-all active:scale-95 ${
+                      selectedChips.includes(chip)
+                        ? 'bg-[#34c759] text-white'
+                        : 'bg-[#1c1c1e] text-white/70 border border-white/10'
+                    }`}
+                    style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif' }}
+                  >
+                    {chip}
+                  </button>
+                ))}
               </div>
             </div>
 
