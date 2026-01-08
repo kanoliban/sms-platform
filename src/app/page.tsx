@@ -106,14 +106,14 @@ export default function Home() {
               onSignupTriggered={handleSignupTriggered}
             />
           </div>
-          <p className="mt-2 text-xs text-white/30 italic">
+          <p className="mt-1 text-sm text-white/40">
             Go ahead, click around
           </p>
         </div>
       </main>
 
       {/* Meet New People section */}
-      <section className="relative z-10 py-20 px-6 border-t border-white/10">
+      <section className="relative z-10 pt-8 pb-20 px-6 border-t border-white/10">
         <div className="max-w-2xl mx-auto text-center">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
             Meet New People
