@@ -99,11 +99,17 @@ export default function Home() {
         </div>
 
         {/* Right side - iPhone with conversation */}
-        <div ref={phoneRef} className="relative phone-glow rounded-[55px]">
-          <SMSConversation
-            triggerSignup={triggerSignup}
-            onSignupTriggered={handleSignupTriggered}
-          />
+        <div className="flex flex-col items-center">
+          <div ref={phoneRef} className="relative phone-glow rounded-[55px]">
+            <SMSConversation
+              triggerSignup={triggerSignup}
+              onSignupTriggered={handleSignupTriggered}
+            />
+          </div>
+          <p className="mt-4 text-sm text-white/40 flex items-center gap-2">
+            <span className="inline-block w-1.5 h-1.5 bg-[#34c759] rounded-full animate-pulse" />
+            Tap to interact
+          </p>
         </div>
       </main>
 
