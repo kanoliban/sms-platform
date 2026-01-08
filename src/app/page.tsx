@@ -106,7 +106,7 @@ export default function Home() {
               onSignupTriggered={handleSignupTriggered}
             />
           </div>
-          <p className="mt-1 text-sm text-white/40">
+          <p className="-mt-2 text-base text-white/40">
             Go ahead, click around
           </p>
         </div>
