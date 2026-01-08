@@ -106,9 +106,8 @@ export default function Home() {
               onSignupTriggered={handleSignupTriggered}
             />
           </div>
-          <p className="mt-4 text-sm text-white/40 flex items-center gap-2">
-            <span className="inline-block w-1.5 h-1.5 bg-[#34c759] rounded-full animate-pulse" />
-            Tap to interact
+          <p className="mt-2 text-xs text-white/30 italic">
+            Go ahead, click around
           </p>
         </div>
       </main>
