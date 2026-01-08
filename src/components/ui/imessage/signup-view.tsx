@@ -127,7 +127,7 @@ export function SignupView({ type, onBack, onSuccess, animate = false }: SignupV
         <div className="absolute left-1/2 -translate-x-1/2">
           <span className="text-[17px] font-semibold text-white"
             style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif' }}>
-            {type === 'host' ? 'Apply to Host' : 'Join the Pool'}
+            {type === 'host' ? 'Become a Host' : 'Get Invited'}
           </span>
         </div>
 
@@ -215,7 +215,7 @@ export function SignupView({ type, onBack, onSuccess, animate = false }: SignupV
             <div className="mb-[20px]">
               <p className="text-[13px] text-white/50 mb-[10px] px-[4px]"
                 style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif' }}>
-                {type === 'host' ? "What would you host?" : "What are you into?"} <span className="text-white/30">(optional)</span>
+                {type === 'host' ? "What would you want to host?" : "Invite me to..."} <span className="text-white/30">(tap all that apply)</span>
               </p>
               <div className="flex flex-wrap gap-[8px]">
                 {(type === 'host' ? HOST_EVENT_TYPES : ATTENDEE_INTERESTS).map((chip) => (
