@@ -146,23 +146,19 @@ export function SignupView({ type, onBack, onSuccess, animate = false }: SignupV
         ) : (
           <form onSubmit={handleSubmit} className="px-[16px] py-[20px]">
             {/* Description */}
-            <p className="text-[13px] text-white/50 uppercase tracking-wide px-[16px] mb-[8px]"
-              style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif' }}>
-              {type === 'host' ? 'Host Application' : 'Join the Pool'}
-            </p>
-            <p className="text-[15px] text-white/60 px-[16px] mb-[20px]"
+            <p className="text-[15px] text-white/60 px-[16px] mb-[24px] text-center"
               style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif' }}>
               {type === 'host'
-                ? "Tell us about yourself and the space you want to create."
-                : "Tell us what you're into. We'll text you when the right gathering opens."
+                ? "Drop your info. We'll text you."
+                : "Drop your info. We'll text you when something fits."
               }
             </p>
 
-            {/* Contact Info Group */}
+            {/* Simple form - just name and phone */}
             <div className="bg-[#1c1c1e] rounded-[12px] overflow-hidden mb-[24px]">
               <div className="border-b border-white/10">
-                <div className="flex items-center px-[16px] py-[12px]">
-                  <label className="text-[17px] text-white w-[100px]"
+                <div className="flex items-center px-[16px] py-[14px]">
+                  <label className="text-[17px] text-white w-[80px]"
                     style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif' }}>
                     Name
                   </label>
@@ -173,30 +169,13 @@ export function SignupView({ type, onBack, onSuccess, animate = false }: SignupV
                     onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
                     className="flex-1 bg-transparent text-[17px] text-white placeholder-white/30 focus:outline-none"
                     style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif' }}
-                    placeholder="Your name"
-                  />
-                </div>
-              </div>
-              <div className="border-b border-white/10">
-                <div className="flex items-center px-[16px] py-[12px]">
-                  <label className="text-[17px] text-white w-[100px]"
-                    style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif' }}>
-                    Email
-                  </label>
-                  <input
-                    type="email"
-                    required
-                    value={formData.email}
-                    onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                    className="flex-1 bg-transparent text-[17px] text-white placeholder-white/30 focus:outline-none"
-                    style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif' }}
-                    placeholder="you@email.com"
+                    placeholder="First name"
                   />
                 </div>
               </div>
               <div>
-                <div className="flex items-center px-[16px] py-[12px]">
-                  <label className="text-[17px] text-white w-[100px]"
+                <div className="flex items-center px-[16px] py-[14px]">
+                  <label className="text-[17px] text-white w-[80px]"
                     style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif' }}>
                     Phone
                   </label>
@@ -213,93 +192,6 @@ export function SignupView({ type, onBack, onSuccess, animate = false }: SignupV
               </div>
             </div>
 
-            {/* Type-specific fields */}
-            {type === 'host' ? (
-              <>
-                <p className="text-[13px] text-white/50 uppercase tracking-wide px-[16px] mb-[8px]"
-                  style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif' }}>
-                  Your Vision
-                </p>
-                <div className="bg-[#1c1c1e] rounded-[12px] overflow-hidden mb-[24px]">
-                  <div className="border-b border-white/10">
-                    <div className="px-[16px] py-[12px]">
-                      <label className="text-[13px] text-white/50 block mb-[4px]"
-                        style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif' }}>
-                        Your event idea
-                      </label>
-                      <textarea
-                        required
-                        value={formData.eventIdea}
-                        onChange={(e) => setFormData(prev => ({ ...prev, eventIdea: e.target.value }))}
-                        className="w-full bg-transparent text-[17px] text-white placeholder-white/30 focus:outline-none resize-none"
-                        style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif' }}
-                        rows={2}
-                        placeholder="e.g., Dinner for 8. Saturday 7pm. $40. Creatives only."
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <div className="px-[16px] py-[12px]">
-                      <label className="text-[13px] text-white/50 block mb-[4px]"
-                        style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif' }}>
-                        Why do you want to host?
-                      </label>
-                      <textarea
-                        value={formData.whyHost}
-                        onChange={(e) => setFormData(prev => ({ ...prev, whyHost: e.target.value }))}
-                        className="w-full bg-transparent text-[17px] text-white placeholder-white/30 focus:outline-none resize-none"
-                        style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif' }}
-                        rows={2}
-                        placeholder="What draws you to creating spaces for strangers?"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </>
-            ) : (
-              <>
-                <p className="text-[13px] text-white/50 uppercase tracking-wide px-[16px] mb-[8px]"
-                  style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif' }}>
-                  About You
-                </p>
-                <div className="bg-[#1c1c1e] rounded-[12px] overflow-hidden mb-[24px]">
-                  <div className="border-b border-white/10">
-                    <div className="px-[16px] py-[12px]">
-                      <label className="text-[13px] text-white/50 block mb-[4px]"
-                        style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif' }}>
-                        What are you into?
-                      </label>
-                      <textarea
-                        required
-                        value={formData.interests}
-                        onChange={(e) => setFormData(prev => ({ ...prev, interests: e.target.value }))}
-                        className="w-full bg-transparent text-[17px] text-white placeholder-white/30 focus:outline-none resize-none"
-                        style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif' }}
-                        rows={2}
-                        placeholder="e.g., art, music, food, deep conversations..."
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <div className="px-[16px] py-[12px]">
-                      <label className="text-[13px] text-white/50 block mb-[4px]"
-                        style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif' }}>
-                        Preferred neighborhoods
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.neighborhoods}
-                        onChange={(e) => setFormData(prev => ({ ...prev, neighborhoods: e.target.value }))}
-                        className="w-full bg-transparent text-[17px] text-white placeholder-white/30 focus:outline-none"
-                        style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif' }}
-                        placeholder="e.g., Northeast, Uptown, Downtown..."
-                      />
-                    </div>
-                  </div>
-                </div>
-              </>
-            )}
-
             {error && (
               <p className="text-[#ff453a] text-[15px] text-center mb-[16px] px-[16px]"
                 style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif' }}>
@@ -314,13 +206,13 @@ export function SignupView({ type, onBack, onSuccess, animate = false }: SignupV
               className="w-full py-[16px] bg-[#34c759] disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-[12px] text-[17px] active:opacity-80 transition-opacity"
               style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif' }}
             >
-              {isSubmitting ? 'Submitting...' : type === 'host' ? 'Submit Application' : 'Join the Pool'}
+              {isSubmitting ? 'Submitting...' : "I'm in"}
             </button>
 
             {/* Footer text */}
             <p className="text-[13px] text-white/40 text-center mt-[16px] px-[16px]"
               style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif' }}>
-              By continuing, you agree to receive texts from SMS about upcoming gatherings.
+              We'll text you. That's it.
             </p>
           </form>
         )}
