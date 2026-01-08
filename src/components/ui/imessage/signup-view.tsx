@@ -33,6 +33,7 @@ export function SignupView({ type, onBack, onSuccess, animate = false }: SignupV
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
+    freeform: '',
   })
   const [selectedChips, setSelectedChips] = useState<string[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -50,8 +51,10 @@ export function SignupView({ type, onBack, onSuccess, animate = false }: SignupV
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           type,
-          ...formData,
+          name: formData.name,
+          phone: formData.phone,
           interests: selectedChips.join(', '),
+          lookingFor: formData.freeform,
         }),
       })
 
@@ -71,7 +74,7 @@ export function SignupView({ type, onBack, onSuccess, animate = false }: SignupV
   }
 
   const handleBack = () => {
-    setFormData({ name: '', phone: '' })
+    setFormData({ name: '', phone: '', freeform: '' })
     setSelectedChips([])
     setSubmitted(false)
     setError(null)
@@ -188,7 +191,7 @@ export function SignupView({ type, onBack, onSuccess, animate = false }: SignupV
                     onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
                     className="flex-1 bg-transparent text-[17px] text-white placeholder-white/30 focus:outline-none"
                     style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif' }}
-                    placeholder="First name"
+                    placeholder="Full name"
                   />
                 </div>
               </div>
@@ -234,6 +237,22 @@ export function SignupView({ type, onBack, onSuccess, animate = false }: SignupV
                   </button>
                 ))}
               </div>
+            </div>
+
+            {/* Optional freeform text */}
+            <div className="mb-[20px]">
+              <p className="text-[13px] text-white/50 mb-[8px] px-[4px]"
+                style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif' }}>
+                {type === 'host' ? "Describe your ideal gathering" : "What kind of people do you want to meet?"} <span className="text-white/30">(optional)</span>
+              </p>
+              <textarea
+                value={formData.freeform}
+                onChange={(e) => setFormData(prev => ({ ...prev, freeform: e.target.value }))}
+                rows={2}
+                className="w-full bg-[#1c1c1e] text-[15px] text-white placeholder-white/30 rounded-[12px] px-[14px] py-[12px] focus:outline-none focus:ring-1 focus:ring-white/20 resize-none"
+                style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif' }}
+                placeholder={type === 'host' ? "e.g., Intimate dinner, good conversation, no phones..." : "e.g., Creatives, curious minds, good vibes..."}
+              />
             </div>
 
             {error && (
